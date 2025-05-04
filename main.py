@@ -1,7 +1,11 @@
 import cv2
 import numpy as np
 import os
+import tensorflow as tf
+from enum import Enum
+import logging
 
+logging.basicConfig(level=logging.INFO)
 # Limites HSV para cada característica
 LIMITE_BICO = [
     (np.array([8, 150, 150]), np.array([40, 255, 255])),  # Amarelo/Laranja
@@ -23,7 +27,6 @@ LIMITE_PENAS = [
     (np.array([140, 100, 100]), np.array([170, 255, 255])), # Tons de Rosa (rosa-claro, rosa-escuro, rosa-pálido)
     (np.array([10, 20, 150]), np.array([30, 150, 255])), # Tons de Bege (bege-areia, bege-amarelado, bege-claro)
     (np.array([0, 0, 180]), np.array([180, 20, 255])) # Tons de Marfim (marfim-claro, marfim-escuro)
-
 ]
 LIMITE_GARRAS = (np.array([0, 20, 20]), np.array([40, 150, 150]))  # Cinza/Bege
 LIMITE_ASAS = [
@@ -46,6 +49,8 @@ LIMITE_POSTURA = (np.array([0, 0, 40]), np.array([180, 50, 200]))  # Tons neutro
 LIMITE_SEM_PELOS = (np.array([0, 0, 40]), np.array([180, 40, 180]))  # Superfície lisa
 LIMITE_SEM_ORELHAS = (np.array([0, 0, 30]), np.array([180, 50, 150]))  # Laterais homogêneas
 
+modelo_especies = tf.keras.models.load_model('modelo_classificacao_passaros.h5')
+
 # Função de processamento de imagem
 def processar_imagem(imagem, limite_inferior, limite_superior, tipo_filtro='open'):
     hsv = cv2.cvtColor(imagem, cv2.COLOR_BGR2HSV)
@@ -57,6 +62,16 @@ def processar_imagem(imagem, limite_inferior, limite_superior, tipo_filtro='open
     else:
         mascara = cv2.morphologyEx(mascara, cv2.MORPH_CLOSE, kernel)
     return cv2.findContours(mascara, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
+
+def identificar_especie(imagem):
+    imagem = cv2.resize(imagem, (224, 224))  # Ajuste para o tamanho do modelo
+    imagem = np.expand_dims(imagem, axis=0)  # Adiciona a dimensão do lote
+    imagem = imagem / 255.0  # Normaliza a imagem
+
+    predicao = modelo_especies.predict(imagem)
+    print(f"Predição bruta: {predicao}")
+    especie = np.argmax(predicao, axis=1)  # Obtém a classe com maior probabilidade
+    return especie
 
 def detectar_caracteristica(imagem, limites, area_min, area_max, vertices_min=3, vertices_max=15):
     for limite in limites if isinstance(limites, list) else [limites]:
@@ -78,11 +93,28 @@ def gerar_limite_hsv(imagem):
     v_min, v_max = np.min(v), np.max(v)
     return (np.array([h_min, s_min, v_min]), np.array([h_max, s_max, v_max]))
 
+class NivelCerteza(Enum):
+    ALTA = "90% de chance"
+    MEDIA = "80% de chance"
+    BAIXA = "70% de chance"
+    NAO_E = "Não é um pássaro"
+
+# Carrega os nomes das classes em uma lista (índice 0 corresponde à classe 1 do arquivo)
+def carregar_nomes_classes(caminho='data/classes.txt'):
+    nomes = []
+    with open(caminho, 'r') as f:
+        for linha in f:
+            partes = linha.strip().split()
+            nome_classe = ' '.join(partes[1:]).replace('_', ' ')
+            nomes.append(nome_classe)
+    return nomes
+
 def identificar_caracteristicas(caminho_imagem):
     imagem = cv2.imread(caminho_imagem)
     if imagem is None:
-        print(f"Erro ao carregar a imagem: {caminho_imagem}")
+        logging.error(f"Erro ao carregar a imagem: {caminho_imagem}")
         return
+    especie = identificar_especie(imagem)
     imagem = cv2.resize(imagem, (300, 300))
 
     encontrou_bico = detectar_caracteristica(imagem, LIMITE_BICO, 100, 3000, 5, 12)
@@ -96,15 +128,21 @@ def identificar_caracteristicas(caminho_imagem):
     sem_pelos = detectar_caracteristica(imagem, LIMITE_SEM_PELOS, 2000, 20000, 5, 30)
     sem_orelhas = detectar_caracteristica(imagem, LIMITE_SEM_ORELHAS, 500, 5000, 4, 15)
 
+    nomes_classes = carregar_nomes_classes()
+    nome_especie = nomes_classes[especie.item()]
+    
     print(f"Resultado para {caminho_imagem}:")
     if (encontrou_bico and encontrou_penas and encontrou_garras and encontrou_asas and encontrou_pernas and encontrou_cauda and encontrou_olhos and encontrou_postura and sem_pelos and sem_orelhas):
-        print("90% de chance de ser um pássaro.")
+        logging.info(f"{NivelCerteza.ALTA.value} de ser um pássaro.")
+        print(f"Espécie identificada: {nome_especie}")
     elif(encontrou_bico and encontrou_penas and encontrou_garras and encontrou_asas and encontrou_olhos and encontrou_postura and (encontrou_cauda or sem_pelos or sem_orelhas)):
-        print("80% de chance de ser um pássaro.")
+        logging.info(f"{NivelCerteza.MEDIA.value} de ser um pássaro.")
+        print(f"Espécie identificada: {nome_especie}")
     elif(encontrou_bico and encontrou_penas and (encontrou_garras or encontrou_asas or encontrou_olhos or encontrou_postura or encontrou_cauda or sem_pelos or sem_orelhas)):
-        print("70% de chance de ser um pássaro.")
+        logging.info(f"{NivelCerteza.BAIXA.value} de ser um pássaro.")
+        print(f"Espécie identificada: {nome_especie}")
     else:
-        print("Não é um pássaro")
+        logging.info(f"{NivelCerteza.NAO_E.value}")
         limite_hsv = gerar_limite_hsv(imagem)
         print(f'Limite HSV gerado: {limite_hsv}')
         
