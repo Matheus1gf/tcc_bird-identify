@@ -25,3 +25,6 @@ venv/
 .idea/
 
 data/
+
+*.h5
+*.keras
