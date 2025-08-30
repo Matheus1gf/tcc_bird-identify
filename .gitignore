@@ -1,6 +1,5 @@
 # Ignorar arquivos específicos
-dataset/
-output/
+antigo/
 
 # Arquivos e diretórios comuns a ignorar em projetos Python
 __pycache__/

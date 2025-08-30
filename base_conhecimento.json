@@ -1,0 +1,24 @@
+{
+    "especies": {
+        "014.Indigo Bunting": [],
+        "016.Painted Bunting": [
+            "asa",
+            "bico"
+        ],
+        "058.Pigeon Guillemot": [],
+        "084.Red legged Kittiwake": []
+    },
+    "especies_conhecidas": {},
+    "especies_novas": [
+        {
+            "confianca_palpite": "32.90%",
+            "fatos": [
+                "bico",
+                "asa"
+            ],
+            "id_temporario": "P\u00e1ssaro Desconhecido #1",
+            "palpite_classificador": "016.Painted Bunting"
+        }
+    ],
+    "regras": []
+}
