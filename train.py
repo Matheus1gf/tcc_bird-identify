@@ -4,6 +4,12 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras import layers, models
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 from sklearn.utils import class_weight
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
+from skimage.feature import hog
+from skimage import exposure
+import cv2
+import os
 
 # Caminho para as imagens
 diretorio_imagens = './data/images/'
@@ -37,19 +43,24 @@ validation_generator = datagen.flow_from_directory(
     class_mode='categorical'
 )
 
+# Construção do modelo
 base_model = tf.keras.applications.MobileNetV2(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
 base_model.trainable = True
+
 # Descongela apenas as últimas camadas
 for layer in base_model.layers[:-30]:  # Ajuste o número se necessário
     layer.trainable = False
 
-num_classes = len(train_generator.class_indices)
+# Adicionando camadas de dropout e normalização
 model = models.Sequential([
     base_model,
     layers.GlobalAveragePooling2D(),
-    layers.Dense(128, activation='relu'),
+    layers.BatchNormalization(),
     layers.Dropout(0.5),
-    layers.Dense(num_classes, activation='softmax')
+    layers.Dense(128, activation='relu'),
+    layers.BatchNormalization(),
+    layers.Dropout(0.5),
+    layers.Dense(len(train_generator.class_indices), activation='softmax')
 ])
 
 model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
@@ -65,6 +76,7 @@ class_weights = class_weight.compute_class_weight(class_weight='balanced',
                                                   y=labels)
 class_weights_dict = dict(enumerate(class_weights))
 
+# Treinamento do modelo
 model.fit(
     train_generator,
     steps_per_epoch=train_generator.samples // batch_size,
@@ -79,3 +91,45 @@ model.fit(
 model.save('modelo_classificacao_passaros.h5')
 model.save('modelo_classificacao_passaros.keras')
 print("Treinamento finalizado. Modelo salvo como .h5 e .keras.")
+
+# Extração de características e treinamento do classificador
+def extrair_caracteristicas(imagem):
+    # Redimensionar a imagem para o tamanho esperado
+    imagem = cv2.resize(imagem, (224, 224))
+    # Converter para escala de cinza
+    imagem_gray = cv2.cvtColor(imagem, cv2.COLOR_BGR2GRAY)
+    # Extrair características HOG
+    features, hog_image = hog(imagem_gray, orientations=9, pixels_per_cell=(8, 8),
+                           cells_per_block=(2, 2), visualize=True)
+    # Melhorar a visualização do HOG
+    hog_image = exposure.rescale_intensity(hog_image, in_range=(0, 10))
+    return features
+
+# Coletar características e rótulos para o classificador
+X = []
+y = []
+
+# Iterar sobre o diretório de treinamento
+for class_id in os.listdir('./data/train'):
+    class_dir = os.path.join('./data/train', class_id)
+    for img_file in os.listdir(class_dir):
+        img_path = os.path.join(class_dir, img_file)
+        imagem = cv2.imread(img_path)
+        if imagem is not None:
+            features = extrair_caracteristicas(imagem)
+            X.append(features)
+            y.append(class_id)
+
+# Converter para arrays numpy
+X = np.array(X)
+y = np.array(y)
+
+# Treinamento do classificador Random Forest
+rf_classifier = RandomForestClassifier(n_estimators=100)
+rf_classifier.fit(X, y)
+
+# Alternativamente, para SVM
+# svm_classifier = SVC(kernel='linear')
+# svm_classifier.fit(X, y)
+
+print("Classificador treinado com sucesso!")
