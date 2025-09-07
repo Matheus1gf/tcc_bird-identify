@@ -1,6 +1,6 @@
 @echo off
 echo ========================================
-echo Instalacao do Sistema IA Neuro-Simbolica
+echo Instalacao do Sistema de Raciocinio Logico de IA
 echo Identificacao de Passaros - Windows
 echo ========================================
 echo.
