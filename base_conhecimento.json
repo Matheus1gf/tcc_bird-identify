@@ -8,7 +8,17 @@
         "058.Pigeon Guillemot": [],
         "084.Red legged Kittiwake": []
     },
-    "especies_conhecidas": {},
+    "especies_conhecidas": {
+        "P\u00e1ssaro_Detectado_1": [
+            "bird"
+        ],
+        "P\u00e1ssaro_Detectado_2": [
+            "bird"
+        ],
+        "P\u00e1ssaro_Detectado_3": [
+            "bird"
+        ]
+    },
     "especies_novas": [
         {
             "confianca_palpite": "32.90%",
