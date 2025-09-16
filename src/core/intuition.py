@@ -715,6 +715,10 @@ class IntuitionEngine:
     def _detect_simple_beak(self, image: np.ndarray) -> bool:
         """Detecção MELHORADA de bico de pássaro"""
         try:
+            # VERIFICAÇÃO ESPECÍFICA PARA ANIMAIS AQUÁTICOS
+            # Se a imagem tem características de ambiente aquático, ser mais rigoroso
+            if self._is_aquatic_environment(image):
+                return False  # Não detectar bico em ambiente aquático
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             
             # Método 1: Detecção por bordas (mais rigorosa)
@@ -726,7 +730,7 @@ class IntuitionEngine:
             
             beak_candidates = 0
             for contour in contours:
-                if len(contour) > 8 and cv2.contourArea(contour) > 80:  # Mais rigoroso
+                if len(contour) > 8 and cv2.contourArea(contour) > 150:  # MUITO mais rigoroso
                     x, y, w, h = cv2.boundingRect(contour)
                     aspect_ratio = w / h if h > 0 else 1.0
                     
@@ -735,11 +739,12 @@ class IntuitionEngine:
                     perimeter = cv2.arcLength(contour, True)
                     compactness = (4 * np.pi * area) / (perimeter * perimeter) if perimeter > 0 else 0
                     
-                    # Bicos são alongados, pontiagudos e têm forma específica
-                    if (aspect_ratio > 2.5 and  # Mais alongados
-                        compactness < 0.8 and  # Não muito compactos (pontiagudos)
-                        area > 100 and        # Área mínima maior
-                        area < 800):          # Não muito grandes
+                    # Bicos são alongados, pontiagudos e têm forma específica - CRITÉRIOS MUITO RIGOROSOS
+                    if (aspect_ratio > 4.0 and   # MUITO mais alongados (evita nadadeiras)
+                        compactness < 0.6 and   # Mais pontiagudos
+                        area > 200 and         # Área mínima MUITO maior
+                        area < 600 and         # Não muito grandes
+                        y < h * 0.4):          # Deve estar na parte superior (evita nadadeiras inferiores)
                         beak_candidates += 1
             
             # Método 2: Detecção por forma triangular (bicos têm formato triangular)
@@ -766,8 +771,8 @@ class IntuitionEngine:
                         contour_w < w * 0.3):  # Não muito largos
                         beak_candidates += 1
             
-            # Requer pelo menos 1 candidato forte de bico
-            return beak_candidates >= 1
+            # Requer pelo menos 2 candidatos fortes de bico (mais rigoroso)
+            return beak_candidates >= 2
             
         except:
             return False
@@ -859,9 +864,46 @@ class IntuitionEngine:
         except:
             return False
     
+    def _is_aquatic_environment(self, image: np.ndarray) -> bool:
+        """Detecta se a imagem tem características de ambiente aquático"""
+        try:
+            # Converter para HSV para análise de cores
+            hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+            
+            # Definir ranges para cores aquáticas (azul, verde-azulado)
+            # Azul do oceano
+            lower_blue = np.array([100, 50, 50])
+            upper_blue = np.array([130, 255, 255])
+            
+            # Verde-azulado (água turva)
+            lower_green_blue = np.array([80, 50, 50])
+            upper_green_blue = np.array([100, 255, 255])
+            
+            # Criar máscaras
+            mask_blue = cv2.inRange(hsv, lower_blue, upper_blue)
+            mask_green_blue = cv2.inRange(hsv, lower_green_blue, upper_green_blue)
+            
+            # Combinar máscaras
+            aquatic_mask = cv2.bitwise_or(mask_blue, mask_green_blue)
+            
+            # Calcular porcentagem de pixels aquáticos
+            total_pixels = image.shape[0] * image.shape[1]
+            aquatic_pixels = np.sum(aquatic_mask > 0)
+            aquatic_percentage = aquatic_pixels / total_pixels
+            
+            # Se mais de 30% da imagem tem cores aquáticas, é ambiente aquático
+            return aquatic_percentage > 0.3
+            
+        except:
+            return False
+    
     def _detect_simple_claws(self, image: np.ndarray) -> bool:
         """Detecção MELHORADA de garras de pássaro"""
         try:
+            # VERIFICAÇÃO ESPECÍFICA PARA ANIMAIS AQUÁTICOS
+            # Se a imagem tem características de ambiente aquático, ser mais rigoroso
+            if self._is_aquatic_environment(image):
+                return False  # Não detectar garras em ambiente aquático
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             
             # Método 1: Detecção por bordas (mais rigorosa)
@@ -875,16 +917,17 @@ class IntuitionEngine:
             h, w = image.shape[:2]
             
             for contour in contours:
-                if len(contour) > 6 and cv2.contourArea(contour) > 30:  # Mais rigoroso
+                if len(contour) > 6 and cv2.contourArea(contour) > 60:  # MUITO mais rigoroso
                     x, y, contour_w, contour_h = cv2.boundingRect(contour)
                     aspect_ratio = contour_w / contour_h if contour_h > 0 else 1.0
                     area = cv2.contourArea(contour)
                     
-                    # Garras são pequenas, alongadas e estão na parte inferior
-                    if (aspect_ratio > 1.8 and  # Mais alongadas
-                        area < 150 and         # Pequenas
-                        area > 40 and          # Mas não muito pequenas
-                        y > h * 0.6):          # Parte inferior da imagem
+                    # Garras são pequenas, alongadas e estão na parte inferior - CRITÉRIOS MUITO RIGOROSOS
+                    if (aspect_ratio > 2.5 and  # MUITO mais alongadas (evita nadadeiras)
+                        area < 100 and         # Menores (evita nadadeiras grandes)
+                        area > 60 and          # Mas não muito pequenas
+                        y > h * 0.7 and        # MUITO mais na parte inferior (evita nadadeiras laterais)
+                        contour_w < w * 0.1): # Largura pequena (evita nadadeiras largas)
                         claw_candidates += 1
             
             # Método 2: Detecção por forma pontiaguda (garras são pontiagudas)
@@ -924,8 +967,8 @@ class IntuitionEngine:
             if small_structures >= 2:
                 claw_candidates += 1
             
-            # Requer pelo menos 1 candidato forte de garra
-            return claw_candidates >= 1
+            # Requer pelo menos 2 candidatos fortes de garra (mais rigoroso)
+            return claw_candidates >= 2
             
         except:
             return False
