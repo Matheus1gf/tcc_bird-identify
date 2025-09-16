@@ -5,12 +5,35 @@
 ## 🚀 Início Rápido
 
 ```bash
-# Instalar dependências
+# 1. Instalar dependências
 pip install -r requirements.txt
 
-# Executar sistema
-python main.py
+# 2. Baixar modelos necessários (IMPORTANTE!)
+python3 download_models.py
+
+# 3. Executar sistema
+python3 -m streamlit run main.py
+# OU
+python3 start_system.py
 ```
+
+## 📦 Modelos Necessários
+
+⚠️ **IMPORTANTE**: Os modelos YOLO não estão incluídos no repositório devido ao limite de tamanho do GitHub.
+
+### Baixar Modelos Automaticamente:
+```bash
+python3 download_models.py
+```
+
+### Baixar Modelos Manualmente:
+- **yolov8n.pt** (recomendado para desenvolvimento): [Download](https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8n.pt)
+- **yolov8s.pt** (melhor precisão): [Download](https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8s.pt)
+
+### Modelos Opcionais:
+- **yolov8m.pt**: [Download](https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8m.pt)
+- **yolov8l.pt**: [Download](https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8l.pt)
+- **yolov8x.pt**: [Download](https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8x.pt)
 
 ## 📁 Estrutura do Projeto
 
