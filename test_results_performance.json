@@ -1,0 +1,137 @@
+{
+  "timestamp": "2025-09-14T20:06:45.980275",
+  "results": [
+    {
+      "test": "Tempo de Resposta",
+      "status": "PASS",
+      "details": "Média: 0.004s, Min: 0.002s, Max: 0.006s",
+      "timestamp": "2025-09-14T20:05:43.528400"
+    },
+    {
+      "test": "Taxa de Transferência",
+      "status": "PASS",
+      "details": "576.47 req/s, 20/20 sucessos",
+      "timestamp": "2025-09-14T20:05:44.564363"
+    },
+    {
+      "test": "Usuários Concorrentes",
+      "status": "PASS",
+      "details": "5 usuários, 100.00% taxa de sucesso",
+      "timestamp": "2025-09-14T20:05:47.635307"
+    },
+    {
+      "test": "Uso de Memória",
+      "status": "PASS",
+      "details": "56.7% usado, 10.4GB disponível",
+      "timestamp": "2025-09-14T20:05:48.640599"
+    },
+    {
+      "test": "Uso de CPU",
+      "status": "PASS",
+      "details": "14.0% usado",
+      "timestamp": "2025-09-14T20:05:50.650285"
+    },
+    {
+      "test": "Tempo de Carregamento",
+      "status": "PASS",
+      "details": "Média: 0.007s, Tamanho: 1522 bytes",
+      "timestamp": "2025-09-14T20:05:56.704480"
+    },
+    {
+      "test": "Escalabilidade",
+      "status": "PASS",
+      "details": "Taxa mínima de sucesso: 100.00%",
+      "timestamp": "2025-09-14T20:06:00.795036"
+    },
+    {
+      "test": "Teste de Estresse",
+      "status": "PASS",
+      "details": "30s, 100.00% taxa de sucesso",
+      "timestamp": "2025-09-14T20:06:31.863026"
+    },
+    {
+      "test": "Eficiência de Recursos",
+      "status": "PASS",
+      "details": "Score: 199211 bytes/s",
+      "timestamp": "2025-09-14T20:06:33.874053"
+    },
+    {
+      "test": "Consistência de Performance",
+      "status": "PASS",
+      "details": "CV: 0.128",
+      "timestamp": "2025-09-14T20:06:44.977328"
+    }
+  ],
+  "performance_metrics": {
+    "response_time": {
+      "average": 0.0035290956497192384,
+      "min": 0.0024950504302978516,
+      "max": 0.0063779354095458984,
+      "samples": 10
+    },
+    "throughput": {
+      "requests_per_second": 576.4653170054563,
+      "total_requests": 20,
+      "successful_requests": 20,
+      "total_time": 0.03469419479370117
+    },
+    "concurrent_users": {
+      "concurrent_users": 5,
+      "total_requests": 20,
+      "successful_requests": 20,
+      "success_rate": 1.0
+    },
+    "memory_usage": {
+      "usage_percent": 56.7,
+      "available_gb": 10.398910522460938,
+      "total_gb": 24.0
+    },
+    "cpu_usage": {
+      "usage_percent": 14.0
+    },
+    "load_time": {
+      "average_time": 0.006845855712890625,
+      "average_size": 1522,
+      "samples": 5
+    },
+    "scalability": {
+      "results": [
+        {
+          "load_level": 1,
+          "success_rate": 1.0,
+          "total_time": 0.009328126907348633
+        },
+        {
+          "load_level": 5,
+          "success_rate": 1.0,
+          "total_time": 0.02572917938232422
+        },
+        {
+          "load_level": 10,
+          "success_rate": 1.0,
+          "total_time": 0.03790903091430664
+        }
+      ],
+      "min_success_rate": 1.0
+    },
+    "stress_test": {
+      "duration": 30,
+      "total_requests": 271,
+      "successful_requests": 271,
+      "success_rate": 1.0
+    },
+    "resource_efficiency": {
+      "response_time": 0.00764012336730957,
+      "content_size": 1522,
+      "efficiency_score": 199211.44290841004,
+      "memory_usage": 55.3,
+      "cpu_usage": 18.4
+    },
+    "performance_consistency": {
+      "average": 0.0069358587265014645,
+      "standard_deviation": 0.0008874998124739031,
+      "coefficient_of_variation": 0.1279581732371255,
+      "samples": 10
+    }
+  }
+}

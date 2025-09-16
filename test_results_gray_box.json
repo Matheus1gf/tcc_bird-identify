@@ -1,0 +1,62 @@
+[
+  {
+    "test": "Endpoints da API",
+    "status": "PASS",
+    "details": "3/3 endpoints funcionando",
+    "timestamp": "2025-09-14T20:01:55.168193"
+  },
+  {
+    "test": "Fluxo de Dados",
+    "status": "PASS",
+    "details": "4 indicadores encontrados",
+    "timestamp": "2025-09-14T20:01:55.677619"
+  },
+  {
+    "test": "Gerenciamento de Estado",
+    "status": "PASS",
+    "details": "3 indicadores encontrados",
+    "timestamp": "2025-09-14T20:01:56.184615"
+  },
+  {
+    "test": "Propagação de Erros",
+    "status": "PASS",
+    "details": "11 indicadores encontrados",
+    "timestamp": "2025-09-14T20:01:56.689531"
+  },
+  {
+    "test": "Monitoramento de Performance",
+    "status": "PASS",
+    "details": "6 indicadores encontrados",
+    "timestamp": "2025-09-14T20:01:57.196673"
+  },
+  {
+    "test": "Implementação de Segurança",
+    "status": "PASS",
+    "details": "Nenhum padrão inseguro encontrado",
+    "timestamp": "2025-09-14T20:01:57.702180"
+  },
+  {
+    "test": "Sistema de Logging",
+    "status": "PASS",
+    "details": "10 indicadores encontrados",
+    "timestamp": "2025-09-14T20:01:58.209842"
+  },
+  {
+    "test": "Gerenciamento de Configuração",
+    "status": "PASS",
+    "details": "3 indicadores encontrados",
+    "timestamp": "2025-09-14T20:01:58.717197"
+  },
+  {
+    "test": "Gerenciamento de Recursos",
+    "status": "PASS",
+    "details": "3 indicadores encontrados",
+    "timestamp": "2025-09-14T20:01:59.226731"
+  },
+  {
+    "test": "Pontos de Integração",
+    "status": "PASS",
+    "details": "10 indicadores encontrados",
+    "timestamp": "2025-09-14T20:01:59.729730"
+  }
+]

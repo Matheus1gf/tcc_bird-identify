@@ -1,0 +1,62 @@
+[
+  {
+    "test": "Integração entre Componentes",
+    "status": "PASS",
+    "details": "5/6 componentes importados",
+    "timestamp": "2025-09-14T20:03:12.246109"
+  },
+  {
+    "test": "Integração do Fluxo de Dados",
+    "status": "FAIL",
+    "details": "Apenas 9 indicadores encontrados",
+    "timestamp": "2025-09-14T20:03:12.754503"
+  },
+  {
+    "test": "Integração da API",
+    "status": "PASS",
+    "details": "3/3 endpoints funcionando",
+    "timestamp": "2025-09-14T20:03:13.281589"
+  },
+  {
+    "test": "Integração com Banco de Dados",
+    "status": "PASS",
+    "details": "0 indicadores encontrados",
+    "timestamp": "2025-09-14T20:03:13.792468"
+  },
+  {
+    "test": "Integração com Sistema de Arquivos",
+    "status": "PASS",
+    "details": "7 indicadores encontrados",
+    "timestamp": "2025-09-14T20:03:14.300074"
+  },
+  {
+    "test": "Integração com Serviços Externos",
+    "status": "PASS",
+    "details": "2 indicadores encontrados",
+    "timestamp": "2025-09-14T20:03:14.807643"
+  },
+  {
+    "test": "Integração da Interface do Usuário",
+    "status": "PASS",
+    "details": "6 indicadores encontrados",
+    "timestamp": "2025-09-14T20:03:15.310463"
+  },
+  {
+    "test": "Integração do Sistema de Logging",
+    "status": "PASS",
+    "details": "8 indicadores encontrados",
+    "timestamp": "2025-09-14T20:03:15.817284"
+  },
+  {
+    "test": "Integração de Configuração",
+    "status": "PASS",
+    "details": "3 indicadores encontrados",
+    "timestamp": "2025-09-14T20:03:16.325431"
+  },
+  {
+    "test": "Integração do Tratamento de Erros",
+    "status": "PASS",
+    "details": "8 indicadores encontrados",
+    "timestamp": "2025-09-14T20:03:16.832741"
+  }
+]

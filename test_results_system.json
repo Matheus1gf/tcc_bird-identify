@@ -1,0 +1,62 @@
+[
+  {
+    "test": "Inicialização do Sistema",
+    "status": "PASS",
+    "details": "3/3 componentes encontrados",
+    "timestamp": "2025-09-14T20:03:55.644594"
+  },
+  {
+    "test": "Disponibilidade do Sistema",
+    "status": "PASS",
+    "details": "HTTP 200",
+    "timestamp": "2025-09-14T20:03:56.661610"
+  },
+  {
+    "test": "Performance do Sistema",
+    "status": "PASS",
+    "details": "Tempo: 0.01s, Tamanho: 1522 bytes",
+    "timestamp": "2025-09-14T20:03:57.672571"
+  },
+  {
+    "test": "Estabilidade do Sistema",
+    "status": "PASS",
+    "details": "5/5 requisições bem-sucedidas",
+    "timestamp": "2025-09-14T20:04:03.731557"
+  },
+  {
+    "test": "Funcionalidade do Sistema",
+    "status": "PASS",
+    "details": "6 funcionalidades encontradas",
+    "timestamp": "2025-09-14T20:04:04.737866"
+  },
+  {
+    "test": "Segurança do Sistema",
+    "status": "PASS",
+    "details": "4 indicadores de segurança, 0 padrões inseguros",
+    "timestamp": "2025-09-14T20:04:05.744248"
+  },
+  {
+    "test": "Escalabilidade do Sistema",
+    "status": "PASS",
+    "details": "10/10 requisições simultâneas bem-sucedidas",
+    "timestamp": "2025-09-14T20:04:06.763807"
+  },
+  {
+    "test": "Confiabilidade do Sistema",
+    "status": "PASS",
+    "details": "Taxa de confiabilidade: 100.00%",
+    "timestamp": "2025-09-14T20:04:17.978500"
+  },
+  {
+    "test": "Manutenibilidade do Sistema",
+    "status": "PASS",
+    "details": "11 indicadores encontrados",
+    "timestamp": "2025-09-14T20:04:18.981094"
+  },
+  {
+    "test": "Usabilidade do Sistema",
+    "status": "PASS",
+    "details": "6 elementos de usabilidade encontrados",
+    "timestamp": "2025-09-14T20:04:19.987261"
+  }
+]

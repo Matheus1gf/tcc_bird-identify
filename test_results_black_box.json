@@ -1,0 +1,62 @@
+[
+  {
+    "test": "Elementos da Interface",
+    "status": "FAIL",
+    "details": "Encontrados apenas: ['streamlit']",
+    "timestamp": "2025-09-14T20:00:59.808975"
+  },
+  {
+    "test": "Navegação entre Tabs",
+    "status": "FAIL",
+    "details": "Apenas 0 tabs encontradas",
+    "timestamp": "2025-09-14T20:01:00.321504"
+  },
+  {
+    "test": "Interface de Upload",
+    "status": "FAIL",
+    "details": "Elementos insuficientes: ['type=']",
+    "timestamp": "2025-09-14T20:01:00.829590"
+  },
+  {
+    "test": "Layout Responsivo",
+    "status": "FAIL",
+    "details": "Elementos CSS insuficientes: []",
+    "timestamp": "2025-09-14T20:01:01.343101"
+  },
+  {
+    "test": "Tratamento de Erros UI",
+    "status": "WARN",
+    "details": "Nenhum elemento de erro encontrado",
+    "timestamp": "2025-09-14T20:01:01.856193"
+  },
+  {
+    "test": "Visualização de Dados",
+    "status": "FAIL",
+    "details": "Elementos insuficientes: []",
+    "timestamp": "2025-09-14T20:01:02.368875"
+  },
+  {
+    "test": "Elementos de Interação",
+    "status": "FAIL",
+    "details": "Elementos insuficientes: []",
+    "timestamp": "2025-09-14T20:01:02.879489"
+  },
+  {
+    "test": "Recursos de Acessibilidade",
+    "status": "WARN",
+    "details": "Nenhum elemento de acessibilidade encontrado",
+    "timestamp": "2025-09-14T20:01:03.387970"
+  },
+  {
+    "test": "Indicadores de Performance",
+    "status": "PASS",
+    "details": "Tempo: 0.01s, Tamanho: 1522 bytes",
+    "timestamp": "2025-09-14T20:01:03.900110"
+  },
+  {
+    "test": "Indicadores de Segurança",
+    "status": "PASS",
+    "details": "Cabeçalhos: 0, Info exposta: 0",
+    "timestamp": "2025-09-14T20:01:04.412654"
+  }
+]

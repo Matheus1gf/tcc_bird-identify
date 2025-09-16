@@ -1,0 +1,62 @@
+[
+  {
+    "test": "Regressão da Funcionalidade Principal",
+    "status": "PASS",
+    "details": "Elementos encontrados: ['streamlit']",
+    "timestamp": "2025-09-14T20:04:47.077114"
+  },
+  {
+    "test": "Regressão dos Endpoints da API",
+    "status": "PASS",
+    "details": "3/3 endpoints funcionando",
+    "timestamp": "2025-09-14T20:04:47.594938"
+  },
+  {
+    "test": "Regressão de Performance",
+    "status": "PASS",
+    "details": "Tempo: 0.00s, Tamanho: 1522 bytes",
+    "timestamp": "2025-09-14T20:04:48.105107"
+  },
+  {
+    "test": "Regressão dos Elementos da UI",
+    "status": "FAIL",
+    "details": "Apenas ['streamlit'] elementos encontrados",
+    "timestamp": "2025-09-14T20:04:48.617793"
+  },
+  {
+    "test": "Regressão do Tratamento de Erros",
+    "status": "PASS",
+    "details": "HTTP 200",
+    "timestamp": "2025-09-14T20:04:49.129410"
+  },
+  {
+    "test": "Regressão de Segurança",
+    "status": "PASS",
+    "details": "Nenhuma informação sensível exposta",
+    "timestamp": "2025-09-14T20:04:49.641880"
+  },
+  {
+    "test": "Regressão da Integridade dos Dados",
+    "status": "PASS",
+    "details": "Elementos HTML encontrados: ['<html', '<head', '<body']",
+    "timestamp": "2025-09-14T20:04:50.153602"
+  },
+  {
+    "test": "Regressão de Compatibilidade",
+    "status": "PASS",
+    "details": "3/3 user agents compatíveis",
+    "timestamp": "2025-09-14T20:04:50.669248"
+  },
+  {
+    "test": "Regressão de Estabilidade",
+    "status": "PASS",
+    "details": "Taxa de estabilidade: 100.00%",
+    "timestamp": "2025-09-14T20:04:56.287530"
+  },
+  {
+    "test": "Regressão de Funcionalidades Específicas",
+    "status": "FAIL",
+    "details": "Apenas ['streamlit'] funcionalidades encontradas",
+    "timestamp": "2025-09-14T20:04:56.799703"
+  }
+]
