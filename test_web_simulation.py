@@ -1,72 +1,144 @@
 #!/usr/bin/env python3
 """
-Simulação do que acontece na interface web
+Simula exatamente o que a interface web faz para processar imagens
 """
 
 import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from core.intuition import IntuitionEngine
+from src.core.intuition import IntuitionEngine
+from src.utils.logger import DebugLogger
 from PIL import Image
-import base64
+import cv2
+import numpy as np
 
-def test_web_simulation():
-    print("🌐 SIMULAÇÃO DA INTERFACE WEB")
-    print("=" * 50)
+def simulate_web_processing():
+    """Simula o processamento da interface web"""
     
-    # Inicializar o sistema
-    intuition_engine = IntuitionEngine("yolov8n.pt", "modelo_classificacao_passaros.keras")
+    print("🌐 SIMULAÇÃO DO PROCESSAMENTO DA INTERFACE WEB")
+    print("="*60)
     
-    # Simular imagem de pássaro (rolinha)
-    rolinha_data = base64.b64decode("""
-    /9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcU
-    FhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgo
-    KCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIA
-    AhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEB
-    AQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX
-    /9k=
-    """)
+    # Inicializar logger
+    debug_logger = DebugLogger()
     
-    # Salvar imagem temporária
-    with open("test_web.jpg", "wb") as f:
-        f.write(rolinha_data)
+    # Inicializar motor de intuição (mesma forma que na interface web)
+    try:
+        engine = IntuitionEngine("yolov8n.pt", "modelo_classificacao_passaros.keras", debug_logger)
+        print("✅ Motor de intuição inicializado com sucesso!")
+    except Exception as e:
+        print(f"❌ Erro ao inicializar motor: {e}")
+        return
+    
+    # Simular upload de imagem de tubarão
+    original_image_path = "temp_Images_%287%29tuba.jpg.png"
+    
+    if not os.path.exists(original_image_path):
+        print(f"❌ Arquivo não encontrado: {original_image_path}")
+        return
+    
+    print(f"\n📸 Simulando upload: {original_image_path}")
+    print("-" * 40)
     
     try:
-        print("📊 Simulando análise da interface web...")
+        # Simular o que a interface web faz:
+        # 1. Carregar imagem com PIL
+        print("1️⃣ Carregando imagem com PIL...")
+        image = Image.open(original_image_path)
+        print(f"   • Formato original: {image.format}")
+        print(f"   • Modo: {image.mode}")
+        print(f"   • Tamanho: {image.size}")
         
-        # Simular exatamente o que acontece na web_app.py
-        temp_path = "test_web.jpg"
-        results = intuition_engine.analyze_image_intuition(temp_path)
+        # 2. Salvar como PNG (como a interface web faz)
+        print("\n2️⃣ Convertendo para PNG...")
+        temp_path = f"temp_shark_web_simulation.png"
+        image.save(temp_path)
+        print(f"   • Salvo como: {temp_path}")
         
-        print(f"  - Resultados: {results is not None}")
-        if results:
-            print(f"  - Confiança: {results.get('confidence', 0):.2%}")
-            print(f"  - Espécie: {results.get('species', 'N/A')}")
-            print(f"  - Cor: {results.get('color', 'N/A')}")
+        # 3. Verificar diferenças entre as imagens
+        print("\n3️⃣ Comparando imagens...")
+        
+        # Carregar imagem original
+        original_cv = cv2.imread(original_image_path)
+        temp_cv = cv2.imread(temp_path)
+        
+        if original_cv is not None and temp_cv is not None:
+            print(f"   • Original CV2 shape: {original_cv.shape}")
+            print(f"   • Temp CV2 shape: {temp_cv.shape}")
             
-            # Análise de intuição
-            intuition_data = results.get('intuition_analysis', {})
-            print(f"  - Candidatos encontrados: {intuition_data.get('candidates_found', 0)}")
-            print(f"  - Recomendação: {intuition_data.get('recommendation', 'N/A')}")
+            # Verificar se são idênticas
+            diff = cv2.absdiff(original_cv, temp_cv)
+            diff_sum = np.sum(diff)
+            print(f"   • Diferença total: {diff_sum}")
             
-            # Análise visual
-            visual_analysis = intuition_data.get('visual_analysis', {})
-            if visual_analysis:
-                print(f"  - Score visual: {visual_analysis.get('bird_like_features', 0):.2%}")
-                print(f"  - Cores de pássaro: {visual_analysis.get('bird_colors', False)}")
-                print(f"  - Proporções de pássaro: {visual_analysis.get('bird_proportions', False)}")
-                print(f"  - Textura de pássaro: {visual_analysis.get('bird_texture', False)}")
+            if diff_sum == 0:
+                print("   ✅ Imagens são idênticas")
+            else:
+                print("   ⚠️ Imagens são diferentes!")
+        
+        # 4. Analisar com imagem original
+        print("\n4️⃣ Analisando imagem original...")
+        original_result = engine.analyze_image_intuition(original_image_path)
+        original_is_bird = original_result.get('is_bird', False)
+        original_confidence = original_result.get('confidence', 0.0)
+        original_species = original_result.get('species', 'Desconhecida')
+        
+        print(f"   • Resultado: {'Pássaro' if original_is_bird else 'Não-Pássaro'}")
+        print(f"   • Confiança: {original_confidence:.2f}")
+        print(f"   • Espécie: {original_species}")
+        
+        # 5. Analisar com imagem convertida (como a interface web faz)
+        print("\n5️⃣ Analisando imagem convertida (como interface web)...")
+        temp_result = engine.analyze_image_intuition(temp_path)
+        temp_is_bird = temp_result.get('is_bird', False)
+        temp_confidence = temp_result.get('confidence', 0.0)
+        temp_species = temp_result.get('species', 'Desconhecida')
+        
+        print(f"   • Resultado: {'Pássaro' if temp_is_bird else 'Não-Pássaro'}")
+        print(f"   • Confiança: {temp_confidence:.2f}")
+        print(f"   • Espécie: {temp_species}")
+        
+        # 6. Comparar resultados
+        print("\n6️⃣ Comparação dos resultados:")
+        if original_is_bird == temp_is_bird:
+            print("   ✅ Resultados são idênticos")
+        else:
+            print("   ❌ Resultados são diferentes!")
+            print(f"   • Original: {'Pássaro' if original_is_bird else 'Não-Pássaro'}")
+            print(f"   • Convertido: {'Pássaro' if temp_is_bird else 'Não-Pássaro'}")
+        
+        # 7. Mostrar características detectadas em ambos os casos
+        print("\n7️⃣ Características detectadas:")
+        
+        original_chars = original_result.get('characteristics_found', [])
+        temp_chars = temp_result.get('characteristics_found', [])
+        
+        print(f"   • Original: {original_chars}")
+        print(f"   • Convertido: {temp_chars}")
+        
+        # 8. Mostrar raciocínio em ambos os casos
+        print("\n8️⃣ Raciocínio:")
+        
+        original_reasoning = original_result.get('reasoning_steps', [])
+        temp_reasoning = temp_result.get('reasoning_steps', [])
+        
+        print("   • Original:")
+        for step in original_reasoning:
+            print(f"     - {step}")
+        
+        print("   • Convertido:")
+        for step in temp_reasoning:
+            print(f"     - {step}")
+        
+        # Limpar arquivo temporário
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+            print(f"\n🧹 Arquivo temporário removido: {temp_path}")
         
     except Exception as e:
-        print(f"❌ Erro: {e}")
+        print(f"❌ Erro na simulação: {e}")
         import traceback
         traceback.print_exc()
-    
-    finally:
-        # Limpar arquivo temporário
-        if os.path.exists("test_web.jpg"):
-            os.remove("test_web.jpg")
 
 if __name__ == "__main__":
-    test_web_simulation()
+    simulate_web_processing()

@@ -64,7 +64,7 @@ class IntuitionEngine:
         self._load_opencv_dnn()
         
         # 3. Carregar MediaPipe (detecção de objetos)
-        self._load_mediapipe()
+        # self._load_mediapipe()  # DESABILITADO temporariamente
         
         # 4. Carregar Keras
         self._load_keras()
@@ -75,12 +75,15 @@ class IntuitionEngine:
     def _load_yolo_models(self):
         """Carrega modelos YOLO com múltiplas versões e configurações avançadas"""
         try:
+            # Aplicar patch PyTorch ANTES de importar YOLO
+            import sys
+            import os
+            sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+            from pytorch_patch import apply_pytorch_patch
+            apply_pytorch_patch()
+            
             from ultralytics import YOLO
             import torch
-            import os
-            
-            # Configuração segura para PyTorch 2.6
-            torch.serialization.add_safe_globals(['ultralytics.nn.tasks.DetectionModel'])
             
             # Lista de modelos YOLO para tentar (em ordem de prioridade)
             yolo_models = [
@@ -368,12 +371,22 @@ class IntuitionEngine:
         contrast_score = self._analyze_color_contrast(hsv_image)
         saturation_score = self._analyze_color_saturation(hsv_image)
         
+        # NOVO: Detecção de padrões complexos e iridescência
+        has_complex_patterns = self._detect_complex_patterns(hsv_image)
+        has_iridescence = self._detect_iridescence(hsv_image)
+        
+        # NOVO: Lista de cores dominantes para análise melhorada
+        dominant_colors = [color for color, score in color_scores.items() if score > 0.1]
+        
         return {
             'dominant_color': dominant_color,
+            'dominant_colors': dominant_colors,  # NOVO
             'distribution': color_scores,
             'bird_color_score': final_score,
             'contrast_score': contrast_score,
             'saturation_score': saturation_score,
+            'has_complex_patterns': has_complex_patterns,  # NOVO
+            'has_iridescence': has_iridescence,  # NOVO
             'color_complexity': len([c for c in color_scores.values() if c > 0.1])
         }
     
@@ -402,6 +415,56 @@ class IntuitionEngine:
             return min(avg_saturation, 1.0)
         except Exception:
             return 0.0
+    
+    def _detect_complex_patterns(self, hsv_image: np.ndarray) -> bool:
+        """Detecta padrões complexos de cor (indicam penas)"""
+        try:
+            # Converter para escala de cinza para análise de padrões
+            gray = cv2.cvtColor(cv2.cvtColor(hsv_image, cv2.COLOR_HSV2BGR), cv2.COLOR_BGR2GRAY)
+            
+            # Usar transformada de Fourier para detectar padrões repetitivos
+            f_transform = np.fft.fft2(gray)
+            f_shift = np.fft.fftshift(f_transform)
+            magnitude_spectrum = np.log(np.abs(f_shift) + 1)
+            
+            # Calcular energia em diferentes frequências
+            h, w = magnitude_spectrum.shape
+            center_h, center_w = h // 2, w // 2
+            
+            # Energia em frequências médias (padrões complexos)
+            medium_freq_mask = np.zeros_like(magnitude_spectrum)
+            cv2.circle(medium_freq_mask, (center_w, center_h), min(h, w) // 4, 1, -1)
+            cv2.circle(medium_freq_mask, (center_w, center_h), min(h, w) // 8, 0, -1)
+            
+            medium_freq_energy = np.sum(magnitude_spectrum * medium_freq_mask)
+            total_energy = np.sum(magnitude_spectrum)
+            
+            # Se há energia significativa em frequências médias, há padrões complexos
+            return medium_freq_energy / total_energy > 0.3
+            
+        except Exception:
+            return False
+    
+    def _detect_iridescence(self, hsv_image: np.ndarray) -> bool:
+        """Detecta iridescência (característica de penas)"""
+        try:
+            # Iridescência aparece como variações rápidas de matiz
+            hue = hsv_image[:, :, 0]
+            
+            # Calcular gradiente de matiz
+            grad_x = cv2.Sobel(hue, cv2.CV_64F, 1, 0, ksize=3)
+            grad_y = cv2.Sobel(hue, cv2.CV_64F, 0, 1, ksize=3)
+            gradient_magnitude = np.sqrt(grad_x**2 + grad_y**2)
+            
+            # Iridescência tem gradientes altos de matiz
+            high_gradient_pixels = np.sum(gradient_magnitude > np.mean(gradient_magnitude) * 2)
+            total_pixels = gradient_magnitude.size
+            
+            # Se mais de 15% dos pixels têm gradientes altos, há iridescência
+            return high_gradient_pixels / total_pixels > 0.15
+            
+        except Exception:
+            return False
     
     def _analyze_shapes(self, image: np.ndarray) -> Dict[str, Any]:
         """Analisa formas básicas como uma criança reconheceria"""
@@ -594,6 +657,12 @@ class IntuitionEngine:
             has_feathers = self._detect_simple_feathers(image)
             has_claws = self._detect_simple_claws(image)
             
+            # NOVO: Detecção de características de répteis
+            has_scales = self._detect_simple_scales(image)
+            has_dorsal_crest = self._detect_simple_dorsal_crest(image)
+            has_elongated_body = self._detect_simple_elongated_body(image)
+            has_scaly_texture = self._detect_simple_scaly_texture(image)
+            
             # Detecção simples de mamíferos
             has_mammal_features = self._detect_simple_mammal_features(image)
             
@@ -613,12 +682,21 @@ class IntuitionEngine:
                 'has_feathers': has_feathers,
                 'has_claws': has_claws,
                 'has_mammal_features': has_mammal_features,
+                # NOVO: Características de répteis
+                'has_scales': has_scales,
+                'has_dorsal_crest': has_dorsal_crest,
+                'has_elongated_body': has_elongated_body,
+                'has_scaly_texture': has_scaly_texture,
                 'bird_like_features': bird_like_features,
                 'bird_shape_score': bird_shape_score,
                 'bird_color_score': bird_color_score,
                 'color_analysis': color_analysis,
                 'shape_analysis': shape_analysis,
-                'texture_analysis': texture_analysis
+                'texture_analysis': texture_analysis,
+                # NOVO: Análise de cores melhorada
+                'dominant_colors': color_analysis.get('dominant_colors', []),
+                'has_complex_patterns': color_analysis.get('has_complex_patterns', False),
+                'has_iridescence': color_analysis.get('has_iridescence', False)
             }
             
         except Exception as e:
@@ -1025,6 +1103,116 @@ class IntuitionEngine:
             
             # Retornar True apenas se encontrar características EXTREMAMENTE claras de mamífero
             return mammal_features >= 3  # Aumentado de 2 para 3
+            
+        except:
+            return False
+    
+    def _detect_simple_scales(self, image: np.ndarray) -> bool:
+        """Detecção de escamas (característica distintiva de répteis)"""
+        try:
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            
+            # Detectar padrões repetitivos pequenos (escamas)
+            # Usar filtro de alta frequência para detectar texturas granulares
+            kernel = np.array([[-1,-1,-1], [-1,8,-1], [-1,-1,-1]])
+            filtered = cv2.filter2D(gray, -1, kernel)
+            
+            # Detectar bordas para encontrar contornos de escamas
+            edges = cv2.Canny(filtered, 20, 60)
+            contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            
+            scale_candidates = 0
+            h, w = gray.shape
+            
+            for contour in contours:
+                if len(contour) > 4 and cv2.contourArea(contour) > 10:
+                    x, y, contour_w, contour_h = cv2.boundingRect(contour)
+                    aspect_ratio = contour_w / contour_h if contour_h > 0 else 1.0
+                    area = cv2.contourArea(contour)
+                    
+                    # Escamas são pequenas, aproximadamente circulares/ovais
+                    if (0.5 < aspect_ratio < 2.0 and 
+                        10 < area < 200 and
+                        contour_w < 30 and contour_h < 30):
+                        scale_candidates += 1
+            
+            # Se há muitas pequenas estruturas circulares, provavelmente são escamas
+            return scale_candidates >= 15
+            
+        except:
+            return False
+    
+    def _detect_simple_dorsal_crest(self, image: np.ndarray) -> bool:
+        """Detecção de crista dorsal (comum em iguanas)"""
+        try:
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            edges = cv2.Canny(gray, 30, 100)
+            contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            
+            h, w = gray.shape
+            crest_candidates = 0
+            
+            for contour in contours:
+                if len(contour) > 10 and cv2.contourArea(contour) > 100:
+                    x, y, contour_w, contour_h = cv2.boundingRect(contour)
+                    aspect_ratio = contour_w / contour_h if contour_h > 0 else 1.0
+                    
+                    # Crista dorsal é uma linha vertical alongada no centro superior
+                    if (aspect_ratio < 0.5 and  # Muito mais alta que larga
+                        contour_h > h * 0.3 and  # Pelo menos 30% da altura
+                        contour_w < w * 0.2 and  # Não muito larga
+                        y < h * 0.4):  # Na parte superior
+                        crest_candidates += 1
+            
+            return crest_candidates >= 1
+            
+        except:
+            return False
+    
+    def _detect_simple_elongated_body(self, image: np.ndarray) -> bool:
+        """Detecção de corpo alongado (típico de répteis)"""
+        try:
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            edges = cv2.Canny(gray, 30, 100)
+            contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            
+            h, w = gray.shape
+            elongated_candidates = 0
+            
+            for contour in contours:
+                if len(contour) > 15 and cv2.contourArea(contour) > 500:
+                    x, y, contour_w, contour_h = cv2.boundingRect(contour)
+                    aspect_ratio = contour_w / contour_h if contour_h > 0 else 1.0
+                    
+                    # Corpo alongado tem proporção específica
+                    if (aspect_ratio > 1.5 and  # Mais largo que alto
+                        contour_w > w * 0.4 and  # Pelo menos 40% da largura
+                        contour_h > h * 0.2):  # Pelo menos 20% da altura
+                        elongated_candidates += 1
+            
+            return elongated_candidates >= 1
+            
+        except:
+            return False
+    
+    def _detect_simple_scaly_texture(self, image: np.ndarray) -> bool:
+        """Detecção de textura escamosa"""
+        try:
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            
+            # Calcular variância local para detectar texturas granulares
+            kernel_size = 5
+            kernel = np.ones((kernel_size, kernel_size), np.float32) / (kernel_size * kernel_size)
+            mean = cv2.filter2D(gray.astype(np.float32), -1, kernel)
+            sqr_mean = cv2.filter2D((gray.astype(np.float32))**2, -1, kernel)
+            variance = sqr_mean - mean**2
+            
+            # Texturas escamosas têm alta variância local
+            high_variance_pixels = np.sum(variance > np.mean(variance) * 1.5)
+            total_pixels = variance.size
+            
+            # Se mais de 20% dos pixels têm alta variância, é textura escamosa
+            return high_variance_pixels / total_pixels > 0.2
             
         except:
             return False
@@ -1803,6 +1991,33 @@ class IntuitionEngine:
             reasoning['species'] = 'Não-Pássaro'
             reasoning['reasoning_steps'].append("🚫 Não é um pássaro")
         
+        # NOVO: Verificação específica para pássaros azuis não detectados
+        if not reasoning['is_bird']:
+            logger.info("🔍 Verificando se é um pássaro azul não detectado...")
+            # Verificar se tem características de pássaro azul
+            dominant_colors = visual_analysis.get('dominant_colors', [])
+            has_blue_color = any('blue' in color.lower() for color in dominant_colors)
+            has_complex_patterns = visual_analysis.get('has_complex_patterns', False)
+            has_iridescence = visual_analysis.get('has_iridescence', False)
+            
+            logger.info(f"🔵 Cores dominantes: {dominant_colors}")
+            logger.info(f"🔵 Tem cor azul: {has_blue_color}")
+            logger.info(f"🔵 Tem bico: {has_beak}")
+            logger.info(f"🔵 Tem padrões complexos: {has_complex_patterns}")
+            logger.info(f"🔵 Tem iridescência: {has_iridescence}")
+            logger.info(f"🔵 Tem penas: {has_feathers}")
+            
+            # Se tem cor azul + características de penas + bico, é provavelmente um pássaro
+            if (has_blue_color and has_beak and 
+                (has_complex_patterns or has_iridescence or has_feathers)):
+                reasoning['is_bird'] = True
+                reasoning['confidence'] = 0.7
+                reasoning['intuition_level'] = 'Média'
+                reasoning['reasoning_steps'].append("🔵 Pássaro azul detectado por características específicas")
+                logger.info("🔵 PÁSSARO AZUL DETECTADO - Corrigindo falso negativo!")
+            else:
+                logger.info("🔵 Não é um pássaro azul - características insuficientes")
+        
         # Calcular confiança geral
         reasoning['overall_confidence'] = reasoning['confidence']
         
@@ -2494,12 +2709,97 @@ class IntuitionEngine:
         score += bird_shape_score * 1.5
         total_weight += 1.5
         
+        # Peso 5: NOVO - Detecção de características de réptil (penalização)
+        reptile_score = self._calculate_reptile_score(characteristics)
+        if reptile_score > 0.6:  # Se tem características fortes de réptil
+            score -= 2.0  # Penalização significativa
+        elif reptile_score > 0.3:  # Se tem características moderadas de réptil
+            score -= 1.0  # Penalização moderada
+        total_weight += 2.0
+        
+        # Peso 6: NOVO - Detecção melhorada de cores específicas
+        color_bonus = self._calculate_color_bonus(characteristics)
+        score += color_bonus * 0.5
+        total_weight += 0.5
+        
         # Peso 5: Score biométrico de pássaro
         biometric_bird_score = characteristics.get('biometric_bird_score', 0)
         score += biometric_bird_score * 1.0
         total_weight += 1.0
         
         return score / total_weight if total_weight > 0 else 0.0
+    
+    def _calculate_reptile_score(self, characteristics: Dict) -> float:
+        """Calcula score de réptil baseado em características específicas"""
+        score = 0.0
+        total_weight = 0.0
+        
+        # Peso 1: Detecção de escamas (característica distintiva de répteis)
+        if characteristics.get('has_scales', False):
+            score += 3.0
+        if characteristics.get('has_scales_ultra', False):
+            score += 2.0
+        total_weight += 3.0
+        
+        # Peso 2: Detecção de crista dorsal (comum em iguanas)
+        if characteristics.get('has_dorsal_crest', False):
+            score += 2.5
+        if characteristics.get('has_spine_ridge', False):
+            score += 2.0
+        total_weight += 2.5
+        
+        # Peso 3: Forma alongada do corpo (típica de répteis)
+        if characteristics.get('has_elongated_body', False):
+            score += 2.0
+        if characteristics.get('body_length_ratio', 0) > 2.5:  # Corpo muito alongado
+            score += 1.5
+        total_weight += 2.0
+        
+        # Peso 4: Ausência de penas (característica distintiva)
+        if not characteristics.get('has_feathers', False):
+            score += 1.0
+        if not characteristics.get('has_feathers_ultra', False):
+            score += 1.5
+        total_weight += 2.0
+        
+        # Peso 5: Presença de garras (comum em répteis)
+        if characteristics.get('has_claws', False):
+            score += 1.5
+        if characteristics.get('has_claws_ultra', False):
+            score += 1.0
+        total_weight += 1.5
+        
+        # Peso 6: Textura de pele escamosa
+        if characteristics.get('has_scaly_texture', False):
+            score += 2.0
+        total_weight += 2.0
+        
+        return score / total_weight if total_weight > 0 else 0.0
+    
+    def _calculate_color_bonus(self, characteristics: Dict) -> float:
+        """Calcula bônus para cores específicas que podem confundir o modelo"""
+        score = 0.0
+        
+        # Peso 1: Cores vibrantes específicas (azul, verde, vermelho)
+        dominant_colors = characteristics.get('dominant_colors', [])
+        
+        for color in dominant_colors:
+            if 'blue' in color.lower() and characteristics.get('has_beak', False):
+                score += 1.5  # Bônus para pássaros azuis com bico
+            elif 'green' in color.lower() and characteristics.get('has_feathers', False):
+                score += 1.0  # Bônus para pássaros verdes com penas
+            elif 'red' in color.lower() and characteristics.get('has_wings', False):
+                score += 1.0  # Bônus para pássaros vermelhos com asas
+        
+        # Peso 2: Padrões de cor complexos (indicam penas)
+        if characteristics.get('has_complex_patterns', False):
+            score += 1.0
+        
+        # Peso 3: Iridescência (característica de penas)
+        if characteristics.get('has_iridescence', False):
+            score += 1.5
+        
+        return min(score, 2.0)  # Limitar bônus máximo
     
     def _multi_library_detection(self, image: np.ndarray) -> Dict[str, Any]:
         """Detecção usando múltiplas bibliotecas (YOLO, OpenCV, MediaPipe)"""
@@ -2516,15 +2816,19 @@ class IntuitionEngine:
         all_detections = []
         
         # 1. Detecção YOLO (todas as versões disponíveis)
+        logger.info(f"🔍 Iniciando detecção YOLO com {len(self.detection_models)} modelos disponíveis")
         for model_name, model in self.detection_models.items():
             if 'yolo' in model_name.lower():
+                logger.info(f"🔍 Testando modelo YOLO: {model_name}")
                 try:
                     yolo_result = self._detect_with_yolo(model, image, model_name)
+                    logger.info(f"🔍 Resultado YOLO {model_name}: detected={yolo_result['detected']}, confidence={yolo_result['confidence']}")
                     if yolo_result['detected']:
                         bird_detections.append(yolo_result['confidence'])
                         all_detections.append(f"YOLO_{model_name}")
                         detection_results['yolo_detection'] = True
                         detection_results['detection_votes'][f"yolo_{model_name}"] = yolo_result['confidence']
+                        logger.info(f"✅ YOLO {model_name} detectou pássaro com confiança {yolo_result['confidence']}")
                 except Exception as e:
                     logger.warning(f"⚠️ Erro na detecção YOLO {model_name}: {e}")
         
@@ -2601,6 +2905,23 @@ class IntuitionEngine:
                                 'name': detection.get('name', f'class_{class_id}')
                             })
                 
+                # NOVO: Verificação pós-processamento para falsos positivos
+                if bird_detected:
+                    logger.info(f"🔍 YOLO detectou pássaro com confiança {max_confidence:.2f}, verificando características visuais...")
+                    # Analisar características visuais para confirmar se é realmente um pássaro
+                    visual_characteristics = self._detect_visual_characteristics(image)
+                    reptile_score = self._calculate_reptile_score(visual_characteristics)
+                    
+                    logger.info(f"🦎 Score de réptil calculado: {reptile_score:.2f}")
+                    
+                    # Se tem características fortes de réptil, rejeitar detecção de pássaro
+                    if reptile_score > 0.6:
+                        bird_detected = False
+                        max_confidence = 0.0
+                        logger.info(f"🦎 YOLO detectou pássaro, mas características visuais indicam réptil (score: {reptile_score:.2f}) - REJEITADO")
+                    else:
+                        logger.info(f"✅ YOLO detectou pássaro e características visuais confirmam (score réptil: {reptile_score:.2f}) - ACEITO")
+                
                 return {
                     'detected': bird_detected,
                     'confidence': max_confidence,
@@ -2636,6 +2957,23 @@ class IntuitionEngine:
                                         'confidence': confidence,
                                         'name': result.names.get(class_id, f'class_{class_id}')
                                     })
+                
+                # NOVO: Verificação pós-processamento para falsos positivos
+                if bird_detected:
+                    logger.info(f"🔍 YOLO detectou pássaro com confiança {max_confidence:.2f}, verificando características visuais...")
+                    # Analisar características visuais para confirmar se é realmente um pássaro
+                    visual_characteristics = self._detect_visual_characteristics(image)
+                    reptile_score = self._calculate_reptile_score(visual_characteristics)
+                    
+                    logger.info(f"🦎 Score de réptil calculado: {reptile_score:.2f}")
+                    
+                    # Se tem características fortes de réptil, rejeitar detecção de pássaro
+                    if reptile_score > 0.6:
+                        bird_detected = False
+                        max_confidence = 0.0
+                        logger.info(f"🦎 YOLO detectou pássaro, mas características visuais indicam réptil (score: {reptile_score:.2f}) - REJEITADO")
+                    else:
+                        logger.info(f"✅ YOLO detectou pássaro e características visuais confirmam (score réptil: {reptile_score:.2f}) - ACEITO")
                 
                 return {
                     'detected': bird_detected,
