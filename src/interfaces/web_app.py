@@ -12,8 +12,7 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from datetime import datetime, timedelta
-import base64
+from datetime import datetime
 from PIL import Image
 import io
 
@@ -22,10 +21,8 @@ from core.intuition import IntuitionEngine
 from core.reasoning import LogicalAIReasoningSystem
 from core.learning import ContinuousLearningSystem
 from core.cache import image_cache
-from core.learning_sync import stop_continuous_sync
 from interfaces.manual_analysis import manual_analysis
 from interfaces.tinder_interface_enhanced import TinderInterfaceEnhanced
-from utils.button_debug import button_debug
 from utils.debug_logger import DebugLogger
 
 def main():
@@ -188,9 +185,9 @@ def main():
         debug_logger = DebugLogger()
         
         # Inicializar motores
-        intuition_engine = IntuitionEngine("yolov8n.pt", "modelo_classificacao_passaros.keras", debug_logger)
+        intuition_engine = IntuitionEngine("data/models/yolov8n.pt", "data/models/modelo_classificacao_passaros.keras", debug_logger)
         reasoning_system = LogicalAIReasoningSystem()
-        learning_system = ContinuousLearningSystem("yolov8n.pt", "modelo_classificacao_passaros.keras")
+        learning_system = ContinuousLearningSystem("data/models/yolov8n.pt", "data/models/modelo_classificacao_passaros.keras")
         tinder_interface = TinderInterfaceEnhanced(manual_analysis)
         
         st.success("✅ Todos os sistemas inicializados com sucesso!")
@@ -280,7 +277,7 @@ def main():
                 st.image(image, width=300)
             
             # Botão de análise
-            if st.button("🔍 Analisar Imagem", type="primary"):
+            if st.button("🔍 Analisar Imagem", type="primary", key="analyze_image_btn"):
                 with st.spinner("Analisando imagem..."):
                     try:
                         # Iniciar logging
@@ -395,7 +392,7 @@ def main():
             temp_path = temp_files[0]
             st.info(f"📁 Arquivo temporário disponível: `{temp_path}`")
             
-            if st.button("📝 Marcar para Análise Manual", type="primary"):
+            if st.button("📝 Marcar para Análise Manual", type="primary", key="mark_manual_analysis_btn"):
                 try:
                     # Chamar análise manual
                     result = manual_analysis(temp_path)
@@ -433,17 +430,17 @@ def main():
         col1, col2 = st.columns(2)
         
         with col1:
-            if st.button("🔄 Reiniciar Sistema", type="primary"):
+            if st.button("🔄 Reiniciar Sistema", type="primary", key="restart_system_btn"):
                 st.success("✅ Sistema reiniciado!")
             
-            if st.button("📊 Verificar Status", type="secondary"):
+            if st.button("📊 Verificar Status", type="secondary", key="check_status_btn"):
                 st.info("✅ Status verificado!")
         
         with col2:
-            if st.button("🧹 Limpar Cache", type="secondary"):
+            if st.button("🧹 Limpar Cache", type="secondary", key="clear_cache_btn"):
                 st.success("✅ Cache limpo!")
             
-            if st.button("📈 Ver Estatísticas", type="secondary"):
+            if st.button("📈 Ver Estatísticas", type="secondary", key="view_stats_btn"):
                 st.info("✅ Estatísticas atualizadas!")
     
     # TAB 4: DASHBOARD
@@ -497,17 +494,17 @@ def main():
         col1, col2 = st.columns(2)
         
         with col1:
-            if st.button("▶️ Iniciar Aprendizado", type="primary"):
+            if st.button("▶️ Iniciar Aprendizado", type="primary", key="start_learning_btn"):
                 st.success("✅ Aprendizado iniciado!")
             
-            if st.button("⏸️ Pausar Aprendizado", type="secondary"):
+            if st.button("⏸️ Pausar Aprendizado", type="secondary", key="pause_learning_btn"):
                 st.warning("⚠️ Aprendizado pausado!")
         
         with col2:
-            if st.button("🔄 Reiniciar Ciclo", type="secondary"):
+            if st.button("🔄 Reiniciar Ciclo", type="secondary", key="restart_cycle_btn"):
                 st.info("ℹ️ Ciclo reiniciado!")
             
-            if st.button("📊 Ver Histórico", type="secondary"):
+            if st.button("📊 Ver Histórico", type="secondary", key="view_history_btn"):
                 st.info("ℹ️ Histórico carregado!")
     
     # TAB 6: ANÁLISE MANUAL
@@ -523,7 +520,7 @@ def main():
         if pending_images > 0:
             st.info(f"📁 {pending_images} imagens pendentes de análise")
             
-            if st.button("👀 Ver Próxima Imagem", type="primary"):
+            if st.button("👀 Ver Próxima Imagem", type="primary", key="next_image_btn"):
                 st.success("✅ Próxima imagem carregada!")
         else:
             st.info("📁 Nenhuma imagem pendente de análise")
@@ -534,17 +531,17 @@ def main():
         col1, col2 = st.columns(2)
         
         with col1:
-            if st.button("✅ Aprovar", type="primary"):
+            if st.button("✅ Aprovar", type="primary", key="approve_image_btn"):
                 st.success("✅ Imagem aprovada!")
             
-            if st.button("❌ Rejeitar", type="secondary"):
+            if st.button("❌ Rejeitar", type="secondary", key="reject_image_btn"):
                 st.warning("⚠️ Imagem rejeitada!")
         
         with col2:
-            if st.button("⏭️ Pular", type="secondary"):
+            if st.button("⏭️ Pular", type="secondary", key="skip_image_btn"):
                 st.info("ℹ️ Imagem pulada!")
             
-            if st.button("📊 Ver Estatísticas", type="secondary"):
+            if st.button("📊 Ver Estatísticas", type="secondary", key="view_tinder_stats_btn"):
                 st.info("ℹ️ Estatísticas carregadas!")
     
     # TAB 7: TINDER INTERFACE
@@ -579,15 +576,15 @@ def main():
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            if st.button("💾 Salvar Configurações", type="primary"):
+            if st.button("💾 Salvar Configurações", type="primary", key="save_config_btn"):
                 st.success("✅ Configurações salvas!")
         
         with col2:
-            if st.button("🔄 Restaurar Padrão", type="secondary"):
+            if st.button("🔄 Restaurar Padrão", type="secondary", key="restore_default_btn"):
                 st.info("ℹ️ Configurações restauradas!")
         
         with col3:
-            if st.button("📤 Exportar Config", type="secondary"):
+            if st.button("📤 Exportar Config", type="secondary", key="export_config_btn"):
                 st.info("ℹ️ Configurações exportadas!")
     
     # TAB 9: RELATÓRIOS
@@ -628,16 +625,16 @@ def main():
         # Status dos sistemas
         st.subheader("📊 Status")
         
-        if st.button("🔄 Atualizar Status", type="primary"):
+        if st.button("🔄 Atualizar Status", type="primary", key="update_status_btn"):
             st.success("✅ Status atualizado!")
         
         # Controles de sistema
         st.subheader("⚙️ Sistema")
         
-        if st.button("🔄 Reiniciar", type="secondary"):
+        if st.button("🔄 Reiniciar", type="secondary", key="restart_quick_btn"):
             st.warning("⚠️ Sistema reiniciando...")
         
-        if st.button("🧹 Limpar Cache", type="secondary"):
+        if st.button("🧹 Limpar Cache", type="secondary", key="clear_cache_quick_btn"):
             st.info("ℹ️ Cache limpo!")
         
         # Informações

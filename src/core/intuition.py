@@ -12,6 +12,48 @@ from typing import Dict, List, Tuple, Optional, Any
 from dataclasses import dataclass
 from enum import Enum
 import logging
+import json
+import random
+
+# Importar sistema de auto-modificação
+try:
+    from .auto_modification import AutoModificationSystem
+    AUTO_MODIFICATION_AVAILABLE = True
+except ImportError:
+    AUTO_MODIFICATION_AVAILABLE = False
+    logger.warning("Sistema de auto-modificação não disponível")
+
+# Importar sistema de evolução de algoritmos
+try:
+    from .algorithm_evolution import AlgorithmEvolutionSystem
+    ALGORITHM_EVOLUTION_AVAILABLE = True
+except ImportError:
+    ALGORITHM_EVOLUTION_AVAILABLE = False
+    logger.warning("Sistema de evolução de algoritmos não disponível")
+
+# Importar sistema de auto-otimização
+try:
+    from .auto_optimization import AutoOptimizationSystem, ThresholdConfig
+    AUTO_OPTIMIZATION_AVAILABLE = True
+except ImportError:
+    AUTO_OPTIMIZATION_AVAILABLE = False
+    logger.warning("Sistema de auto-otimização não disponível")
+
+# Importar sistema de otimização apurada dos pesos
+try:
+    from .advanced_weight_optimization import AdvancedWeightOptimizationSystem, WeightConfiguration
+    ADVANCED_WEIGHT_OPTIMIZATION_AVAILABLE = True
+except ImportError:
+    ADVANCED_WEIGHT_OPTIMIZATION_AVAILABLE = False
+    logger.warning("Sistema de otimização apurada dos pesos não disponível")
+
+# Importar sistema de evolução de arquitetura
+try:
+    from .architecture_evolution import ArchitectureEvolutionSystem, ArchitectureConfig
+    ARCHITECTURE_EVOLUTION_AVAILABLE = True
+except ImportError:
+    ARCHITECTURE_EVOLUTION_AVAILABLE = False
+    logger.warning("Sistema de evolução de arquitetura não disponível")
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -42,6 +84,56 @@ class IntuitionEngine:
         self.debug_logger = debug_logger
         self.yolo_model = None
         self.keras_model = None
+        
+        # Sistema de auto-modificação
+        self.auto_modification_system = None
+        if AUTO_MODIFICATION_AVAILABLE:
+            try:
+                self.auto_modification_system = AutoModificationSystem()
+                logger.info("Sistema de auto-modificação inicializado")
+            except Exception as e:
+                logger.error(f"Erro ao inicializar sistema de auto-modificação: {e}")
+                self.auto_modification_system = None
+        
+        # Sistema de evolução de algoritmos
+        self.algorithm_evolution_system = None
+        if ALGORITHM_EVOLUTION_AVAILABLE:
+            try:
+                self.algorithm_evolution_system = AlgorithmEvolutionSystem()
+                logger.info("Sistema de evolução de algoritmos inicializado")
+            except Exception as e:
+                logger.error(f"Erro ao inicializar sistema de evolução de algoritmos: {e}")
+                self.algorithm_evolution_system = None
+        
+        # Sistema de auto-otimização
+        self.auto_optimization_system = None
+        if AUTO_OPTIMIZATION_AVAILABLE:
+            try:
+                self.auto_optimization_system = AutoOptimizationSystem()
+                logger.info("Sistema de auto-otimização inicializado")
+            except Exception as e:
+                logger.error(f"Erro ao inicializar sistema de auto-otimização: {e}")
+                self.auto_optimization_system = None
+        
+        # Sistema de otimização apurada dos pesos
+        self.advanced_weight_optimization_system = None
+        if ADVANCED_WEIGHT_OPTIMIZATION_AVAILABLE:
+            try:
+                self.advanced_weight_optimization_system = AdvancedWeightOptimizationSystem()
+                logger.info("Sistema de otimização apurada dos pesos inicializado")
+            except Exception as e:
+                logger.error(f"Erro ao inicializar sistema de otimização apurada dos pesos: {e}")
+                self.advanced_weight_optimization_system = None
+        
+        # Sistema de evolução de arquitetura
+        self.architecture_evolution_system = None
+        if ARCHITECTURE_EVOLUTION_AVAILABLE:
+            try:
+                self.architecture_evolution_system = ArchitectureEvolutionSystem()
+                logger.info("Sistema de evolução de arquitetura inicializado")
+            except Exception as e:
+                logger.error(f"Erro ao inicializar sistema de evolução de arquitetura: {e}")
+                self.architecture_evolution_system = None
         
         # Conhecimento acumulado (como uma criança)
         self.learned_patterns = {
@@ -78,9 +170,12 @@ class IntuitionEngine:
             # Aplicar patch PyTorch ANTES de importar YOLO
             import sys
             import os
-            sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-            from pytorch_patch import apply_pytorch_patch
-            apply_pytorch_patch()
+            # Aplicar patch de typing
+            try:
+                from utils.typing_patch import apply_typing_patch
+                apply_typing_patch()
+            except ImportError:
+                pass
             
             from ultralytics import YOLO
             import torch
@@ -168,19 +263,8 @@ class IntuitionEngine:
                 logger.warning(f"⚠️ OpenCV YOLO não disponível: {e}")
             
             # MobileNet-SSD (mais leve e robusto)
-            try:
-                # Usar modelo pré-treinado do OpenCV
-                prototxt = "MobileNetSSD_deploy.prototxt"
-                model = "MobileNetSSD_deploy.caffemodel"
-                
-                # Se não existir, usar modelo padrão do OpenCV
-                if not os.path.exists(prototxt):
-                    # Usar modelo padrão do OpenCV
-                    net = cv2.dnn.readNetFromTensorflow("opencv_face_detector_uint8.pb", "opencv_face_detector.pbtxt")
-                    self.detection_models['opencv_ssd'] = net
-                    logger.info("✅ OpenCV SSD carregado")
-            except Exception as e:
-                logger.warning(f"⚠️ OpenCV SSD não disponível: {e}")
+            # OpenCV SSD desabilitado devido a problemas de compatibilidade
+            logger.info("ℹ️ OpenCV SSD desabilitado - usando apenas YOLO")
                 
         except Exception as e:
             logger.warning(f"⚠️ Erro ao carregar OpenCV DNN: {e}")
@@ -208,20 +292,44 @@ class IntuitionEngine:
             import tensorflow as tf
             import os
             
+            # Verificar se TensorFlow está funcionando
+            if not hasattr(tf, 'keras'):
+                logger.warning("⚠️ TensorFlow não tem atributo 'keras'")
+                self.keras_model = None
+                return
+            
+            # Verificar se tf.keras.models existe
+            if not hasattr(tf.keras, 'models'):
+                logger.warning("⚠️ TensorFlow keras.models não disponível")
+                self.keras_model = None
+                return
+            
             # Tentar carregar como HDF5 primeiro
             if self.keras_model_path.endswith('.keras'):
                 # Se é .keras, tentar como HDF5
                 h5_path = self.keras_model_path.replace('.keras', '.h5')
                 if os.path.exists(h5_path):
-                    self.keras_model = tf.keras.models.load_model(h5_path)
-                    logger.info("✅ Modelo Keras HDF5 carregado")
+                    try:
+                        self.keras_model = tf.keras.models.load_model(h5_path)
+                        logger.info("✅ Modelo Keras HDF5 carregado")
+                    except Exception as e:
+                        logger.warning(f"⚠️ Erro ao carregar HDF5: {e}")
+                        self.keras_model = None
                 else:
                     # Tentar carregar diretamente
+                    try:
+                        self.keras_model = tf.keras.models.load_model(self.keras_model_path)
+                        logger.info("✅ Modelo Keras carregado")
+                    except Exception as e:
+                        logger.warning(f"⚠️ Erro ao carregar Keras: {e}")
+                        self.keras_model = None
+            else:
+                try:
                     self.keras_model = tf.keras.models.load_model(self.keras_model_path)
                     logger.info("✅ Modelo Keras carregado")
-            else:
-                self.keras_model = tf.keras.models.load_model(self.keras_model_path)
-                logger.info("✅ Modelo Keras carregado")
+                except Exception as e:
+                    logger.warning(f"⚠️ Erro ao carregar Keras: {e}")
+                    self.keras_model = None
         except Exception as e:
             logger.warning(f"⚠️ Erro ao carregar Keras: {e}")
             logger.info("🔄 Usando análise visual pura")
@@ -3158,6 +3266,939 @@ class IntuitionEngine:
         
         return score / total_weight if total_weight > 0 else 0.0
     
+    def _apply_generated_rules(self, characteristics: Dict, confidence: float) -> float:
+        """
+        Aplica regras geradas automaticamente pelo sistema de auto-modificação.
+        
+        Args:
+            characteristics: Características detectadas na imagem
+            confidence: Confiança atual da detecção
+            
+        Returns:
+            Boost de confiança aplicado pelas regras
+        """
+        if not self.auto_modification_system:
+            return 0.0
+        
+        try:
+            # Carregar regras geradas
+            generated_rules = self.auto_modification_system.rule_generator.load_generated_rules()
+            
+            total_boost = 0.0
+            applied_rules = 0
+            
+            for rule in generated_rules:
+                try:
+                    # Verificar se a regra se aplica
+                    if self._evaluate_rule_condition(rule, characteristics, confidence):
+                        # Aplicar ação da regra
+                        boost = self._apply_rule_action(rule)
+                        total_boost += boost
+                        applied_rules += 1
+                        
+                        logger.debug(f"Regra aplicada: {rule['description']} (boost: {boost})")
+                        
+                except Exception as e:
+                    logger.warning(f"Erro ao aplicar regra {rule.get('description', 'unknown')}: {e}")
+            
+            if applied_rules > 0:
+                logger.info(f"Aplicadas {applied_rules} regras geradas automaticamente (boost total: {total_boost:.3f})")
+            
+            return total_boost
+            
+        except Exception as e:
+            logger.error(f"Erro ao aplicar regras geradas: {e}")
+            return 0.0
+    
+    def _evaluate_rule_condition(self, rule: Dict[str, Any], characteristics: Dict, confidence: float) -> bool:
+        """
+        Avalia se uma regra se aplica às características atuais.
+        
+        Args:
+            rule: Regra a ser avaliada
+            characteristics: Características detectadas
+            confidence: Confiança atual
+            
+        Returns:
+            True se a regra se aplica, False caso contrário
+        """
+        try:
+            rule_text = rule.get('rule', '')
+            
+            # Substituir variáveis na regra
+            rule_text = rule_text.replace('confidence', str(confidence))
+            
+            # Verificar condições específicas
+            if 'color_dominant' in rule_text:
+                color = characteristics.get('dominant_color', '')
+                if color:
+                    rule_text = rule_text.replace("color_dominant == 'azul'", f"'{color}' == 'azul'")
+                    rule_text = rule_text.replace("color_dominant == 'vermelho'", f"'{color}' == 'vermelho'")
+            
+            if 'species_detected' in rule_text:
+                species = characteristics.get('detected_species', '')
+                if species:
+                    rule_text = rule_text.replace("species_detected == 'azulão'", f"'{species}' == 'azulão'")
+                    rule_text = rule_text.replace("species_detected == 'canário'", f"'{species}' == 'canário'")
+            
+            if 'has_bico' in rule_text:
+                has_beak = characteristics.get('has_beak', False) or characteristics.get('has_beak_ultra', False)
+                rule_text = rule_text.replace('has_bico', str(has_beak))
+            
+            if 'has_penas' in rule_text:
+                has_feathers = characteristics.get('has_feathers', False) or characteristics.get('has_feathers_ultra', False)
+                rule_text = rule_text.replace('has_penas', str(has_feathers))
+            
+            if 'characteristics_match' in rule_text:
+                # Verificar se características básicas estão presentes
+                basic_chars = [
+                    characteristics.get('has_beak', False),
+                    characteristics.get('has_feathers', False),
+                    characteristics.get('has_wings', False)
+                ]
+                chars_match = sum(basic_chars) >= 2
+                rule_text = rule_text.replace('characteristics_match', str(chars_match))
+            
+            # Avaliar a regra (versão simplificada)
+            # Em uma implementação real, seria necessário um parser mais robusto
+            if 'and' in rule_text:
+                parts = rule_text.split('and')
+                for part in parts:
+                    if not self._evaluate_simple_condition(part.strip()):
+                        return False
+                return True
+            else:
+                return self._evaluate_simple_condition(rule_text)
+                
+        except Exception as e:
+            logger.warning(f"Erro ao avaliar condição da regra: {e}")
+            return False
+    
+    def _evaluate_simple_condition(self, condition: str) -> bool:
+        """
+        Avalia uma condição simples (versão simplificada).
+        
+        Args:
+            condition: Condição a ser avaliada
+            
+        Returns:
+            True se a condição é verdadeira, False caso contrário
+        """
+        try:
+            # Remover 'if' se presente
+            condition = condition.replace('if ', '').replace(':', '')
+            
+            # Verificar operadores
+            if '>' in condition:
+                left, right = condition.split('>')
+                return float(left.strip()) > float(right.strip())
+            elif '<' in condition:
+                left, right = condition.split('<')
+                return float(left.strip()) < float(right.strip())
+            elif '==' in condition:
+                left, right = condition.split('==')
+                return left.strip().strip("'\"") == right.strip().strip("'\"")
+            elif 'True' in condition:
+                return True
+            elif 'False' in condition:
+                return False
+            
+            return False
+            
+        except Exception as e:
+            logger.warning(f"Erro ao avaliar condição simples: {e}")
+            return False
+    
+    def _apply_rule_action(self, rule: Dict[str, Any]) -> float:
+        """
+        Aplica a ação de uma regra.
+        
+        Args:
+            rule: Regra com ação a ser aplicada
+            
+        Returns:
+            Valor do boost aplicado
+        """
+        try:
+            action = rule.get('action', '')
+            
+            if 'confidence_boost' in action:
+                # Extrair valor do boost
+                import re
+                boost_match = re.search(r'confidence_boost\s*\+\=\s*([0-9.]+)', action)
+                if boost_match:
+                    return float(boost_match.group(1))
+            
+            return 0.0
+            
+        except Exception as e:
+            logger.warning(f"Erro ao aplicar ação da regra: {e}")
+            return 0.0
+    
+    def run_bug_auto_correction_cycle(self, log_file: str = "logs/debug.log") -> Dict[str, Any]:
+        """
+        Executa um ciclo de auto-correção de bugs.
+        
+        Args:
+            log_file: Caminho para o arquivo de log a ser analisado
+        
+        Returns:
+            Relatório do ciclo de correção executado
+        """
+        if not self.bug_auto_correction_system:
+            return {"error": "Sistema de auto-correção de bugs não disponível"}
+        
+        try:
+            # Executar ciclo de auto-correção
+            report = self.bug_auto_correction_system.run_auto_correction_cycle(log_file)
+            
+            logger.info(f"Ciclo de auto-correção de bugs executado: {report}")
+            return report
+            
+        except Exception as e:
+            error_msg = f"Erro ao executar ciclo de auto-correção de bugs: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def handle_exception_with_auto_correction(self, exception: Exception, traceback_str: str = None) -> Dict[str, Any]:
+        """
+        Trata uma exceção usando o sistema de auto-correção.
+        
+        Args:
+            exception: Exceção capturada
+            traceback_str: String do traceback
+            
+        Returns:
+            Resultado do tratamento da exceção
+        """
+        if not self.bug_auto_correction_system:
+            return {"error": "Sistema de auto-correção de bugs não disponível"}
+        
+        try:
+            # Tratar exceção com auto-correção
+            result = self.bug_auto_correction_system.handle_exception(exception, traceback_str)
+            
+            logger.info(f"Exceção tratada com auto-correção: {result}")
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro ao tratar exceção com auto-correção: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def initialize_algorithm_evolution(self) -> Dict[str, Any]:
+        """
+        Inicializa o sistema de evolução de algoritmos com a configuração atual.
+        
+        Returns:
+            Resultado da inicialização
+        """
+        if not self.algorithm_evolution_system:
+            return {"error": "Sistema de evolução de algoritmos não disponível"}
+        
+        try:
+            # Criar configuração base a partir do estado atual
+            base_config = {
+                'parameters': {
+                    'bird_threshold': 0.5,
+                    'confidence_threshold': 0.6,
+                    'boost_factor': 0.1,
+                    'learning_rate': 0.01,
+                    'color_weight': 0.3,
+                    'shape_weight': 0.4,
+                    'pattern_weight': 0.3
+                },
+                'architecture': {
+                    'detection_config': {
+                        'num_layers': 3,
+                        'window_size': 640,
+                        'confidence_threshold': 0.6
+                    },
+                    'learning_config': {
+                        'optimizer': 'adam',
+                        'batch_size': 32,
+                        'epochs': 10
+                    }
+                },
+                'strategy': {
+                    'detection_order': ['yolo', 'color_analysis', 'shape_analysis', 'pattern_analysis'],
+                    'fallback_strategy': 'balanced',
+                    'learning_strategy': 'incremental'
+                }
+            }
+            
+            success = self.algorithm_evolution_system.initialize_with_base_config(base_config)
+            
+            if success:
+                logger.info("Sistema de evolução de algoritmos inicializado com configuração base")
+                return {"success": True, "message": "Sistema inicializado com sucesso"}
+            else:
+                return {"error": "Falha ao inicializar sistema de evolução"}
+                
+        except Exception as e:
+            error_msg = f"Erro ao inicializar evolução de algoritmos: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def run_algorithm_evolution_cycle(self, performance_data: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        Executa um ciclo de evolução de algoritmos.
+        
+        Args:
+            performance_data: Dados de performance para avaliação
+            
+        Returns:
+            Relatório do ciclo de evolução
+        """
+        if not self.algorithm_evolution_system:
+            return {"error": "Sistema de evolução de algoritmos não disponível"}
+        
+        try:
+            # Se não há dados de performance, criar dados simulados
+            if performance_data is None:
+                performance_data = {
+                    'correct_detections': random.randint(80, 95),
+                    'total_detections': 100,
+                    'avg_processing_time': random.uniform(0.5, 2.0),
+                    'performance_variance': random.uniform(0.1, 0.3),
+                    'learning_rate': random.uniform(0.01, 0.1),
+                    'convergence_time': random.randint(50, 100),
+                    'memory_usage': random.uniform(0.3, 0.7),
+                    'cpu_usage': random.uniform(0.2, 0.6)
+                }
+            
+            # Executar ciclo de evolução
+            report = self.algorithm_evolution_system.run_evolution_cycle(performance_data)
+            
+            logger.info(f"Ciclo de evolução de algoritmos executado: {report}")
+            return report
+            
+        except Exception as e:
+            error_msg = f"Erro ao executar ciclo de evolução de algoritmos: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def get_best_algorithm_config(self) -> Dict[str, Any]:
+        """
+        Retorna a configuração do melhor algoritmo evolucionado.
+        
+        Returns:
+            Configuração do melhor algoritmo
+        """
+        if not self.algorithm_evolution_system:
+            return {"error": "Sistema de evolução de algoritmos não disponível"}
+        
+        try:
+            best_config = self.algorithm_evolution_system.get_best_algorithm_config()
+            
+            if best_config:
+                logger.info("Configuração do melhor algoritmo obtida")
+                return best_config
+            else:
+                return {"error": "Nenhuma configuração de algoritmo disponível"}
+                
+        except Exception as e:
+            error_msg = f"Erro ao obter melhor configuração de algoritmo: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def get_algorithm_evolution_status(self) -> Dict[str, Any]:
+        """
+        Retorna o status do sistema de evolução de algoritmos.
+        
+        Returns:
+            Status do sistema
+        """
+        if not self.algorithm_evolution_system:
+            return {"error": "Sistema de evolução de algoritmos não disponível"}
+        
+        try:
+            status = self.algorithm_evolution_system.get_evolution_status()
+            return status
+            
+        except Exception as e:
+            error_msg = f"Erro ao obter status da evolução de algoritmos: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def start_auto_optimization(self) -> Dict[str, Any]:
+        """
+        Inicia o sistema de auto-otimização.
+        
+        Returns:
+            Resultado da inicialização
+        """
+        if not self.auto_optimization_system:
+            return {"error": "Sistema de auto-otimização não disponível"}
+        
+        try:
+            self.auto_optimization_system.start_optimization()
+            logger.info("Sistema de auto-otimização iniciado")
+            return {"success": True, "message": "Auto-otimização iniciada com sucesso"}
+            
+        except Exception as e:
+            error_msg = f"Erro ao iniciar auto-otimização: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def stop_auto_optimization(self) -> Dict[str, Any]:
+        """
+        Para o sistema de auto-otimização.
+        
+        Returns:
+            Resultado da parada
+        """
+        if not self.auto_optimization_system:
+            return {"error": "Sistema de auto-otimização não disponível"}
+        
+        try:
+            self.auto_optimization_system.stop_optimization()
+            logger.info("Sistema de auto-otimização parado")
+            return {"success": True, "message": "Auto-otimização parada com sucesso"}
+            
+        except Exception as e:
+            error_msg = f"Erro ao parar auto-otimização: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def get_optimized_thresholds(self) -> Dict[str, Any]:
+        """
+        Retorna os thresholds otimizados atuais.
+        
+        Returns:
+            Configuração de thresholds otimizada
+        """
+        if not self.auto_optimization_system:
+            return {"error": "Sistema de auto-otimização não disponível"}
+        
+        try:
+            config = self.auto_optimization_system.get_current_configuration()
+            
+            return {
+                "bird_threshold": config.bird_threshold,
+                "confidence_threshold": config.confidence_threshold,
+                "boost_factor": config.boost_factor,
+                "color_weight": config.color_weight,
+                "shape_weight": config.shape_weight,
+                "pattern_weight": config.pattern_weight,
+                "detection_sensitivity": config.detection_sensitivity,
+                "reasoning_threshold": config.reasoning_threshold,
+                "adaptation_rate": config.adaptation_rate
+            }
+            
+        except Exception as e:
+            error_msg = f"Erro ao obter thresholds otimizados: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def get_optimization_performance_report(self) -> Dict[str, Any]:
+        """
+        Retorna relatório de performance da otimização.
+        
+        Returns:
+            Relatório de performance
+        """
+        if not self.auto_optimization_system:
+            return {"error": "Sistema de auto-otimização não disponível"}
+        
+        try:
+            report = self.auto_optimization_system.get_performance_report()
+            return report
+            
+        except Exception as e:
+            error_msg = f"Erro ao obter relatório de performance: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def apply_optimized_thresholds(self) -> Dict[str, Any]:
+        """
+        Aplica os thresholds otimizados ao sistema.
+        
+        Returns:
+            Resultado da aplicação
+        """
+        if not self.auto_optimization_system:
+            return {"error": "Sistema de auto-otimização não disponível"}
+        
+        try:
+            config = self.auto_optimization_system.get_current_configuration()
+            
+            # Aplicar thresholds otimizados
+            self.bird_threshold = config.bird_threshold
+            self.confidence_threshold = config.confidence_threshold
+            self.boost_factor = config.boost_factor
+            self.color_weight = config.color_weight
+            self.shape_weight = config.shape_weight
+            self.pattern_weight = config.pattern_weight
+            self.detection_sensitivity = config.detection_sensitivity
+            self.reasoning_threshold = config.reasoning_threshold
+            self.adaptation_rate = config.adaptation_rate
+            
+            logger.info("Thresholds otimizados aplicados com sucesso")
+            return {
+                "success": True, 
+                "message": "Thresholds otimizados aplicados",
+                "thresholds": {
+                    "bird_threshold": self.bird_threshold,
+                    "confidence_threshold": self.confidence_threshold,
+                    "boost_factor": self.boost_factor,
+                    "color_weight": self.color_weight,
+                    "shape_weight": self.shape_weight,
+                    "pattern_weight": self.pattern_weight,
+                    "detection_sensitivity": self.detection_sensitivity,
+                    "reasoning_threshold": self.reasoning_threshold,
+                    "adaptation_rate": self.adaptation_rate
+                }
+            }
+            
+        except Exception as e:
+            error_msg = f"Erro ao aplicar thresholds otimizados: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def process_detection_for_optimization(self, 
+                                         is_bird: bool, 
+                                         predicted_bird: bool, 
+                                         confidence: float, 
+                                         processing_time: float) -> Dict[str, Any]:
+        """
+        Processa uma detecção para otimização automática.
+        
+        Args:
+            is_bird: Se a imagem é realmente um pássaro
+            predicted_bird: Se o sistema previu que é um pássaro
+            confidence: Confiança da predição
+            processing_time: Tempo de processamento
+            
+        Returns:
+            Resultado do processamento
+        """
+        if not self.auto_optimization_system:
+            return {"error": "Sistema de auto-otimização não disponível"}
+        
+        try:
+            # Processar detecção para otimização
+            new_config = self.auto_optimization_system.process_detection(
+                is_bird, predicted_bird, confidence, processing_time
+            )
+            
+            if new_config:
+                # Aplicar nova configuração automaticamente
+                self.bird_threshold = new_config.bird_threshold
+                self.confidence_threshold = new_config.confidence_threshold
+                self.boost_factor = new_config.boost_factor
+                self.color_weight = new_config.color_weight
+                self.shape_weight = new_config.shape_weight
+                self.pattern_weight = new_config.pattern_weight
+                self.detection_sensitivity = new_config.detection_sensitivity
+                self.reasoning_threshold = new_config.reasoning_threshold
+                self.adaptation_rate = new_config.adaptation_rate
+                
+                logger.info("Thresholds otimizados automaticamente aplicados")
+                return {
+                    "success": True,
+                    "message": "Thresholds otimizados automaticamente",
+                    "new_thresholds": {
+                        "bird_threshold": new_config.bird_threshold,
+                        "confidence_threshold": new_config.confidence_threshold,
+                        "boost_factor": new_config.boost_factor,
+                        "color_weight": new_config.color_weight,
+                        "shape_weight": new_config.shape_weight,
+                        "pattern_weight": new_config.pattern_weight,
+                        "detection_sensitivity": new_config.detection_sensitivity,
+                        "reasoning_threshold": new_config.reasoning_threshold,
+                        "adaptation_rate": new_config.adaptation_rate
+                    }
+                }
+            else:
+                return {
+                    "success": True,
+                    "message": "Detecção processada, sem otimização necessária"
+                }
+                
+        except Exception as e:
+            error_msg = f"Erro ao processar detecção para otimização: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def start_advanced_weight_optimization(self) -> Dict[str, Any]:
+        """
+        Inicia o sistema de otimização apurada dos pesos.
+        
+        Returns:
+            Resultado da inicialização
+        """
+        if not self.advanced_weight_optimization_system:
+            return {"error": "Sistema de otimização apurada dos pesos não disponível"}
+        
+        try:
+            self.advanced_weight_optimization_system.start_optimization()
+            logger.info("Sistema de otimização apurada dos pesos iniciado")
+            return {"success": True, "message": "Otimização apurada dos pesos iniciada com sucesso"}
+            
+        except Exception as e:
+            error_msg = f"Erro ao iniciar otimização apurada dos pesos: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def stop_advanced_weight_optimization(self) -> Dict[str, Any]:
+        """
+        Para o sistema de otimização apurada dos pesos.
+        
+        Returns:
+            Resultado da parada
+        """
+        if not self.advanced_weight_optimization_system:
+            return {"error": "Sistema de otimização apurada dos pesos não disponível"}
+        
+        try:
+            self.advanced_weight_optimization_system.stop_optimization()
+            logger.info("Sistema de otimização apurada dos pesos parado")
+            return {"success": True, "message": "Otimização apurada dos pesos parada com sucesso"}
+            
+        except Exception as e:
+            error_msg = f"Erro ao parar otimização apurada dos pesos: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def get_optimized_weights(self) -> Dict[str, Any]:
+        """
+        Retorna os pesos otimizados atuais.
+        
+        Returns:
+            Configuração de pesos otimizada
+        """
+        if not self.advanced_weight_optimization_system:
+            return {"error": "Sistema de otimização apurada dos pesos não disponível"}
+        
+        try:
+            weights = self.advanced_weight_optimization_system.get_current_weights()
+            
+            return {
+                "color_weight": weights.color_weight,
+                "shape_weight": weights.shape_weight,
+                "pattern_weight": weights.pattern_weight,
+                "texture_weight": weights.texture_weight,
+                "size_weight": weights.size_weight,
+                "yolo_confidence_weight": weights.yolo_confidence_weight,
+                "color_confidence_weight": weights.color_confidence_weight,
+                "shape_confidence_weight": weights.shape_confidence_weight,
+                "pattern_confidence_weight": weights.pattern_confidence_weight,
+                "beak_weight": weights.beak_weight,
+                "wing_weight": weights.wing_weight,
+                "tail_weight": weights.tail_weight,
+                "eye_weight": weights.eye_weight,
+                "background_weight": weights.background_weight,
+                "lighting_weight": weights.lighting_weight,
+                "angle_weight": weights.angle_weight,
+                "learned_pattern_weight": weights.learned_pattern_weight,
+                "species_boost_weight": weights.species_boost_weight,
+                "characteristic_boost_weight": weights.characteristic_boost_weight,
+                "optimization_score": weights.optimization_score
+            }
+            
+        except Exception as e:
+            error_msg = f"Erro ao obter pesos otimizados: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def get_weight_optimization_analysis(self) -> Dict[str, Any]:
+        """
+        Retorna análise de otimização dos pesos.
+        
+        Returns:
+            Análise dos componentes e tendências
+        """
+        if not self.advanced_weight_optimization_system:
+            return {"error": "Sistema de otimização apurada dos pesos não disponível"}
+        
+        try:
+            analysis = self.advanced_weight_optimization_system.get_component_analysis()
+            return analysis
+            
+        except Exception as e:
+            error_msg = f"Erro ao obter análise de otimização dos pesos: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def apply_optimized_weights(self) -> Dict[str, Any]:
+        """
+        Aplica os pesos otimizados ao sistema.
+        
+        Returns:
+            Resultado da aplicação
+        """
+        if not self.advanced_weight_optimization_system:
+            return {"error": "Sistema de otimização apurada dos pesos não disponível"}
+        
+        try:
+            weights = self.advanced_weight_optimization_system.get_current_weights()
+            
+            # Aplicar pesos otimizados aos componentes do sistema
+            self.color_weight = weights.color_weight
+            self.shape_weight = weights.shape_weight
+            self.pattern_weight = weights.pattern_weight
+            
+            # Aplicar pesos de confiança
+            self.yolo_confidence_weight = weights.yolo_confidence_weight
+            self.color_confidence_weight = weights.color_confidence_weight
+            self.shape_confidence_weight = weights.shape_confidence_weight
+            self.pattern_confidence_weight = weights.pattern_confidence_weight
+            
+            # Aplicar pesos de características específicas
+            self.beak_weight = weights.beak_weight
+            self.wing_weight = weights.wing_weight
+            self.tail_weight = weights.tail_weight
+            self.eye_weight = weights.eye_weight
+            
+            # Aplicar pesos de contexto
+            self.background_weight = weights.background_weight
+            self.lighting_weight = weights.lighting_weight
+            self.angle_weight = weights.angle_weight
+            
+            # Aplicar pesos de aprendizado
+            self.learned_pattern_weight = weights.learned_pattern_weight
+            self.species_boost_weight = weights.species_boost_weight
+            self.characteristic_boost_weight = weights.characteristic_boost_weight
+            
+            logger.info("Pesos otimizados aplicados com sucesso")
+            return {
+                "success": True, 
+                "message": "Pesos otimizados aplicados",
+                "applied_weights": {
+                    "color_weight": self.color_weight,
+                    "shape_weight": self.shape_weight,
+                    "pattern_weight": self.pattern_weight,
+                    "texture_weight": weights.texture_weight,
+                    "size_weight": weights.size_weight,
+                    "optimization_score": weights.optimization_score
+                }
+            }
+            
+        except Exception as e:
+            error_msg = f"Erro ao aplicar pesos otimizados: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def process_detection_batch_for_weight_optimization(self, 
+                                                      detection_results: List[Dict[str, Any]], 
+                                                      ground_truth: List[bool]) -> Dict[str, Any]:
+        """
+        Processa um lote de detecções para otimização de pesos.
+        
+        Args:
+            detection_results: Lista de resultados de detecção
+            ground_truth: Lista de valores verdadeiros
+            
+        Returns:
+            Resultado do processamento
+        """
+        if not self.advanced_weight_optimization_system:
+            return {"error": "Sistema de otimização apurada dos pesos não disponível"}
+        
+        try:
+            # Processar lote para otimização de pesos
+            new_weights = self.advanced_weight_optimization_system.process_detection_batch(
+                detection_results, ground_truth
+            )
+            
+            if new_weights:
+                # Aplicar novos pesos automaticamente
+                self.color_weight = new_weights.color_weight
+                self.shape_weight = new_weights.shape_weight
+                self.pattern_weight = new_weights.pattern_weight
+                self.yolo_confidence_weight = new_weights.yolo_confidence_weight
+                self.color_confidence_weight = new_weights.color_confidence_weight
+                self.shape_confidence_weight = new_weights.shape_confidence_weight
+                self.pattern_confidence_weight = new_weights.pattern_confidence_weight
+                self.beak_weight = new_weights.beak_weight
+                self.wing_weight = new_weights.wing_weight
+                self.tail_weight = new_weights.tail_weight
+                self.eye_weight = new_weights.eye_weight
+                self.background_weight = new_weights.background_weight
+                self.lighting_weight = new_weights.lighting_weight
+                self.angle_weight = new_weights.angle_weight
+                self.learned_pattern_weight = new_weights.learned_pattern_weight
+                self.species_boost_weight = new_weights.species_boost_weight
+                self.characteristic_boost_weight = new_weights.characteristic_boost_weight
+                
+                logger.info("Pesos otimizados automaticamente aplicados")
+                return {
+                    "success": True,
+                    "message": "Pesos otimizados automaticamente",
+                    "new_weights": {
+                        "color_weight": new_weights.color_weight,
+                        "shape_weight": new_weights.shape_weight,
+                        "pattern_weight": new_weights.pattern_weight,
+                        "texture_weight": new_weights.texture_weight,
+                        "size_weight": new_weights.size_weight,
+                        "optimization_score": new_weights.optimization_score
+                    }
+                }
+            else:
+                return {
+                    "success": True,
+                    "message": "Lote processado, sem otimização necessária"
+                }
+                
+        except Exception as e:
+            error_msg = f"Erro ao processar lote para otimização de pesos: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def start_architecture_evolution(self) -> Dict[str, Any]:
+        """
+        Inicia o sistema de evolução de arquitetura.
+        
+        Returns:
+            Resultado da inicialização
+        """
+        if not self.architecture_evolution_system:
+            return {"error": "Sistema de evolução de arquitetura não disponível"}
+        
+        try:
+            self.architecture_evolution_system.start_evolution()
+            logger.info("Sistema de evolução de arquitetura iniciado")
+            return {"success": True, "message": "Evolução de arquitetura iniciada com sucesso"}
+            
+        except Exception as e:
+            error_msg = f"Erro ao iniciar evolução de arquitetura: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def stop_architecture_evolution(self) -> Dict[str, Any]:
+        """
+        Para o sistema de evolução de arquitetura.
+        
+        Returns:
+            Resultado da parada
+        """
+        if not self.architecture_evolution_system:
+            return {"error": "Sistema de evolução de arquitetura não disponível"}
+        
+        try:
+            self.architecture_evolution_system.stop_evolution()
+            logger.info("Sistema de evolução de arquitetura parado")
+            return {"success": True, "message": "Evolução de arquitetura parada com sucesso"}
+            
+        except Exception as e:
+            error_msg = f"Erro ao parar evolução de arquitetura: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def get_current_architecture(self) -> Dict[str, Any]:
+        """
+        Retorna a arquitetura atual.
+        
+        Returns:
+            Configuração da arquitetura atual
+        """
+        if not self.architecture_evolution_system:
+            return {"error": "Sistema de evolução de arquitetura não disponível"}
+        
+        try:
+            architecture = self.architecture_evolution_system.get_current_architecture()
+            return architecture
+            
+        except Exception as e:
+            error_msg = f"Erro ao obter arquitetura atual: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def get_architecture_analysis(self) -> Dict[str, Any]:
+        """
+        Retorna análise da arquitetura atual.
+        
+        Returns:
+            Análise detalhada da arquitetura
+        """
+        if not self.architecture_evolution_system:
+            return {"error": "Sistema de evolução de arquitetura não disponível"}
+        
+        try:
+            analysis = self.architecture_evolution_system.get_architecture_analysis()
+            return analysis
+            
+        except Exception as e:
+            error_msg = f"Erro ao obter análise da arquitetura: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def run_architecture_evolution_cycle(self, performance_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Executa um ciclo de evolução de arquitetura.
+        
+        Args:
+            performance_data: Dados de performance do sistema
+            
+        Returns:
+            Resultado do ciclo de evolução
+        """
+        if not self.architecture_evolution_system:
+            return {"error": "Sistema de evolução de arquitetura não disponível"}
+        
+        try:
+            result = self.architecture_evolution_system.run_evolution_cycle(performance_data)
+            
+            if result.get("success") and "improvement" in result:
+                logger.info(f"Arquitetura evoluída: {result['improvement']:.3f} de melhoria")
+            
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro ao executar ciclo de evolução de arquitetura: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def _save_learned_patterns(self):
+        """Salva padrões aprendidos para uso pelo sistema de auto-modificação."""
+        try:
+            # Converter padrões para formato compatível
+            patterns_to_save = {
+                "color_combinations": {},
+                "known_species": {},
+                "characteristic_patterns": {}
+            }
+            
+            # Converter cores aprendidas
+            if hasattr(self, 'learned_patterns') and 'color_combinations' in self.learned_patterns:
+                for color, data in self.learned_patterns['color_combinations'].items():
+                    if isinstance(data, dict):
+                        patterns_to_save["color_combinations"][color] = {
+                            "confidence": data.get("confidence", 0.5),
+                            "count": data.get("count", 1),
+                            "last_seen": data.get("last_seen", "2025-09-23T00:00:00")
+                        }
+            
+            # Converter espécies aprendidas
+            if hasattr(self, 'learned_patterns') and 'known_species' in self.learned_patterns:
+                for species in self.learned_patterns['known_species']:
+                    patterns_to_save["known_species"][species] = {
+                        "confidence": 0.8,  # Confiança padrão
+                        "count": 1,
+                        "last_seen": "2025-09-23T00:00:00"
+                    }
+            
+            # Converter características aprendidas
+            if hasattr(self, 'learned_patterns') and 'characteristic_patterns' in self.learned_patterns:
+                for char, data in self.learned_patterns['characteristic_patterns'].items():
+                    if isinstance(data, dict):
+                        patterns_to_save["characteristic_patterns"][char] = {
+                            "confidence": data.get("confidence", 0.7),
+                            "count": data.get("count", 1),
+                            "last_seen": data.get("last_seen", "2025-09-23T00:00:00")
+                        }
+            
+            # Salvar padrões
+            os.makedirs("data", exist_ok=True)
+            with open("data/learned_patterns.json", "w", encoding="utf-8") as f:
+                json.dump(patterns_to_save, f, indent=2, ensure_ascii=False)
+            
+            logger.info("Padrões aprendidos salvos para auto-modificação")
+            
+        except Exception as e:
+            logger.warning(f"Erro ao salvar padrões aprendidos: {e}")
+    
     def _calculate_bird_score_enhanced(self, characteristics: Dict) -> float:
         """Calcula score de pássaro melhorado com votação de modelos"""
         score = 0.0
@@ -3269,9 +4310,22 @@ class IntuitionEngine:
         
         # Calcular confiança média ponderada
         if confidence_factors:
-            return sum(confidence_factors) / len(confidence_factors)
+            base_confidence = sum(confidence_factors) / len(confidence_factors)
         else:
-            return 0.0
+            base_confidence = 0.0
+        
+        # Aplicar regras geradas automaticamente
+        try:
+            generated_rules_boost = self._apply_generated_rules(characteristics, base_confidence)
+            if generated_rules_boost > 0:
+                logger.info(f"Boost aplicado por regras geradas: {generated_rules_boost:.3f}")
+                base_confidence += generated_rules_boost
+                # Limitar confiança máxima a 1.0
+                base_confidence = min(base_confidence, 1.0)
+        except Exception as e:
+            logger.warning(f"Erro ao aplicar regras geradas: {e}")
+        
+        return base_confidence
     
     def _calculate_ultra_hybrid_confidence(self, characteristics: Dict, yolo_detections: int, mammal_score: float, bird_score: float) -> float:
         """Calcula confiança híbrida ultra-rigorosa"""

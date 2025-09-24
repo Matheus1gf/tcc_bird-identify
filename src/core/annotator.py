@@ -85,6 +85,18 @@ class GradCAMAnnotator:
                 self.model = None
                 return
             
+            # Verificar se TensorFlow está funcionando
+            if not hasattr(tf, 'keras'):
+                logging.error("❌ TensorFlow não tem atributo 'keras'")
+                self.model = None
+                return
+            
+            # Verificar se tf.keras.models existe
+            if not hasattr(tf.keras, 'models'):
+                logging.error("❌ TensorFlow keras.models não disponível")
+                self.model = None
+                return
+            
             self.model = tf.keras.models.load_model(
                 self.keras_model_path,
                 custom_objects={

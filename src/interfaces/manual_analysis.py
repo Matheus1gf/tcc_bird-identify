@@ -17,7 +17,7 @@ import streamlit as st
 class ManualAnalysisSystem:
     """Sistema para análise manual de imagens não reconhecidas"""
     
-    def __init__(self, base_dir: str = "./manual_analysis"):
+    def __init__(self, base_dir: str = "data/manual_analysis"):
         self.base_dir = base_dir
         self.pending_dir = os.path.join(base_dir, "pending")
         self.approved_dir = os.path.join(base_dir, "approved")

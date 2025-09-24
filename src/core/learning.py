@@ -72,7 +72,7 @@ class ContinuousLearningSystem:
                  keras_model_path: str,
                  api_type: str = "gemini",
                  api_key: str = None,
-                 learning_data_path: str = "./learning_data"):
+                 learning_data_path: str = "data/learning_data"):
         """
         Inicializa sistema de aprendizado contínuo
         
