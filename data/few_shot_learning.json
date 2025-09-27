@@ -1,0 +1,45 @@
+{
+  "concept_knowledge_base": {
+    "blue_jay": {
+      "concept_type": "species",
+      "examples_count": 1,
+      "learning_mode": "one_shot",
+      "strategy_used": "prototype_based",
+      "confidence": 0.49,
+      "success": true,
+      "last_learned": 1758939278.281559
+    },
+    "dog": {
+      "concept_type": "species",
+      "examples_count": 3,
+      "learning_mode": "few_shot",
+      "strategy_used": "similarity_based",
+      "confidence": 0.6544097383793264,
+      "success": true,
+      "last_learned": 1758939278.28214
+    },
+    "lizard": {
+      "concept_type": "species",
+      "examples_count": 2,
+      "learning_mode": "few_shot",
+      "strategy_used": "transfer_learning",
+      "confidence": 0.5375115276553223,
+      "success": true,
+      "last_learned": 1758939278.283166
+    },
+    "hybrid_animal": {
+      "concept_type": "species",
+      "examples_count": 2,
+      "learning_mode": "few_shot",
+      "strategy_used": "adaptive_fusion",
+      "confidence": 0.7301627604166666,
+      "success": true,
+      "last_learned": 1758939278.28498
+    }
+  },
+  "learning_history": [
+    {
+      "concept_name": "blue_jay",
+      "success": true,
+      "confidence": 0.49,
+      "learning_mode": 

@@ -1,0 +1,214 @@
+{
+  "memories": {
+    "episodic_6268ee85f1ab": {
+      "memory_id": "episodic_6268ee85f1ab",
+      "memory_type": "visual",
+      "content": {
+        "description": "Primeira detecção de pássaro",
+        "species": "unknown"
+      },
+      "context": {
+        "environment": "initialization",
+        "confidence": 0.5
+      },
+      "timestamp": 1758946818.789862,
+      "location": null,
+      "emotional_state": "neutral",
+      "associated_memories": [],
+      "memory_strength": "weak",
+      "confidence": 0.28,
+      "access_count": 0,
+      "last_accessed": 1758946818.789862,
+      "consolidation_level": 0.0,
+      "forgetting_rate": 0.1,
+      "created_at": 1758946818.789862,
+      "last_updated": 1758946818.789862
+    },
+    "episodic_4255c12fc54b": {
+      "memory_id": "episodic_4255c12fc54b",
+      "memory_type": "behavioral",
+      "content": {
+        "action": "system_startup",
+        "timestamp": 1758946818.7898471
+      },
+      "context": {
+        "system_state": "initialization"
+      },
+      "timestamp": 1758946818.790067,
+      "location": null,
+      "emotional_state": "neutral",
+      "associated_memories": [],
+      "memory_strength": "weak",
+      "confidence": 0.2,
+      "access_count": 0,
+      "last_accessed": 1758946818.790068,
+      "consolidation_level": 0.0,
+      "forgetting_rate": 0.2,
+      "created_at": 1758946818.790068,
+      "last_updated": 1758946818.790068
+    },
+    "episodic_d6ce98415863": {
+      "memory_id": "episodic_d6ce98415863",
+      "memory_type": "visual",
+      "content": {
+        "description": "Primeira detecção de pássaro",
+        "species": "unknown"
+      },
+      "context": {
+        "environment": "initialization",
+        "confidence": 0.5
+      },
+      "timestamp": 1758946820.215084,
+      "location": null,
+      "emotional_state": "neutral",
+      "associated_memories": [],
+      "memory_strength": "weak",
+      "confidence": 0.28,
+      "access_count": 0,
+      "last_accessed": 1758946820.215084,
+      "consolidation_level": 0.0,
+      "forgetting_rate": 0.1,
+      "created_at": 1758946820.215084,
+      "last_updated": 1758946820.215084
+    },
+    "episodic_37d1ca84104d": {
+      "memory_id": "episodic_37d1ca84104d",
+      "memory_type": "behavioral",
+      "content": {
+        "action": "system_startup",
+        "timestamp": 1758946820.214984
+      },
+      "context": {
+        "system_state": "initialization"
+      },
+      "timestamp": 1758946820.21583,
+      "location": null,
+      "emotional_state": "neutral",
+      "associated_memories": [],
+      "memory_strength": "weak",
+      "confidence": 0.2,
+      "access_count": 0,
+      "last_accessed": 1758946820.21583,
+      "consolidation_level": 0.0,
+      "forgetting_rate": 0.2,
+      "created_at": 1758946820.21583,
+      "last_updated": 1758946820.21583
+    },
+    "episodic_2d351eef58fd": {
+      "memory_id": "episodic_2d351eef58fd",
+      "memory_type": "visual",
+      "content": {
+        "description": "Primeira detecção de pássaro",
+        "species": "unknown"
+      },
+      "context": {
+        "environment": "initialization",
+        "confidence": 0.5
+      },
+      "timestamp": 1758946820.243789,
+      "location": null,
+      "emotional_state": "neutral",
+      "associated_memories": [],
+      "memory_strength": "weak",
+      "confidence": 0.28,
+      "access_count": 0,
+      "last_accessed": 1758946820.243789,
+      "consolidation_level": 0.0,
+      "forgetting_rate": 0.1,
+      "created_at": 1758946820.243789,
+      "last_updated": 1758946820.243789
+    },
+    "episodic_8b10c740e7a0": {
+      "memory_id": "episodic_8b10c740e7a0",
+      "memory_type": "behavioral",
+      "content": {
+        "action": "system_startup",
+        "timestamp": 1758946820.243762
+      },
+      "context": {
+        "system_state": "initialization"
+      },
+      "timestamp": 1758946820.244084,
+      "location": null,
+      "emotional_state": "neutral",
+      "associated_memories": [],
+      "memory_strength": "weak",
+      "confidence": 0.2,
+      "access_count": 0,
+      "last_accessed": 1758946820.244084,
+      "consolidation_level": 0.0,
+      "forgetting_rate": 0.2,
+      "created_at": 1758946820.244084,
+      "last_updated": 1758946820.244084
+    },
+    "episodic_53fb9313afad": {
+      "memory_id": "episodic_53fb9313afad",
+      "memory_type": "visual",
+      "content": {
+        "description": "Primeira detecção de pássaro",
+        "species": "unknown"
+      },
+      "context": {
+        "environment": "initialization",
+        "confidence": 0.5
+      },
+      "timestamp": 1758946820.2692502,
+      "location": null,
+      "emotional_state": "neutral",
+      "associated_memories": [],
+      "memory_strength": "weak",
+      "confidence": 0.28,
+      "access_count": 0,
+      "last_accessed": 1758946820.2692502,
+      "consolidation_level": 0.0,
+      "forgetting_rate": 0.1,
+      "created_at": 1758946820.2692502,
+      "last_updated": 1758946820.269251
+    },
+    "episodic_6eb528065a63": {
+      "memory_id": "episodic_6eb528065a63",
+      "memory_type": "behavioral",
+      "content": {
+        "action": "system_startup",
+        "timestamp": 1758946820.2691998
+      },
+      "context": {
+        "system_state": "initialization"
+      },
+      "timestamp": 1758946820.269917,
+      "location": null,
+      "emotional_state": "neutral",
+      "associated_memories": [],
+      "memory_strength": "weak",
+      "confidence": 0.2,
+      "access_count": 0,
+      "last_accessed": 1758946820.269917,
+      "consolidation_level": 0.0,
+      "forgetting_rate": 0.2,
+      "created_at": 1758946820.269917,
+      "last_updated": 1758946820.269917
+    }
+  },
+  "retrieval_history": [],
+  "consolidation_queue": [
+    "episodic_6268ee85f1ab",
+    "episodic_4255c12fc54b",
+    "episodic_d6ce98415863",
+    "episodic_37d1ca84104d",
+    "episodic_2d351eef58fd",
+    "episodic_8b10c740e7a0",
+    "episodic_53fb9313afad",
+    "episodic_6eb528065a63"
+  ],
+  "forgetting_schedule": {
+    "episodic_6268ee85f1ab": 1758982818.7898712,
+    "episodic_4255c12fc54b": 1758964818.790074,
+    "episodic_d6ce98415863": 1758982820.2151182,
+    "episodic_37d1ca84104d": 1758964820.215853,
+    "episodic_2d351eef58fd": 1758982820.243802,
+    "episodic_8b10c740e7a0": 1758964820.2440908,
+    "episodic_53fb9313afad": 1758982820.269266,
+    "episodic_6eb528065a63": 1758964820.2699258
+  },
+  "last_saved": 1758946820.2699451
+}

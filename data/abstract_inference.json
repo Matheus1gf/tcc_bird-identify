@@ -1,0 +1,333 @@
+{
+  "abstract_concepts": {
+    "concept_a56270275a69": {
+      "concept_id": "concept_a56270275a69",
+      "name": "animal",
+      "description": "Ser vivo que se move e respira",
+      "abstraction_level": "general",
+      "properties": {
+        "movement": true,
+        "breathing": true,
+        "consumption": true
+      },
+      "relationships": [],
+      "examples": [
+        "cachorro",
+        "gato",
+        "pássaro",
+        "peixe"
+      ],
+      "created_at": 1758946820.207446,
+      "last_updated": 1758946820.207447
+    },
+    "concept_27c5fede8c1c": {
+      "concept_id": "concept_27c5fede8c1c",
+      "name": "bird",
+      "description": "Animal com penas e capacidade de voar",
+      "abstraction_level": "specific",
+      "properties": {
+        "feathers": true,
+        "flying": true,
+        "beak": true
+      },
+      "relationships": [],
+      "examples": [
+        "canário",
+        "papagaio",
+        "águia",
+        "pinguim"
+      ],
+      "created_at": 1758946820.208425,
+      "last_updated": 1758946820.208425
+    },
+    "concept_20239d7a9b05": {
+      "concept_id": "concept_20239d7a9b05",
+      "name": "behavior",
+      "description": "Padrão de ações observáveis em animais",
+      "abstraction_level": "abstract",
+      "properties": {
+        "observable": true,
+        "pattern": true,
+        "adaptive": true
+      },
+      "relationships": [],
+      "examples": [
+        "voo",
+        "canto",
+        "nidificação",
+        "migração"
+      ],
+      "created_at": 1758946820.209203,
+      "last_updated": 1758946820.209203
+    },
+    "concept_210b8d3c765e": {
+      "concept_id": "concept_210b8d3c765e",
+      "name": "animal",
+      "description": "Ser vivo que se move e respira",
+      "abstraction_level": "general",
+      "properties": {
+        "movement": true,
+        "breathing": true,
+        "consumption": true
+      },
+      "relationships": [],
+      "examples": [
+        "cachorro",
+        "gato",
+        "pássaro",
+        "peixe"
+      ],
+      "created_at": 1758946820.2398038,
+      "last_updated": 1758946820.2398038
+    },
+    "concept_630c0aeb3241": {
+      "concept_id": "concept_630c0aeb3241",
+      "name": "bird",
+      "description": "Animal com penas e capacidade de voar",
+      "abstraction_level": "specific",
+      "properties": {
+        "feathers": true,
+        "flying": true,
+        "beak": true
+      },
+      "relationships": [],
+      "examples": [
+        "canário",
+        "papagaio",
+        "águia",
+        "pinguim"
+      ],
+      "created_at": 1758946820.240191,
+      "last_updated": 1758946820.240191
+    },
+    "concept_5c7543301e12": {
+      "concept_id": "concept_5c7543301e12",
+      "name": "behavior",
+      "description": "Padrão de ações observáveis em animais",
+      "abstraction_level": "abstract",
+      "properties": {
+        "observable": true,
+        "pattern": true,
+        "adaptive": true
+      },
+      "relationships": [],
+      "examples": [
+        "voo",
+        "canto",
+        "nidificação",
+        "migração"
+      ],
+      "created_at": 1758946820.240536,
+      "last_updated": 1758946820.240536
+    },
+    "concept_c6876cf6ec0b": {
+      "concept_id": "concept_c6876cf6ec0b",
+      "name": "animal",
+      "description": "Ser vivo que se move e respira",
+      "abstraction_level": "general",
+      "properties": {
+        "movement": true,
+        "breathing": true,
+        "consumption": true
+      },
+      "relationships": [],
+      "examples": [
+        "cachorro",
+        "gato",
+        "pássaro",
+        "peixe"
+      ],
+      "created_at": 1758946820.263386,
+      "last_updated": 1758946820.263386
+    },
+    "concept_e9e90a246301": {
+      "concept_id": "concept_e9e90a246301",
+      "name": "bird",
+      "description": "Animal com penas e capacidade de voar",
+      "abstraction_level": "specific",
+      "properties": {
+        "feathers": true,
+        "flying": true,
+        "beak": true
+      },
+      "relationships": [],
+      "examples": [
+        "canário",
+        "papagaio",
+        "águia",
+        "pinguim"
+      ],
+      "created_at": 1758946820.26378,
+      "last_updated": 1758946820.26378
+    },
+    "concept_3d1ec45cdafa": {
+      "concept_id": "concept_3d1ec45cdafa",
+      "name": "behavior",
+      "description": "Padrão de ações observáveis em animais",
+      "abstraction_level": "abstract",
+      "properties": {
+        "observable": true,
+        "pattern": true,
+        "adaptive": true
+      },
+      "relationships": [],
+      "examples": [
+        "voo",
+        "canto",
+        "nidificação",
+        "migração"
+      ],
+      "created_at": 1758946820.264143,
+      "last_updated": 1758946820.264143
+    }
+  },
+  "inference_rules": {
+    "rule_9aa4d2f3864a": {
+      "rule_id": "rule_9aa4d2f3864a",
+      "name": "Classificação de Animais",
+      "premise_patterns": [
+        "{premise_1} tem penas",
+        "{premise_2} pode voar"
+      ],
+      "conclusion_pattern": "Portanto, {premise_1} é um pássaro",
+      "inference_type": "deductive",
+      "confidence": 0.45,
+      "abstraction_level": "general",
+      "conditions": [],
+      "exceptions": [],
+      "created_at": 1758946820.20985,
+      "last_updated": 1758946820.2098508
+    },
+    "rule_54cae2f85895": {
+      "rule_id": "rule_54cae2f85895",
+      "name": "Padrão de Comportamento",
+      "premise_patterns": [
+        "{premise_1} canta",
+        "{premise_2} constrói ninho"
+      ],
+      "conclusion_pattern": "Portanto, {premise_1} está em época de acasalamento",
+      "inference_type": "inductive",
+      "confidence": 0.55,
+      "abstraction_level": "abstract",
+      "conditions": [],
+      "exceptions": [],
+      "created_at": 1758946820.210541,
+      "last_updated": 1758946820.210541
+    },
+    "rule_d5366c9f373f": {
+      "rule_id": "rule_d5366c9f373f",
+      "name": "Inferência Causal",
+      "premise_patterns": [
+        "{premise_1} detecta predador",
+        "{premise_2} foge"
+      ],
+      "conclusion_pattern": "Portanto, {premise_1} causa {premise_2}",
+      "inference_type": "causal",
+      "confidence": 0.4,
+      "abstraction_level": "abstract",
+      "conditions": [],
+      "exceptions": [],
+      "created_at": 1758946820.211144,
+      "last_updated": 1758946820.211144
+    },
+    "rule_c4457cb1de11": {
+      "rule_id": "rule_c4457cb1de11",
+      "name": "Classificação de Animais",
+      "premise_patterns": [
+        "{premise_1} tem penas",
+        "{premise_2} pode voar"
+      ],
+      "conclusion_pattern": "Portanto, {premise_1} é um pássaro",
+      "inference_type": "deductive",
+      "confidence": 0.45,
+      "abstraction_level": "general",
+      "conditions": [],
+      "exceptions": [],
+      "created_at": 1758946820.24088,
+      "last_updated": 1758946820.24088
+    },
+    "rule_07e226f59969": {
+      "rule_id": "rule_07e226f59969",
+      "name": "Padrão de Comportamento",
+      "premise_patterns": [
+        "{premise_1} canta",
+        "{premise_2} constrói ninho"
+      ],
+      "conclusion_pattern": "Portanto, {premise_1} está em época de acasalamento",
+      "inference_type": "inductive",
+      "confidence": 0.55,
+      "abstraction_level": "abstract",
+      "conditions": [],
+      "exceptions": [],
+      "created_at": 1758946820.241206,
+      "last_updated": 1758946820.241206
+    },
+    "rule_b38b3752e42d": {
+      "rule_id": "rule_b38b3752e42d",
+      "name": "Inferência Causal",
+      "premise_patterns": [
+        "{premise_1} detecta predador",
+        "{premise_2} foge"
+      ],
+      "conclusion_pattern": "Portanto, {premise_1} causa {premise_2}",
+      "inference_type": "causal",
+      "confidence": 0.4,
+      "abstraction_level": "abstract",
+      "conditions": [],
+      "exceptions": [],
+      "created_at": 1758946820.241826,
+      "last_updated": 1758946820.241826
+    },
+    "rule_187b277a9eb1": {
+      "rule_id": "rule_187b277a9eb1",
+      "name": "Classificação de Animais",
+      "premise_patterns": [
+        "{premise_1} tem penas",
+        "{premise_2} pode voar"
+      ],
+      "conclusion_pattern": "Portanto, {premise_1} é um pássaro",
+      "inference_type": "deductive",
+      "confidence": 0.45,
+      "abstraction_level": "general",
+      "conditions": [],
+      "exceptions": [],
+      "created_at": 1758946820.264545,
+      "last_updated": 1758946820.264545
+    },
+    "rule_2b4a17d8906b": {
+      "rule_id": "rule_2b4a17d8906b",
+      "name": "Padrão de Comportamento",
+      "premise_patterns": [
+        "{premise_1} canta",
+        "{premise_2} constrói ninho"
+      ],
+      "conclusion_pattern": "Portanto, {premise_1} está em época de acasalamento",
+      "inference_type": "inductive",
+      "confidence": 0.55,
+      "abstraction_level": "abstract",
+      "conditions": [],
+      "exceptions": [],
+      "created_at": 1758946820.265089,
+      "last_updated": 1758946820.265089
+    },
+    "rule_a398274bce78": {
+      "rule_id": "rule_a398274bce78",
+      "name": "Inferência Causal",
+      "premise_patterns": [
+        "{premise_1} detecta predador",
+        "{premise_2} foge"
+      ],
+      "conclusion_pattern": "Portanto, {premise_1} causa {premise_2}",
+      "inference_type": "causal",
+      "confidence": 0.4,
+      "abstraction_level": "abstract",
+      "conditions": [],
+      "exceptions": [],
+      "created_at": 1758946820.26595,
+      "last_updated": 1758946820.26595
+    }
+  },
+  "inference_history": [],
+  "concept_graph": {},
+  "last_saved": 1758946820.2659788
+}

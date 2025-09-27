@@ -15,6 +15,10 @@ import logging
 import json
 import random
 
+# Configurar logging primeiro
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Importar sistema de auto-modificação
 try:
     from .auto_modification import AutoModificationSystem
@@ -55,9 +59,221 @@ except ImportError:
     ARCHITECTURE_EVOLUTION_AVAILABLE = False
     logger.warning("Sistema de evolução de arquitetura não disponível")
 
-# Configurar logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Importar sistema de aprendizado de conceitos abstratos
+try:
+    from .abstract_concept_learning import AbstractConceptLearner, AbstractConcept, ConceptType, ConceptLevel
+    ABSTRACT_CONCEPT_LEARNING_AVAILABLE = True
+except ImportError:
+    ABSTRACT_CONCEPT_LEARNING_AVAILABLE = False
+    logger.warning("Sistema de aprendizado de conceitos abstratos não disponível")
+
+# Importar sistema de características universais
+try:
+    from .universal_features import UniversalKnowledgeTransfer, UniversalFeatureAnalyzer, UniversalFeatureType, UniversalFeatureLevel
+    UNIVERSAL_FEATURES_AVAILABLE = True
+except ImportError:
+    UNIVERSAL_FEATURES_AVAILABLE = False
+    logger.warning("Sistema de características universais não disponível")
+
+# Importar sistema de few-shot learning
+try:
+    from .few_shot_learning import FewShotLearner, FewShotStrategy, LearningMode, ConceptType
+    FEW_SHOT_LEARNING_AVAILABLE = True
+except ImportError:
+    FEW_SHOT_LEARNING_AVAILABLE = False
+    logger.warning("Sistema de few-shot learning não disponível")
+
+# Importar sistema de raciocínio conceitual
+try:
+    from .conceptual_reasoning import AbstractInferenceEngine, InferenceType, ConceptRelation, AbstractionLevel
+    CONCEPTUAL_REASONING_AVAILABLE = True
+except ImportError:
+    CONCEPTUAL_REASONING_AVAILABLE = False
+    logger.warning("Sistema de raciocínio conceitual não disponível")
+
+# Importar sistema de raciocínio por analogia
+try:
+    from .analogical_reasoning import StructuralAnalogyEngine, AnalogyType, AnalogyStrength, MappingType
+    ANALOGICAL_REASONING_AVAILABLE = True
+except ImportError:
+    ANALOGICAL_REASONING_AVAILABLE = False
+    logger.warning("Sistema de raciocínio por analogia não disponível")
+
+# Importar sistema de aprendizado por padrões universais
+try:
+    from .universal_pattern_learning import UniversalPatternLearner, PatternType, PatternLevel, PatternConfidence
+    UNIVERSAL_PATTERN_LEARNING_AVAILABLE = True
+except ImportError:
+    UNIVERSAL_PATTERN_LEARNING_AVAILABLE = False
+    logger.warning("Sistema de aprendizado por padrões universais não disponível")
+
+# Importar sistema de memória episódica
+try:
+    from .episodic_memory import EpisodicMemorySystem, MemoryType, MemoryStrength, RetrievalType
+    EPISODIC_MEMORY_AVAILABLE = True
+except ImportError:
+    EPISODIC_MEMORY_AVAILABLE = False
+    logger.warning("Sistema de memória episódica não disponível")
+
+# Importar sistema de raciocínio causal
+try:
+    from .causal_reasoning import CausalReasoningSystem, CausalRelationType, CausalStrength, EvidenceType
+    CAUSAL_REASONING_AVAILABLE = True
+except ImportError:
+    CAUSAL_REASONING_AVAILABLE = False
+    logger.warning("Sistema de raciocínio causal não disponível")
+
+# Importar sistema de inferência abstrata
+try:
+    from .abstract_inference import AbstractInferenceEngine, InferenceType, AbstractionLevel, ConfidenceLevel
+    ABSTRACT_INFERENCE_AVAILABLE = True
+except ImportError:
+    ABSTRACT_INFERENCE_AVAILABLE = False
+    logger.warning("Sistema de inferência abstrata não disponível")
+
+# Importar sistema de meta-aprendizado
+try:
+    from .meta_learning import MetaLearningSystem, LearningContext, MetaLearningStrategy, PerformanceMetric
+    META_LEARNING_AVAILABLE = True
+except ImportError:
+    META_LEARNING_AVAILABLE = False
+    logger.warning("Sistema de meta-aprendizado não disponível")
+
+# Importar sistema de hierarquias de conceitos
+try:
+    from .concept_hierarchy import ConceptHierarchyManager, HierarchicalConcept, ConceptRelationshipType, ConceptAbstractionLevel, ConceptComplexity
+    CONCEPT_HIERARCHY_AVAILABLE = True
+except ImportError:
+    CONCEPT_HIERARCHY_AVAILABLE = False
+    logger.warning("Sistema de hierarquias de conceitos não disponível")
+
+# Importar sistema de aprendizado de relações
+try:
+    from .relation_learning import RelationLearningSystem, RelationType, RelationStrength, LearningMode, EvidenceType, RelationEvidence
+    RELATION_LEARNING_AVAILABLE = True
+except ImportError:
+    RELATION_LEARNING_AVAILABLE = False
+    # Definir classes dummy para evitar erros
+    class RelationType:
+        TEMPORAL = "temporal"
+        SPATIAL = "spatial"
+        CAUSAL = "causal"
+        FUNCTIONAL = "functional"
+        STRUCTURAL = "structural"
+        BEHAVIORAL = "behavioral"
+        SIMILARITY = "similarity"
+        OPPOSITION = "opposition"
+        DEPENDENCY = "dependency"
+        ASSOCIATION = "association"
+    
+    class RelationStrength:
+        VERY_WEAK = "very_weak"
+        WEAK = "weak"
+        MODERATE = "moderate"
+        STRONG = "strong"
+        VERY_STRONG = "very_strong"
+    
+    class LearningMode:
+        SUPERVISED = "supervised"
+        UNSUPERVISED = "unsupervised"
+        SEMI_SUPERVISED = "semi_supervised"
+        REINFORCEMENT = "reinforcement"
+        TRANSFER = "transfer"
+    
+    class EvidenceType:
+        DIRECT_OBSERVATION = "direct_observation"
+        STATISTICAL_CORRELATION = "statistical_correlation"
+        EXPERT_KNOWLEDGE = "expert_knowledge"
+        LOGICAL_INFERENCE = "logical_inference"
+        PATTERN_RECOGNITION = "pattern_recognition"
+        ANALOGICAL_REASONING = "analogical_reasoning"
+    
+    class RelationEvidence:
+        def __init__(self, **kwargs):
+            pass
+    logger.warning("Sistema de aprendizado de relações não disponível")
+
+# Importar sistema de transferência de conhecimento
+try:
+    from .knowledge_transfer import KnowledgeTransferSystem, TransferType, TransferStrategy, TransferConfidence, KnowledgeType
+    KNOWLEDGE_TRANSFER_AVAILABLE = True
+except ImportError:
+    KNOWLEDGE_TRANSFER_AVAILABLE = False
+    # Definir classes dummy para evitar erros
+    class TransferType:
+        DOMAIN_TO_DOMAIN = "domain_to_domain"
+        CONCEPT_TO_CONCEPT = "concept_to_concept"
+        SPECIES_TO_SPECIES = "species_to_species"
+        CONTEXT_TO_CONTEXT = "context_to_context"
+        SKILL_TO_SKILL = "skill_to_skill"
+        PATTERN_TO_PATTERN = "pattern_to_pattern"
+        FEATURE_TO_FEATURE = "feature_to_feature"
+        STRATEGY_TO_STRATEGY = "strategy_to_strategy"
+    
+    class TransferStrategy:
+        DIRECT = "direct"
+        ADAPTIVE = "adaptive"
+        SELECTIVE = "selective"
+        HIERARCHICAL = "hierarchical"
+        CONTEXTUAL = "contextual"
+        ANALOGICAL = "analogical"
+        META_LEARNING = "meta_learning"
+        FEW_SHOT = "few_shot"
+    
+    class TransferConfidence:
+        VERY_LOW = "very_low"
+        LOW = "low"
+        MODERATE = "moderate"
+        HIGH = "high"
+        VERY_HIGH = "very_high"
+    
+    class KnowledgeType:
+        FACTUAL = "factual"
+        PROCEDURAL = "procedural"
+        CONCEPTUAL = "conceptual"
+        METACOGNITIVE = "metacognitive"
+        EXPERIENTIAL = "experiential"
+        PATTERN_BASED = "pattern_based"
+    logger.warning("Sistema de transferência de conhecimento não disponível")
+
+# Importar sistema de meta-cognição
+try:
+    from .metacognition import MetaCognitiveSystem, MetaCognitiveProcess, ReflectionType, AdaptationStrategy, MetaCognitiveLevel
+    METACOGNITION_AVAILABLE = True
+except ImportError:
+    METACOGNITION_AVAILABLE = False
+    # Definir classes dummy para evitar erros
+    class MetaCognitiveProcess:
+        LEARNING_TO_LEARN = "learning_to_learn"
+        SELF_REFLECTION = "self_reflection"
+        STRATEGY_ADAPTATION = "strategy_adaptation"
+        PERFORMANCE_MONITORING = "performance_monitoring"
+        METACOGNITIVE_CONTROL = "metacognitive_control"
+        KNOWLEDGE_MONITORING = "knowledge_monitoring"
+    
+    class ReflectionType:
+        PERFORMANCE_REFLECTION = "performance_reflection"
+        STRATEGY_REFLECTION = "strategy_reflection"
+        LEARNING_REFLECTION = "learning_reflection"
+        ERROR_REFLECTION = "error_reflection"
+        SUCCESS_REFLECTION = "success_reflection"
+        METACOGNITIVE_REFLECTION = "metacognitive_reflection"
+    
+    class AdaptationStrategy:
+        PARAMETER_ADJUSTMENT = "parameter_adjustment"
+        STRATEGY_SWITCHING = "strategy_switching"
+        LEARNING_RATE_ADAPTATION = "learning_rate_adaptation"
+        ARCHITECTURE_MODIFICATION = "architecture_modification"
+        KNOWLEDGE_RESTRUCTURING = "knowledge_restructuring"
+        METACOGNITIVE_ADAPTATION = "metacognitive_adaptation"
+    
+    class MetaCognitiveLevel:
+        BASIC = "basic"
+        INTERMEDIATE = "intermediate"
+        ADVANCED = "advanced"
+        EXPERT = "expert"
+        MASTER = "master"
+    logger.warning("Sistema de meta-cognição não disponível")
 
 class LearningCandidateType(Enum):
     """Tipos de candidatos para aprendizado"""
@@ -134,6 +350,126 @@ class IntuitionEngine:
             except Exception as e:
                 logger.error(f"Erro ao inicializar sistema de evolução de arquitetura: {e}")
                 self.architecture_evolution_system = None
+        
+        # Sistema de aprendizado de conceitos abstratos
+        self.abstract_concept_learner = None
+        if ABSTRACT_CONCEPT_LEARNING_AVAILABLE:
+            try:
+                self.abstract_concept_learner = AbstractConceptLearner()
+                logger.info("Sistema de aprendizado de conceitos abstratos inicializado")
+            except Exception as e:
+                logger.error(f"Erro ao inicializar sistema de conceitos abstratos: {e}")
+                self.abstract_concept_learner = None
+        
+        # Sistema de few-shot learning
+        self.few_shot_learner = None
+        if FEW_SHOT_LEARNING_AVAILABLE:
+            try:
+                self.few_shot_learner = FewShotLearner()
+                logger.info("Sistema de few-shot learning inicializado")
+            except Exception as e:
+                logger.error(f"Erro ao inicializar sistema de few-shot learning: {e}")
+                self.few_shot_learner = None
+        
+        # Sistema de meta-aprendizado
+        self.meta_learning_system = None
+        if META_LEARNING_AVAILABLE:
+            try:
+                self.meta_learning_system = MetaLearningSystem()
+                logger.info("Sistema de meta-aprendizado inicializado")
+            except Exception as e:
+                logger.error(f"Erro ao inicializar sistema de meta-aprendizado: {e}")
+                self.meta_learning_system = None
+        
+        # Sistema de raciocínio conceitual
+        self.conceptual_reasoning_system = None
+        if CONCEPTUAL_REASONING_AVAILABLE:
+            try:
+                self.conceptual_reasoning_system = AbstractInferenceEngine()
+                logger.info("Sistema de raciocínio conceitual inicializado")
+            except Exception as e:
+                logger.error(f"Erro ao inicializar sistema de raciocínio conceitual: {e}")
+                self.conceptual_reasoning_system = None
+        
+        # Sistema de raciocínio por analogia
+        self.analogical_reasoning_system = None
+        if ANALOGICAL_REASONING_AVAILABLE:
+            try:
+                self.analogical_reasoning_system = StructuralAnalogyEngine()
+                logger.info("Sistema de raciocínio por analogia inicializado")
+            except Exception as e:
+                logger.error(f"Erro ao inicializar sistema de raciocínio por analogia: {e}")
+                self.analogical_reasoning_system = None
+        
+        # Sistema de aprendizado por padrões universais
+        self.universal_pattern_learner = None
+        if UNIVERSAL_PATTERN_LEARNING_AVAILABLE:
+            try:
+                self.universal_pattern_learner = UniversalPatternLearner()
+                logger.info("Sistema de aprendizado por padrões universais inicializado")
+            except Exception as e:
+                logger.error(f"Erro ao inicializar sistema de aprendizado por padrões universais: {e}")
+                self.universal_pattern_learner = None
+        
+        # Sistema de memória episódica
+        self.episodic_memory_system = None
+        if EPISODIC_MEMORY_AVAILABLE:
+            try:
+                self.episodic_memory_system = EpisodicMemorySystem()
+                logger.info("Sistema de memória episódica inicializado")
+            except Exception as e:
+                logger.error(f"Erro ao inicializar sistema de memória episódica: {e}")
+                self.episodic_memory_system = None
+        
+        # Sistema de raciocínio causal
+        self.causal_reasoning_system = None
+        if CAUSAL_REASONING_AVAILABLE:
+            try:
+                self.causal_reasoning_system = CausalReasoningSystem()
+                logger.info("Sistema de raciocínio causal inicializado")
+            except Exception as e:
+                logger.error(f"Erro ao inicializar sistema de raciocínio causal: {e}")
+                self.causal_reasoning_system = None
+        
+        # Sistema de hierarquias de conceitos
+        self.concept_hierarchy_manager = None
+        if CONCEPT_HIERARCHY_AVAILABLE:
+            try:
+                self.concept_hierarchy_manager = ConceptHierarchyManager()
+                logger.info("Sistema de hierarquias de conceitos inicializado")
+            except Exception as e:
+                logger.error(f"Erro ao inicializar sistema de hierarquias de conceitos: {e}")
+                self.concept_hierarchy_manager = None
+        
+        # Sistema de aprendizado de relações
+        self.relation_learning_system = None
+        if RELATION_LEARNING_AVAILABLE:
+            try:
+                self.relation_learning_system = RelationLearningSystem()
+                logger.info("Sistema de aprendizado de relações inicializado")
+            except Exception as e:
+                logger.error(f"Erro ao inicializar sistema de aprendizado de relações: {e}")
+                self.relation_learning_system = None
+        
+        # Sistema de transferência de conhecimento
+        self.knowledge_transfer_system = None
+        if KNOWLEDGE_TRANSFER_AVAILABLE:
+            try:
+                self.knowledge_transfer_system = KnowledgeTransferSystem()
+                logger.info("Sistema de transferência de conhecimento inicializado")
+            except Exception as e:
+                logger.error(f"Erro ao inicializar sistema de transferência de conhecimento: {e}")
+                self.knowledge_transfer_system = None
+        
+        # Sistema de meta-cognição
+        self.metacognitive_system = None
+        if METACOGNITION_AVAILABLE:
+            try:
+                self.metacognitive_system = MetaCognitiveSystem()
+                logger.info("Sistema de meta-cognição inicializado")
+            except Exception as e:
+                logger.error(f"Erro ao inicializar sistema de meta-cognição: {e}")
+                self.metacognitive_system = None
         
         # Conhecimento acumulado (como uma criança)
         self.learned_patterns = {
@@ -311,30 +647,23 @@ class IntuitionEngine:
                 if os.path.exists(h5_path):
                     try:
                         self.keras_model = tf.keras.models.load_model(h5_path)
-                        logger.info("✅ Modelo Keras HDF5 carregado")
+                        logger.info(f"Modelo Keras carregado: {h5_path}")
+                        return
                     except Exception as e:
-                        logger.warning(f"⚠️ Erro ao carregar HDF5: {e}")
-                        self.keras_model = None
-                else:
-                    # Tentar carregar diretamente
-                    try:
-                        self.keras_model = tf.keras.models.load_model(self.keras_model_path)
-                        logger.info("✅ Modelo Keras carregado")
-                    except Exception as e:
-                        logger.warning(f"⚠️ Erro ao carregar Keras: {e}")
-                        self.keras_model = None
-            else:
+                        logger.warning(f"Erro ao carregar modelo HDF5: {e}")
+            
+            # Carregar modelo Keras se disponível
+            if self.keras_model_path and os.path.exists(self.keras_model_path):
                 try:
                     self.keras_model = tf.keras.models.load_model(self.keras_model_path)
                     logger.info("✅ Modelo Keras carregado")
                 except Exception as e:
                     logger.warning(f"⚠️ Erro ao carregar Keras: {e}")
                     self.keras_model = None
-        except Exception as e:
-            logger.warning(f"⚠️ Erro ao carregar Keras: {e}")
-            logger.info("🔄 Usando análise visual pura")
+        except ImportError:
+            logger.warning("⚠️ TensorFlow não disponível")
             self.keras_model = None
-    
+
     def _log_model_status(self):
         """Log do status de todos os modelos carregados"""
         loaded_models = list(self.detection_models.keys())
@@ -2082,7 +2411,7 @@ class IntuitionEngine:
             reasoning['confidence'] = 0.9
             reasoning['intuition_level'] = 'Alta'
             reasoning['reasoning_steps'].append("❌ Detectadas características específicas de mamíferos")
-            
+        
         # 8. OITAVO: Provavelmente não é pássaro
         else:
             reasoning['is_bird'] = False
@@ -4147,6 +4476,1983 @@ class IntuitionEngine:
             
         except Exception as e:
             error_msg = f"Erro ao executar ciclo de evolução de arquitetura: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def analyze_with_abstract_concepts(self, detection_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Analisa um objeto usando conceitos abstratos.
+        
+        Args:
+            detection_data: Dados de detecção do objeto
+            
+        Returns:
+            Análise usando conceitos abstratos
+        """
+        if not self.abstract_concept_learner:
+            return {"error": "Sistema de conceitos abstratos não disponível"}
+        
+        try:
+            analysis = self.abstract_concept_learner.analyze_object(detection_data)
+            
+            # Log da análise
+            if analysis["concept_applications"].get("passarinidade", {}).get("is_bird"):
+                logger.info("Objeto identificado como pássaro usando conceitos abstratos")
+            else:
+                logger.info("Objeto não identificado como pássaro usando conceitos abstratos")
+            
+            return analysis
+            
+        except Exception as e:
+            error_msg = f"Erro ao analisar com conceitos abstratos: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def learn_from_concept_example(self, detection_data: Dict[str, Any], correct_label: str, feedback: str = "") -> Dict[str, Any]:
+        """
+        Aprende com um exemplo usando conceitos abstratos.
+        
+        Args:
+            detection_data: Dados de detecção
+            correct_label: Rótulo correto
+            feedback: Feedback adicional
+            
+        Returns:
+            Resultado do aprendizado
+        """
+        if not self.abstract_concept_learner:
+            return {"error": "Sistema de conceitos abstratos não disponível"}
+        
+        try:
+            self.abstract_concept_learner.learn_from_example(detection_data, correct_label, feedback)
+            
+            logger.info(f"Exemplo aprendido com conceitos abstratos: {correct_label}")
+            
+            return {
+                "success": True,
+                "message": f"Exemplo aprendido: {correct_label}",
+                "feedback": feedback
+            }
+            
+        except Exception as e:
+            error_msg = f"Erro ao aprender com exemplo: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def get_concept_analysis(self, concept_name: str = "passarinidade") -> Dict[str, Any]:
+        """
+        Retorna análise de um conceito específico.
+        
+        Args:
+            concept_name: Nome do conceito
+            
+        Returns:
+            Análise do conceito
+        """
+        if not self.abstract_concept_learner:
+            return {"error": "Sistema de conceitos abstratos não disponível"}
+        
+        try:
+            analysis = self.abstract_concept_learner.get_concept_analysis(concept_name)
+            return analysis
+            
+        except Exception as e:
+            error_msg = f"Erro ao obter análise do conceito: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def get_all_concepts(self) -> Dict[str, Any]:
+        """
+        Retorna todos os conceitos disponíveis.
+        
+        Returns:
+            Todos os conceitos
+        """
+        if not self.abstract_concept_learner:
+            return {"error": "Sistema de conceitos abstratos não disponível"}
+        
+        try:
+            concepts = self.abstract_concept_learner.get_all_concepts()
+            return concepts
+            
+        except Exception as e:
+            error_msg = f"Erro ao obter conceitos: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def get_universal_features_analysis(self) -> Dict[str, Any]:
+        """
+        Retorna análise das características universais.
+        
+        Returns:
+            Análise das características universais
+        """
+        if not self.abstract_concept_learner:
+            return {"error": "Sistema de conceitos abstratos não disponível"}
+        
+        try:
+            analysis = self.abstract_concept_learner.get_universal_features_analysis()
+            return analysis
+            
+        except Exception as e:
+            error_msg = f"Erro ao obter análise de características universais: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def learn_universal_pattern(self, detection_data: Dict[str, Any], species_label: str, feedback: str = "") -> Dict[str, Any]:
+        """
+        Aprende padrão universal de uma espécie.
+        
+        Args:
+            detection_data: Dados de detecção
+            species_label: Rótulo da espécie
+            feedback: Feedback adicional
+            
+        Returns:
+            Resultado do aprendizado
+        """
+        if not self.abstract_concept_learner:
+            return {"error": "Sistema de conceitos abstratos não disponível"}
+        
+        try:
+            result = self.abstract_concept_learner.learn_universal_pattern(
+                detection_data, species_label, feedback
+            )
+            
+            logger.info(f"Padrão universal aprendido: {species_label}")
+            
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro ao aprender padrão universal: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def analyze_with_universal_features(self, detection_data: Dict[str, Any], species_context: str = "") -> Dict[str, Any]:
+        """
+        Analisa um objeto usando características universais.
+        
+        Args:
+            detection_data: Dados de detecção do objeto
+            species_context: Contexto da espécie
+            
+        Returns:
+            Análise usando características universais
+        """
+        if not self.abstract_concept_learner:
+            return {"error": "Sistema de conceitos abstratos não disponível"}
+        
+        try:
+            analysis = self.abstract_concept_learner.analyze_object(detection_data, species_context)
+            
+            # Log da análise
+            if analysis.get("universal_analysis"):
+                logger.info("Análise com características universais realizada")
+            
+            return analysis
+            
+        except Exception as e:
+            error_msg = f"Erro ao analisar com características universais: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def get_concept_hierarchy_analysis(self, concept_name: str = None) -> Dict[str, Any]:
+        """
+        Retorna análise da hierarquia de conceitos.
+        
+        Args:
+            concept_name: Nome do conceito específico (opcional)
+            
+        Returns:
+            Análise da hierarquia de conceitos
+        """
+        if not self.abstract_concept_learner:
+            return {"error": "Sistema de conceitos abstratos não disponível"}
+        
+        try:
+            analysis = self.abstract_concept_learner.get_concept_hierarchy_analysis(concept_name)
+            return analysis
+            
+        except Exception as e:
+            error_msg = f"Erro ao obter análise de hierarquia: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def find_similar_concepts(self, concept_name: str, threshold: float = 0.5) -> Dict[str, Any]:
+        """
+        Encontra conceitos similares na hierarquia.
+        
+        Args:
+            concept_name: Nome do conceito base
+            threshold: Threshold de similaridade
+            
+        Returns:
+            Conceitos similares encontrados
+        """
+        if not self.abstract_concept_learner:
+            return {"error": "Sistema de conceitos abstratos não disponível"}
+        
+        try:
+            similar_concepts = self.abstract_concept_learner.find_similar_concepts(concept_name, threshold)
+            return similar_concepts
+            
+        except Exception as e:
+            error_msg = f"Erro ao encontrar conceitos similares: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def analyze_for_universal_generalization(self, detection_data: Dict[str, Any], species: str, context: str = "general") -> Dict[str, Any]:
+        """
+        Analisa dados para generalização universal.
+        
+        Args:
+            detection_data: Dados de detecção
+            species: Espécie identificada
+            context: Contexto da análise
+            
+        Returns:
+            Análise de generalização universal
+        """
+        if not self.universal_generalization_system:
+            return {"error": "Sistema de generalização universal não disponível"}
+        
+        try:
+            analysis = self.universal_generalization_system.analyze_for_universal_generalization(
+                detection_data, species, context
+            )
+            return analysis
+            
+        except Exception as e:
+            error_msg = f"Erro na análise de generalização universal: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def transfer_knowledge_between_species(self, source_species: str, target_species: str, 
+                                         features: List[str], strategy: str = "adaptive") -> Dict[str, Any]:
+        """
+        Transfere conhecimento entre espécies.
+        
+        Args:
+            source_species: Espécie fonte
+            target_species: Espécie alvo
+            features: Características a transferir
+            strategy: Estratégia de transferência
+            
+        Returns:
+            Resultado da transferência
+        """
+        if not self.universal_generalization_system:
+            return {"error": "Sistema de generalização universal não disponível"}
+        
+        try:
+            # Converter string para enum
+            strategy_enum = TransferStrategy.ADAPTIVE
+            if strategy == "direct":
+                strategy_enum = TransferStrategy.DIRECT
+            elif strategy == "selective":
+                strategy_enum = TransferStrategy.SELECTIVE
+            elif strategy == "hierarchical":
+                strategy_enum = TransferStrategy.HIERARCHICAL
+            elif strategy == "contextual":
+                strategy_enum = TransferStrategy.CONTEXTUAL
+            
+            result = self.universal_generalization_system.transfer_knowledge_between_species(
+                source_species, target_species, features, strategy_enum
+            )
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro na transferência de conhecimento: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def learn_universal_pattern(self, detection_data: Dict[str, Any], species: str, 
+                               pattern_name: str, pattern_type: str = "morphological") -> Dict[str, Any]:
+        """
+        Aprende um novo padrão universal.
+        
+        Args:
+            detection_data: Dados de detecção
+            species: Espécie
+            pattern_name: Nome do padrão
+            pattern_type: Tipo do padrão
+            
+        Returns:
+            Resultado do aprendizado
+        """
+        if not self.universal_generalization_system:
+            return {"error": "Sistema de generalização universal não disponível"}
+        
+        try:
+            # Converter string para enum
+            pattern_type_enum = UniversalPatternType.MORPHOLOGICAL
+            if pattern_type == "behavioral":
+                pattern_type_enum = UniversalPatternType.BEHAVIORAL
+            elif pattern_type == "ecological":
+                pattern_type_enum = UniversalPatternType.ECOLOGICAL
+            elif pattern_type == "physiological":
+                pattern_type_enum = UniversalPatternType.PHYSIOLOGICAL
+            elif pattern_type == "evolutionary":
+                pattern_type_enum = UniversalPatternType.EVOLUTIONARY
+            
+            result = self.universal_generalization_system.learn_universal_pattern(
+                detection_data, species, pattern_name, pattern_type_enum
+            )
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro ao aprender padrão universal: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def learn_concept_few_shot(self, concept_name: str, concept_type: str, 
+                              examples: List[Dict[str, Any]], strategy: str = "prototype_based") -> Dict[str, Any]:
+        """
+        Aprende um conceito usando few-shot learning.
+        
+        Args:
+            concept_name: Nome do conceito
+            concept_type: Tipo do conceito
+            examples: Lista de exemplos
+            strategy: Estratégia de aprendizado
+            
+        Returns:
+            Resultado do aprendizado few-shot
+        """
+        if not self.few_shot_learner:
+            return {"error": "Sistema de few-shot learning não disponível"}
+        
+        try:
+            # Converter string para enum
+            concept_type_enum = ConceptType.SPECIES
+            if concept_type == "object":
+                concept_type_enum = ConceptType.OBJECT
+            elif concept_type == "behavior":
+                concept_type_enum = ConceptType.BEHAVIOR
+            elif concept_type == "pattern":
+                concept_type_enum = ConceptType.PATTERN
+            elif concept_type == "feature":
+                concept_type_enum = ConceptType.FEATURE
+            
+            strategy_enum = FewShotStrategy.PROTOTYPE_BASED
+            if strategy == "similarity_based":
+                strategy_enum = FewShotStrategy.SIMILARITY_BASED
+            elif strategy == "meta_learning":
+                strategy_enum = FewShotStrategy.META_LEARNING
+            elif strategy == "transfer_learning":
+                strategy_enum = FewShotStrategy.TRANSFER_LEARNING
+            elif strategy == "adaptive_fusion":
+                strategy_enum = FewShotStrategy.ADAPTIVE_FUSION
+            
+            result = self.few_shot_learner.learn_concept_few_shot(
+                concept_name, concept_type_enum, examples, strategy_enum
+            )
+            
+            return {
+                "success": result.success,
+                "confidence": result.confidence,
+                "learning_mode": result.learning_mode.value,
+                "strategy_used": result.strategy_used.value,
+                "examples_used": result.examples_used,
+                "transfer_sources": result.transfer_sources,
+                "adaptation_required": result.adaptation_required,
+                "performance_improvement": result.performance_improvement
+            }
+            
+        except Exception as e:
+            error_msg = f"Erro no aprendizado few-shot: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def classify_with_few_shot(self, detection_data: Dict[str, Any], 
+                               concept_type: str = None) -> Dict[str, Any]:
+        """
+        Classifica dados usando few-shot learning.
+        
+        Args:
+            detection_data: Dados de detecção
+            concept_type: Tipo do conceito (opcional)
+            
+        Returns:
+            Resultado da classificação few-shot
+        """
+        if not self.few_shot_learner:
+            return {"error": "Sistema de few-shot learning não disponível"}
+        
+        try:
+            # Converter string para enum
+            concept_type_enum = None
+            if concept_type:
+                if concept_type == "species":
+                    concept_type_enum = ConceptType.SPECIES
+                elif concept_type == "object":
+                    concept_type_enum = ConceptType.OBJECT
+                elif concept_type == "behavior":
+                    concept_type_enum = ConceptType.BEHAVIOR
+                elif concept_type == "pattern":
+                    concept_type_enum = ConceptType.PATTERN
+                elif concept_type == "feature":
+                    concept_type_enum = ConceptType.FEATURE
+            
+            result = self.few_shot_learner.classify_with_few_shot(detection_data, concept_type_enum)
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro na classificação few-shot: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def get_few_shot_analysis(self, concept_name: str = None) -> Dict[str, Any]:
+        """
+        Obtém análise do sistema few-shot.
+        
+        Args:
+            concept_name: Nome do conceito específico (opcional)
+            
+        Returns:
+            Análise do sistema few-shot
+        """
+        if not self.few_shot_learner:
+            return {"error": "Sistema de few-shot learning não disponível"}
+        
+        try:
+            analysis = self.few_shot_learner.get_few_shot_analysis(concept_name)
+            return analysis
+            
+        except Exception as e:
+            error_msg = f"Erro na análise few-shot: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def analyze_learning_session(self, session_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Analisa uma sessão de aprendizado para meta-aprendizado.
+        
+        Args:
+            session_data: Dados da sessão de aprendizado
+            
+        Returns:
+            Análise da sessão de aprendizado
+        """
+        if not self.meta_learning_system:
+            return {"error": "Sistema de meta-aprendizado não disponível"}
+        
+        try:
+            # Converter dados para LearningSession
+            from .meta_learning import LearningSession, LearningContext
+            
+            context_enum = LearningContext.NEW_CONCEPT
+            if session_data.get("context") == "similar_concept":
+                context_enum = LearningContext.SIMILAR_CONCEPT
+            elif session_data.get("context") == "complex_concept":
+                context_enum = LearningContext.COMPLEX_CONCEPT
+            elif session_data.get("context") == "simple_concept":
+                context_enum = LearningContext.SIMPLE_CONCEPT
+            elif session_data.get("context") == "few_examples":
+                context_enum = LearningContext.FEW_EXAMPLES
+            elif session_data.get("context") == "many_examples":
+                context_enum = LearningContext.MANY_EXAMPLES
+            
+            import time
+            session = LearningSession(
+                session_id=session_data.get("session_id", f"session_{int(time.time())}"),
+                concept_name=session_data.get("concept_name", "unknown"),
+                concept_type=session_data.get("concept_type", "species"),
+                strategy_used=session_data.get("strategy_used", "prototype_based"),
+                context=context_enum,
+                examples_count=session_data.get("examples_count", 1),
+                performance_metrics=session_data.get("performance_metrics", {}),
+                success=session_data.get("success", False),
+                learning_time=session_data.get("learning_time", 1.0),
+                timestamp=time.time(),
+                metadata=session_data.get("metadata", {})
+            )
+            
+            analysis = self.meta_learning_system.analyze_learning_session(session)
+            return analysis
+            
+        except Exception as e:
+            error_msg = f"Erro na análise de sessão de aprendizado: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def recommend_learning_strategy(self, concept_name: str, concept_type: str, 
+                                  examples_count: int, context: str = "new_concept") -> Dict[str, Any]:
+        """
+        Recomenda estratégia de aprendizado baseada em meta-aprendizado.
+        
+        Args:
+            concept_name: Nome do conceito
+            concept_type: Tipo do conceito
+            examples_count: Número de exemplos
+            context: Contexto de aprendizado
+            
+        Returns:
+            Recomendação de estratégia de aprendizado
+        """
+        if not self.meta_learning_system:
+            return {"error": "Sistema de meta-aprendizado não disponível"}
+        
+        try:
+            # Converter string para enum
+            from .meta_learning import LearningContext
+            
+            context_enum = LearningContext.NEW_CONCEPT
+            if context == "similar_concept":
+                context_enum = LearningContext.SIMILAR_CONCEPT
+            elif context == "complex_concept":
+                context_enum = LearningContext.COMPLEX_CONCEPT
+            elif context == "simple_concept":
+                context_enum = LearningContext.SIMPLE_CONCEPT
+            elif context == "few_examples":
+                context_enum = LearningContext.FEW_EXAMPLES
+            elif context == "many_examples":
+                context_enum = LearningContext.MANY_EXAMPLES
+            
+            recommendation = self.meta_learning_system.recommend_learning_strategy(
+                concept_name, concept_type, examples_count, context_enum
+            )
+            return recommendation
+            
+        except Exception as e:
+            error_msg = f"Erro na recomendação de estratégia: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def get_meta_learning_analysis(self) -> Dict[str, Any]:
+        """
+        Obtém análise geral do sistema de meta-aprendizado.
+        
+        Returns:
+            Análise do sistema de meta-aprendizado
+        """
+        if not self.meta_learning_system:
+            return {"error": "Sistema de meta-aprendizado não disponível"}
+        
+        try:
+            analysis = self.meta_learning_system.get_meta_learning_analysis()
+            return analysis
+            
+        except Exception as e:
+            error_msg = f"Erro na análise de meta-aprendizado: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def infer_abstract_properties(self, concept_name: str, target_property: str = None) -> Dict[str, Any]:
+        """
+        Infere propriedades abstratas de um conceito.
+        
+        Args:
+            concept_name: Nome do conceito
+            target_property: Propriedade específica para inferir (opcional)
+            
+        Returns:
+            Resultado da inferência abstrata
+        """
+        if not self.conceptual_reasoning_system:
+            return {"error": "Sistema de raciocínio conceitual não disponível"}
+        
+        try:
+            result = self.conceptual_reasoning_system.infer_abstract_properties(concept_name, target_property)
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro na inferência abstrata: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def add_concept(self, name: str, definition: str, properties: List[str], 
+                   abstraction_level: str = "general", relations: Dict[str, List[str]] = None) -> Dict[str, Any]:
+        """
+        Adiciona um conceito ao sistema de raciocínio conceitual.
+        
+        Args:
+            name: Nome do conceito
+            definition: Definição do conceito
+            properties: Lista de propriedades
+            abstraction_level: Nível de abstração
+            relations: Relações com outros conceitos
+            
+        Returns:
+            Resultado da adição do conceito
+        """
+        if not self.conceptual_reasoning_system:
+            return {"error": "Sistema de raciocínio conceitual não disponível"}
+        
+        try:
+            # Converter string para enum
+            abstraction_enum = AbstractionLevel.GENERAL
+            if abstraction_level == "concrete":
+                abstraction_enum = AbstractionLevel.CONCRETE
+            elif abstraction_level == "specific":
+                abstraction_enum = AbstractionLevel.SPECIFIC
+            elif abstraction_level == "abstract":
+                abstraction_enum = AbstractionLevel.ABSTRACT
+            elif abstraction_level == "universal":
+                abstraction_enum = AbstractionLevel.UNIVERSAL
+            
+            success = self.conceptual_reasoning_system.add_concept(
+                name, definition, properties, abstraction_enum, relations
+            )
+            
+            return {
+                "success": success,
+                "concept_name": name,
+                "message": f"Conceito '{name}' {'adicionado' if success else 'não pôde ser adicionado'} com sucesso"
+            }
+            
+        except Exception as e:
+            error_msg = f"Erro ao adicionar conceito: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def get_conceptual_analysis(self, concept_name: str = None) -> Dict[str, Any]:
+        """
+        Obtém análise conceitual.
+        
+        Args:
+            concept_name: Nome do conceito específico (opcional)
+            
+        Returns:
+            Análise conceitual
+        """
+        if not self.conceptual_reasoning_system:
+            return {"error": "Sistema de raciocínio conceitual não disponível"}
+        
+        try:
+            analysis = self.conceptual_reasoning_system.get_conceptual_analysis(concept_name)
+            return analysis
+            
+        except Exception as e:
+            error_msg = f"Erro na análise conceitual: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def find_structural_analogy(self, source_concept: str, target_concept: str) -> Dict[str, Any]:
+        """
+        Encontra analogia estrutural entre dois conceitos.
+        
+        Args:
+            source_concept: Conceito fonte
+            target_concept: Conceito alvo
+            
+        Returns:
+            Resultado da analogia estrutural
+        """
+        if not self.analogical_reasoning_system:
+            return {"error": "Sistema de raciocínio por analogia não disponível"}
+        
+        try:
+            result = self.analogical_reasoning_system.find_structural_analogy(source_concept, target_concept)
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro na analogia estrutural: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def reason_by_analogy(self, source_concept: str, target_concept: str, 
+                         property_to_transfer: str = None) -> Dict[str, Any]:
+        """
+        Raciocina por analogia entre dois conceitos.
+        
+        Args:
+            source_concept: Conceito fonte
+            target_concept: Conceito alvo
+            property_to_transfer: Propriedade específica para transferir (opcional)
+            
+        Returns:
+            Resultado do raciocínio por analogia
+        """
+        if not self.analogical_reasoning_system:
+            return {"error": "Sistema de raciocínio por analogia não disponível"}
+        
+        try:
+            result = self.analogical_reasoning_system.reason_by_analogy(
+                source_concept, target_concept, property_to_transfer
+            )
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro no raciocínio por analogia: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def add_concept_structure(self, concept_name: str, structure: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Adiciona estrutura de um conceito ao sistema de analogia.
+        
+        Args:
+            concept_name: Nome do conceito
+            structure: Estrutura do conceito (componentes, relações, propriedades)
+            
+        Returns:
+            Resultado da adição da estrutura
+        """
+        if not self.analogical_reasoning_system:
+            return {"error": "Sistema de raciocínio por analogia não disponível"}
+        
+        try:
+            success = self.analogical_reasoning_system.add_concept_structure(concept_name, structure)
+            
+            return {
+                "success": success,
+                "concept_name": concept_name,
+                "message": f"Estrutura do conceito '{concept_name}' {'adicionada' if success else 'não pôde ser adicionada'} com sucesso"
+            }
+            
+        except Exception as e:
+            error_msg = f"Erro ao adicionar estrutura de conceito: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def get_analogy_analysis(self, concept_name: str = None) -> Dict[str, Any]:
+        """
+        Obtém análise de analogias.
+        
+        Args:
+            concept_name: Nome do conceito específico (opcional)
+            
+        Returns:
+            Análise de analogias
+        """
+        if not self.analogical_reasoning_system:
+            return {"error": "Sistema de raciocínio por analogia não disponível"}
+        
+        try:
+            analysis = self.analogical_reasoning_system.get_analogy_analysis(concept_name)
+            return analysis
+            
+        except Exception as e:
+            error_msg = f"Erro na análise de analogias: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def learn_universal_pattern(self, detection_data: Dict[str, Any], 
+                              species: str, pattern_name: str = None) -> Dict[str, Any]:
+        """
+        Aprende um padrão universal a partir de dados de detecção.
+        
+        Args:
+            detection_data: Dados de detecção
+            species: Espécie observada
+            pattern_name: Nome do padrão (opcional)
+            
+        Returns:
+            Resultado do aprendizado de padrão universal
+        """
+        if not self.universal_pattern_learner:
+            return {"error": "Sistema de aprendizado por padrões universais não disponível"}
+        
+        try:
+            result = self.universal_pattern_learner.learn_universal_pattern(
+                detection_data, species, pattern_name
+            )
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro no aprendizado de padrão universal: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def validate_pattern_universality(self, pattern_id: str, 
+                                   new_species_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Valida se um padrão é universal aplicando-o a uma nova espécie.
+        
+        Args:
+            pattern_id: ID do padrão
+            new_species_data: Dados da nova espécie
+            
+        Returns:
+            Resultado da validação de universalidade
+        """
+        if not self.universal_pattern_learner:
+            return {"error": "Sistema de aprendizado por padrões universais não disponível"}
+        
+        try:
+            result = self.universal_pattern_learner.validate_pattern_universality(
+                pattern_id, new_species_data
+            )
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro na validação de universalidade: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def find_applicable_patterns(self, detection_data: Dict[str, Any], 
+                               species: str = None) -> Dict[str, Any]:
+        """
+        Encontra padrões universais aplicáveis aos dados de detecção.
+        
+        Args:
+            detection_data: Dados de detecção
+            species: Espécie (opcional)
+            
+        Returns:
+            Padrões aplicáveis encontrados
+        """
+        if not self.universal_pattern_learner:
+            return {"error": "Sistema de aprendizado por padrões universais não disponível"}
+        
+        try:
+            result = self.universal_pattern_learner.find_applicable_patterns(
+                detection_data, species
+            )
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro na busca de padrões aplicáveis: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def get_universal_pattern_analysis(self, pattern_id: str = None) -> Dict[str, Any]:
+        """
+        Obtém análise de padrões universais.
+        
+        Args:
+            pattern_id: ID do padrão específico (opcional)
+            
+        Returns:
+            Análise de padrões universais
+        """
+        if not self.universal_pattern_learner:
+            return {"error": "Sistema de aprendizado por padrões universais não disponível"}
+        
+        try:
+            analysis = self.universal_pattern_learner.get_universal_pattern_analysis(pattern_id)
+            return analysis
+            
+        except Exception as e:
+            error_msg = f"Erro na análise de padrões universais: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def store_episodic_memory(self, memory_type: str, content: Dict[str, Any], 
+                            context: Dict[str, Any] = None, location: str = None,
+                            emotional_state: str = None) -> Dict[str, Any]:
+        """
+        Armazena uma memória episódica.
+        
+        Args:
+            memory_type: Tipo da memória
+            content: Conteúdo da memória
+            context: Contexto da memória
+            location: Localização (opcional)
+            emotional_state: Estado emocional (opcional)
+            
+        Returns:
+            Resultado do armazenamento
+        """
+        if not self.episodic_memory_system:
+            return {"error": "Sistema de memória episódica não disponível"}
+        
+        try:
+            result = self.episodic_memory_system.store_episodic_memory(
+                memory_type, content, context, location, emotional_state
+            )
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro no armazenamento de memória episódica: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def retrieve_memories(self, query: Dict[str, Any], 
+                         retrieval_type: str = "free_recall",
+                         limit: int = 10) -> Dict[str, Any]:
+        """
+        Recupera memórias baseado em uma consulta.
+        
+        Args:
+            query: Consulta para recuperação
+            retrieval_type: Tipo de recuperação
+            limit: Limite de resultados
+            
+        Returns:
+            Memórias recuperadas
+        """
+        if not self.episodic_memory_system:
+            return {"error": "Sistema de memória episódica não disponível"}
+        
+        try:
+            result = self.episodic_memory_system.retrieve_memories(
+                query, retrieval_type, limit
+            )
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro na recuperação de memórias: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def consolidate_memories(self) -> Dict[str, Any]:
+        """
+        Consolida memórias na fila de consolidação.
+        
+        Returns:
+            Resultado da consolidação
+        """
+        if not self.episodic_memory_system:
+            return {"error": "Sistema de memória episódica não disponível"}
+        
+        try:
+            result = self.episodic_memory_system.consolidate_memories()
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro na consolidação de memórias: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def forget_old_memories(self) -> Dict[str, Any]:
+        """
+        Esquece memórias antigas baseado no agendamento.
+        
+        Returns:
+            Resultado do esquecimento
+        """
+        if not self.episodic_memory_system:
+            return {"error": "Sistema de memória episódica não disponível"}
+        
+        try:
+            result = self.episodic_memory_system.forget_old_memories()
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro no esquecimento de memórias: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def get_memory_analysis(self, memory_id: str = None) -> Dict[str, Any]:
+        """
+        Obtém análise de memórias.
+        
+        Args:
+            memory_id: ID da memória específica (opcional)
+            
+        Returns:
+            Análise de memórias
+        """
+        if not self.episodic_memory_system:
+            return {"error": "Sistema de memória episódica não disponível"}
+        
+        try:
+            analysis = self.episodic_memory_system.get_memory_analysis(memory_id)
+            return analysis
+            
+        except Exception as e:
+            error_msg = f"Erro na análise de memórias: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def identify_causal_relation(self, cause: str, effect: str, 
+                               evidence: List[Dict[str, Any]] = None,
+                               context: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        Identifica uma relação causal entre causa e efeito.
+        
+        Args:
+            cause: Causa
+            effect: Efeito
+            evidence: Evidências (opcional)
+            context: Contexto (opcional)
+            
+        Returns:
+            Resultado da identificação de relação causal
+        """
+        if not self.causal_reasoning_system:
+            return {"error": "Sistema de raciocínio causal não disponível"}
+        
+        try:
+            result = self.causal_reasoning_system.identify_causal_relation(
+                cause, effect, evidence, context
+            )
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro na identificação de relação causal: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def infer_causal_relations(self, query: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Faz inferências causais baseadas em uma consulta.
+        
+        Args:
+            query: Consulta para inferência causal
+            
+        Returns:
+            Inferências causais
+        """
+        if not self.causal_reasoning_system:
+            return {"error": "Sistema de raciocínio causal não disponível"}
+        
+        try:
+            result = self.causal_reasoning_system.infer_causal_relations(query)
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro na inferência causal: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def detect_correlation_vs_causation(self, event_a: str, event_b: str, 
+                                      evidence: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Detecta se a relação é correlação ou causalidade.
+        
+        Args:
+            event_a: Primeiro evento
+            event_b: Segundo evento
+            evidence: Evidências
+            
+        Returns:
+            Análise de correlação vs causalidade
+        """
+        if not self.causal_reasoning_system:
+            return {"error": "Sistema de raciocínio causal não disponível"}
+        
+        try:
+            result = self.causal_reasoning_system.detect_correlation_vs_causation(
+                event_a, event_b, evidence
+            )
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro na detecção de correlação vs causalidade: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def get_causal_analysis(self, relation_id: str = None) -> Dict[str, Any]:
+        """
+        Obtém análise de relações causais.
+        
+        Args:
+            relation_id: ID da relação específica (opcional)
+            
+        Returns:
+            Análise de relações causais
+        """
+        if not self.causal_reasoning_system:
+            return {"error": "Sistema de raciocínio causal não disponível"}
+        
+        try:
+            analysis = self.causal_reasoning_system.get_causal_analysis(relation_id)
+            return analysis
+            
+        except Exception as e:
+            error_msg = f"Erro na análise causal: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def add_abstract_concept(self, name: str, description: str, 
+                           abstraction_level: AbstractionLevel,
+                           properties: Dict[str, Any] = None,
+                           examples: List[str] = None) -> Dict[str, Any]:
+        """
+        Adiciona um conceito abstrato.
+        
+        Args:
+            name: Nome do conceito
+            description: Descrição do conceito
+            abstraction_level: Nível de abstração
+            properties: Propriedades do conceito (opcional)
+            examples: Exemplos do conceito (opcional)
+            
+        Returns:
+            Resultado da adição do conceito
+        """
+        if not self.abstract_inference_engine:
+            return {"error": "Sistema de inferência abstrata não disponível"}
+        
+        try:
+            result = self.abstract_inference_engine.add_abstract_concept(
+                name, description, abstraction_level, properties, examples
+            )
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro ao adicionar conceito abstrato: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def add_inference_rule(self, name: str, premise_patterns: List[str],
+                          conclusion_pattern: str, inference_type: InferenceType,
+                          abstraction_level: AbstractionLevel,
+                          conditions: List[str] = None,
+                          exceptions: List[str] = None) -> Dict[str, Any]:
+        """
+        Adiciona uma regra de inferência.
+        
+        Args:
+            name: Nome da regra
+            premise_patterns: Padrões de premissas
+            conclusion_pattern: Padrão de conclusão
+            inference_type: Tipo de inferência
+            abstraction_level: Nível de abstração
+            conditions: Condições (opcional)
+            exceptions: Exceções (opcional)
+            
+        Returns:
+            Resultado da adição da regra
+        """
+        if not self.abstract_inference_engine:
+            return {"error": "Sistema de inferência abstrata não disponível"}
+        
+        try:
+            result = self.abstract_inference_engine.add_inference_rule(
+                name, premise_patterns, conclusion_pattern, inference_type,
+                abstraction_level, conditions, exceptions
+            )
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro ao adicionar regra de inferência: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def perform_abstract_inference(self, query: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Realiza inferência abstrata.
+        
+        Args:
+            query: Consulta para inferência
+            
+        Returns:
+            Resultado da inferência abstrata
+        """
+        if not self.abstract_inference_engine:
+            return {"error": "Sistema de inferência abstrata não disponível"}
+        
+        try:
+            result = self.abstract_inference_engine.perform_abstract_inference(query)
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro na inferência abstrata: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def validate_abstract_inference(self, inference_id: str) -> Dict[str, Any]:
+        """
+        Valida uma inferência abstrata.
+        
+        Args:
+            inference_id: ID da inferência
+            
+        Returns:
+            Resultado da validação
+        """
+        if not self.abstract_inference_engine:
+            return {"error": "Sistema de inferência abstrata não disponível"}
+        
+        try:
+            result = self.abstract_inference_engine.validate_abstract_inference(inference_id)
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro na validação da inferência abstrata: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def get_abstract_inference_analysis(self, inference_id: str = None) -> Dict[str, Any]:
+        """
+        Obtém análise de inferências abstratas.
+        
+        Args:
+            inference_id: ID da inferência específica (opcional)
+            
+        Returns:
+            Análise de inferências abstratas
+        """
+        if not self.abstract_inference_engine:
+            return {"error": "Sistema de inferência abstrata não disponível"}
+        
+        try:
+            analysis = self.abstract_inference_engine.get_abstract_inference_analysis(inference_id)
+            return analysis
+            
+        except Exception as e:
+            error_msg = f"Erro na análise de inferência abstrata: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    # ===== MÉTODOS DE HIERARQUIAS DE CONCEITOS =====
+    
+    def add_hierarchical_concept(self, name: str, description: str, 
+                                abstraction_level: str = "general",
+                                complexity: str = "simple",
+                                parent_concepts: List[str] = None,
+                                properties: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        Adiciona um conceito hierárquico.
+        
+        Args:
+            name: Nome do conceito
+            description: Descrição do conceito
+            abstraction_level: Nível de abstração
+            complexity: Nível de complexidade
+            parent_concepts: Conceitos pais (opcional)
+            properties: Propriedades do conceito (opcional)
+            
+        Returns:
+            Resultado da adição do conceito
+        """
+        if not self.concept_hierarchy_manager:
+            return {"error": "Sistema de hierarquias de conceitos não disponível"}
+        
+        try:
+            # Converter strings para enums
+            abstraction_enum = ConceptAbstractionLevel.GENERAL
+            if abstraction_level == "concrete":
+                abstraction_enum = ConceptAbstractionLevel.CONCRETE
+            elif abstraction_level == "specific":
+                abstraction_enum = ConceptAbstractionLevel.SPECIFIC
+            elif abstraction_level == "abstract":
+                abstraction_enum = ConceptAbstractionLevel.ABSTRACT
+            elif abstraction_level == "universal":
+                abstraction_enum = ConceptAbstractionLevel.UNIVERSAL
+            elif abstraction_level == "metaphysical":
+                abstraction_enum = ConceptAbstractionLevel.METAPHYSICAL
+            
+            complexity_enum = ConceptComplexity.SIMPLE
+            if complexity == "compound":
+                complexity_enum = ConceptComplexity.COMPOUND
+            elif complexity == "complex":
+                complexity_enum = ConceptComplexity.COMPLEX
+            elif complexity == "meta":
+                complexity_enum = ConceptComplexity.META
+            
+            result = self.concept_hierarchy_manager.add_concept(
+                name, description, abstraction_enum, complexity_enum,
+                parent_concepts, properties
+            )
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro ao adicionar conceito hierárquico: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def add_concept_relationship(self, source_concept: str, target_concept: str,
+                                relationship_type: str, strength: float = 0.5,
+                                confidence: float = 0.5) -> Dict[str, Any]:
+        """
+        Adiciona um relacionamento entre conceitos.
+        
+        Args:
+            source_concept: Conceito origem
+            target_concept: Conceito destino
+            relationship_type: Tipo de relacionamento
+            strength: Força do relacionamento
+            confidence: Confiança no relacionamento
+            
+        Returns:
+            Resultado da adição do relacionamento
+        """
+        if not self.concept_hierarchy_manager:
+            return {"error": "Sistema de hierarquias de conceitos não disponível"}
+        
+        try:
+            # Converter string para enum
+            relationship_enum = ConceptRelationshipType.IS_A
+            if relationship_type == "part_of":
+                relationship_enum = ConceptRelationshipType.PART_OF
+            elif relationship_type == "has_a":
+                relationship_enum = ConceptRelationshipType.HAS_A
+            elif relationship_type == "similar_to":
+                relationship_enum = ConceptRelationshipType.SIMILAR_TO
+            elif relationship_type == "opposite_of":
+                relationship_enum = ConceptRelationshipType.OPPOSITE_OF
+            elif relationship_type == "causes":
+                relationship_enum = ConceptRelationshipType.CAUSES
+            elif relationship_type == "requires":
+                relationship_enum = ConceptRelationshipType.REQUIRES
+            elif relationship_type == "inhibits":
+                relationship_enum = ConceptRelationshipType.INHIBITS
+            
+            result = self.concept_hierarchy_manager.add_relationship(
+                source_concept, target_concept, relationship_enum,
+                strength, confidence
+            )
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro ao adicionar relacionamento: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def find_concept_relationships(self, concept_name: str, 
+                                 relationship_type: str = None) -> Dict[str, Any]:
+        """
+        Encontra relacionamentos de um conceito.
+        
+        Args:
+            concept_name: Nome do conceito
+            relationship_type: Tipo de relacionamento (opcional)
+            
+        Returns:
+            Relacionamentos encontrados
+        """
+        if not self.concept_hierarchy_manager:
+            return {"error": "Sistema de hierarquias de conceitos não disponível"}
+        
+        try:
+            result = self.concept_hierarchy_manager.find_relationships(
+                concept_name, relationship_type
+            )
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro ao encontrar relacionamentos: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def get_concept_hierarchy(self, root_concept: str = None, 
+                            max_depth: int = 3) -> Dict[str, Any]:
+        """
+        Obtém a hierarquia de conceitos.
+        
+        Args:
+            root_concept: Conceito raiz (opcional)
+            max_depth: Profundidade máxima
+            
+        Returns:
+            Hierarquia de conceitos
+        """
+        if not self.concept_hierarchy_manager:
+            return {"error": "Sistema de hierarquias de conceitos não disponível"}
+        
+        try:
+            hierarchy = self.concept_hierarchy_manager.get_hierarchy(
+                root_concept, max_depth
+            )
+            return hierarchy
+            
+        except Exception as e:
+            error_msg = f"Erro ao obter hierarquia: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def analyze_concept_similarity(self, concept1: str, concept2: str) -> Dict[str, Any]:
+        """
+        Analisa similaridade entre dois conceitos.
+        
+        Args:
+            concept1: Primeiro conceito
+            concept2: Segundo conceito
+            
+        Returns:
+            Análise de similaridade
+        """
+        if not self.concept_hierarchy_manager:
+            return {"error": "Sistema de hierarquias de conceitos não disponível"}
+        
+        try:
+            similarity = self.concept_hierarchy_manager.analyze_similarity(
+                concept1, concept2
+            )
+            return similarity
+            
+        except Exception as e:
+            error_msg = f"Erro na análise de similaridade: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def get_concept_hierarchy_analysis(self, concept_name: str = None) -> Dict[str, Any]:
+        """
+        Obtém análise da hierarquia de conceitos.
+        
+        Args:
+            concept_name: Nome do conceito específico (opcional)
+            
+        Returns:
+            Análise da hierarquia
+        """
+        if not self.concept_hierarchy_manager:
+            return {"error": "Sistema de hierarquias de conceitos não disponível"}
+        
+        try:
+            analysis = self.concept_hierarchy_manager.get_analysis(concept_name)
+            return analysis
+            
+        except Exception as e:
+            error_msg = f"Erro na análise da hierarquia: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    # ===== MÉTODOS DE APRENDIZADO DE RELAÇÕES =====
+    
+    def learn_relation(self, source_concept: str, target_concept: str,
+                      relation_type: str, evidence: List[Dict[str, Any]] = None,
+                      learning_mode: str = "unsupervised",
+                      context: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        Aprende uma nova relação entre conceitos.
+        
+        Args:
+            source_concept: Conceito origem
+            target_concept: Conceito destino
+            relation_type: Tipo da relação
+            evidence: Evidências que suportam a relação
+            learning_mode: Modo de aprendizado
+            context: Contexto da relação
+            
+        Returns:
+            Resultado do aprendizado
+        """
+        if not self.relation_learning_system:
+            return {"error": "Sistema de aprendizado de relações não disponível"}
+        
+        try:
+            # Converter strings para enums
+            relation_enum = RelationType.STRUCTURAL
+            if relation_type == "temporal":
+                relation_enum = RelationType.TEMPORAL
+            elif relation_type == "spatial":
+                relation_enum = RelationType.SPATIAL
+            elif relation_type == "causal":
+                relation_enum = RelationType.CAUSAL
+            elif relation_type == "functional":
+                relation_enum = RelationType.FUNCTIONAL
+            elif relation_type == "behavioral":
+                relation_enum = RelationType.BEHAVIORAL
+            elif relation_type == "similarity":
+                relation_enum = RelationType.SIMILARITY
+            elif relation_type == "opposition":
+                relation_enum = RelationType.OPPOSITION
+            elif relation_type == "dependency":
+                relation_enum = RelationType.DEPENDENCY
+            elif relation_type == "association":
+                relation_enum = RelationType.ASSOCIATION
+            
+            learning_enum = LearningMode.UNSUPERVISED
+            if learning_mode == "supervised":
+                learning_enum = LearningMode.SUPERVISED
+            elif learning_mode == "semi_supervised":
+                learning_enum = LearningMode.SEMI_SUPERVISED
+            elif learning_mode == "reinforcement":
+                learning_enum = LearningMode.REINFORCEMENT
+            elif learning_mode == "transfer":
+                learning_enum = LearningMode.TRANSFER
+            
+            # Converter evidências para objetos RelationEvidence
+            evidence_objects = []
+            if evidence:
+                for i, ev in enumerate(evidence):
+                    evidence_type = EvidenceType.DIRECT_OBSERVATION
+                    if ev.get("type") == "statistical_correlation":
+                        evidence_type = EvidenceType.STATISTICAL_CORRELATION
+                    elif ev.get("type") == "expert_knowledge":
+                        evidence_type = EvidenceType.EXPERT_KNOWLEDGE
+                    elif ev.get("type") == "logical_inference":
+                        evidence_type = EvidenceType.LOGICAL_INFERENCE
+                    elif ev.get("type") == "pattern_recognition":
+                        evidence_type = EvidenceType.PATTERN_RECOGNITION
+                    elif ev.get("type") == "analogical_reasoning":
+                        evidence_type = EvidenceType.ANALOGICAL_REASONING
+                    
+                    import time
+                    evidence_obj = RelationEvidence(
+                        evidence_id=f"ev_{i}_{int(time.time())}",
+                        evidence_type=evidence_type,
+                        source=ev.get("source", "unknown"),
+                        confidence=ev.get("confidence", 0.5),
+                        context=ev.get("context", {}),
+                        timestamp=time.time(),
+                        metadata=ev.get("metadata", {})
+                    )
+                    evidence_objects.append(evidence_obj)
+            
+            result = self.relation_learning_system.learn_relation(
+                source_concept, target_concept, relation_enum, evidence_objects,
+                learning_enum, context
+            )
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro ao aprender relação: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def infer_relation(self, source_concept: str, target_concept: str,
+                      relation_type: str = None,
+                      context: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        Infere uma relação entre conceitos.
+        
+        Args:
+            source_concept: Conceito origem
+            target_concept: Conceito destino
+            relation_type: Tipo de relação específico (opcional)
+            context: Contexto da inferência
+            
+        Returns:
+            Resultado da inferência
+        """
+        if not self.relation_learning_system:
+            return {"error": "Sistema de aprendizado de relações não disponível"}
+        
+        try:
+            # Converter string para enum se necessário
+            relation_enum = None
+            if relation_type:
+                if relation_type == "temporal":
+                    relation_enum = RelationType.TEMPORAL
+                elif relation_type == "spatial":
+                    relation_enum = RelationType.SPATIAL
+                elif relation_type == "causal":
+                    relation_enum = RelationType.CAUSAL
+                elif relation_type == "functional":
+                    relation_enum = RelationType.FUNCTIONAL
+                elif relation_type == "behavioral":
+                    relation_enum = RelationType.BEHAVIORAL
+                elif relation_type == "similarity":
+                    relation_enum = RelationType.SIMILARITY
+                elif relation_type == "opposition":
+                    relation_enum = RelationType.OPPOSITION
+                elif relation_type == "dependency":
+                    relation_enum = RelationType.DEPENDENCY
+                elif relation_type == "association":
+                    relation_enum = RelationType.ASSOCIATION
+            
+            result = self.relation_learning_system.infer_relation(
+                source_concept, target_concept, relation_enum, context
+            )
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro na inferência de relação: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def validate_relation(self, relation_id: str, new_evidence: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Valida uma relação existente com novas evidências.
+        
+        Args:
+            relation_id: ID da relação
+            new_evidence: Novas evidências
+            
+        Returns:
+            Resultado da validação
+        """
+        if not self.relation_learning_system:
+            return {"error": "Sistema de aprendizado de relações não disponível"}
+        
+        try:
+            # Converter evidências para objetos RelationEvidence
+            evidence_objects = []
+            for i, ev in enumerate(new_evidence):
+                evidence_type = EvidenceType.DIRECT_OBSERVATION
+                if ev.get("type") == "statistical_correlation":
+                    evidence_type = EvidenceType.STATISTICAL_CORRELATION
+                elif ev.get("type") == "expert_knowledge":
+                    evidence_type = EvidenceType.EXPERT_KNOWLEDGE
+                elif ev.get("type") == "logical_inference":
+                    evidence_type = EvidenceType.LOGICAL_INFERENCE
+                elif ev.get("type") == "pattern_recognition":
+                    evidence_type = EvidenceType.PATTERN_RECOGNITION
+                elif ev.get("type") == "analogical_reasoning":
+                    evidence_type = EvidenceType.ANALOGICAL_REASONING
+                
+                import time
+                evidence_obj = RelationEvidence(
+                    evidence_id=f"ev_{i}_{int(time.time())}",
+                    evidence_type=evidence_type,
+                    source=ev.get("source", "unknown"),
+                    confidence=ev.get("confidence", 0.5),
+                    context=ev.get("context", {}),
+                    timestamp=time.time(),
+                    metadata=ev.get("metadata", {})
+                )
+                evidence_objects.append(evidence_obj)
+            
+            result = self.relation_learning_system.validate_relation(relation_id, evidence_objects)
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro na validação de relação: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def find_relation_patterns(self, concept: str = None, 
+                             pattern_type: str = None) -> Dict[str, Any]:
+        """
+        Encontra padrões de relações.
+        
+        Args:
+            concept: Conceito específico (opcional)
+            pattern_type: Tipo de padrão (opcional)
+            
+        Returns:
+            Padrões encontrados
+        """
+        if not self.relation_learning_system:
+            return {"error": "Sistema de aprendizado de relações não disponível"}
+        
+        try:
+            result = self.relation_learning_system.find_relation_patterns(concept, pattern_type)
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro ao encontrar padrões: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def get_relation_analysis(self, concept: str = None) -> Dict[str, Any]:
+        """
+        Obtém análise das relações aprendidas.
+        
+        Args:
+            concept: Conceito específico (opcional)
+            
+        Returns:
+            Análise das relações
+        """
+        if not self.relation_learning_system:
+            return {"error": "Sistema de aprendizado de relações não disponível"}
+        
+        try:
+            result = self.relation_learning_system.get_relation_analysis(concept)
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro na análise de relações: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    # ===== MÉTODOS DE TRANSFERÊNCIA DE CONHECIMENTO =====
+    
+    def transfer_knowledge(self, source_domain: str, target_domain: str,
+                          source_knowledge: Dict[str, Any],
+                          transfer_type: str = "concept_to_concept",
+                          strategy: str = "adaptive",
+                          knowledge_type: str = "conceptual",
+                          context: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        Transfere conhecimento entre domínios.
+        
+        Args:
+            source_domain: Domínio fonte
+            target_domain: Domínio alvo
+            source_knowledge: Conhecimento fonte
+            transfer_type: Tipo de transferência
+            strategy: Estratégia de transferência
+            knowledge_type: Tipo de conhecimento
+            context: Contexto da transferência
+            
+        Returns:
+            Resultado da transferência
+        """
+        if not self.knowledge_transfer_system:
+            return {"error": "Sistema de transferência de conhecimento não disponível"}
+        
+        try:
+            # Converter strings para enums
+            transfer_enum = TransferType.CONCEPT_TO_CONCEPT
+            if transfer_type == "domain_to_domain":
+                transfer_enum = TransferType.DOMAIN_TO_DOMAIN
+            elif transfer_type == "species_to_species":
+                transfer_enum = TransferType.SPECIES_TO_SPECIES
+            elif transfer_type == "context_to_context":
+                transfer_enum = TransferType.CONTEXT_TO_CONTEXT
+            elif transfer_type == "skill_to_skill":
+                transfer_enum = TransferType.SKILL_TO_SKILL
+            elif transfer_type == "pattern_to_pattern":
+                transfer_enum = TransferType.PATTERN_TO_PATTERN
+            elif transfer_type == "feature_to_feature":
+                transfer_enum = TransferType.FEATURE_TO_FEATURE
+            elif transfer_type == "strategy_to_strategy":
+                transfer_enum = TransferType.STRATEGY_TO_STRATEGY
+            
+            strategy_enum = TransferStrategy.ADAPTIVE
+            if strategy == "direct":
+                strategy_enum = TransferStrategy.DIRECT
+            elif strategy == "selective":
+                strategy_enum = TransferStrategy.SELECTIVE
+            elif strategy == "hierarchical":
+                strategy_enum = TransferStrategy.HIERARCHICAL
+            elif strategy == "contextual":
+                strategy_enum = TransferStrategy.CONTEXTUAL
+            elif strategy == "analogical":
+                strategy_enum = TransferStrategy.ANALOGICAL
+            elif strategy == "meta_learning":
+                strategy_enum = TransferStrategy.META_LEARNING
+            elif strategy == "few_shot":
+                strategy_enum = TransferStrategy.FEW_SHOT
+            
+            knowledge_enum = KnowledgeType.CONCEPTUAL
+            if knowledge_type == "factual":
+                knowledge_enum = KnowledgeType.FACTUAL
+            elif knowledge_type == "procedural":
+                knowledge_enum = KnowledgeType.PROCEDURAL
+            elif knowledge_type == "metacognitive":
+                knowledge_enum = KnowledgeType.METACOGNITIVE
+            elif knowledge_type == "experiential":
+                knowledge_enum = KnowledgeType.EXPERIENTIAL
+            elif knowledge_type == "pattern_based":
+                knowledge_enum = KnowledgeType.PATTERN_BASED
+            
+            result = self.knowledge_transfer_system.transfer_knowledge(
+                source_domain, target_domain, source_knowledge,
+                transfer_enum, strategy_enum, knowledge_enum, context
+            )
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro na transferência de conhecimento: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def find_similar_transfers(self, source_domain: str, target_domain: str,
+                             transfer_type: str = None) -> Dict[str, Any]:
+        """
+        Encontra transferências similares.
+        
+        Args:
+            source_domain: Domínio fonte
+            target_domain: Domínio alvo
+            transfer_type: Tipo de transferência (opcional)
+            
+        Returns:
+            Transferências similares encontradas
+        """
+        if not self.knowledge_transfer_system:
+            return {"error": "Sistema de transferência de conhecimento não disponível"}
+        
+        try:
+            # Converter string para enum se necessário
+            transfer_enum = None
+            if transfer_type:
+                if transfer_type == "domain_to_domain":
+                    transfer_enum = TransferType.DOMAIN_TO_DOMAIN
+                elif transfer_type == "concept_to_concept":
+                    transfer_enum = TransferType.CONCEPT_TO_CONCEPT
+                elif transfer_type == "species_to_species":
+                    transfer_enum = TransferType.SPECIES_TO_SPECIES
+                elif transfer_type == "context_to_context":
+                    transfer_enum = TransferType.CONTEXT_TO_CONTEXT
+                elif transfer_type == "skill_to_skill":
+                    transfer_enum = TransferType.SKILL_TO_SKILL
+                elif transfer_type == "pattern_to_pattern":
+                    transfer_enum = TransferType.PATTERN_TO_PATTERN
+                elif transfer_type == "feature_to_feature":
+                    transfer_enum = TransferType.FEATURE_TO_FEATURE
+                elif transfer_type == "strategy_to_strategy":
+                    transfer_enum = TransferType.STRATEGY_TO_STRATEGY
+            
+            result = self.knowledge_transfer_system.find_similar_transfers(
+                source_domain, target_domain, transfer_enum
+            )
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro ao encontrar transferências similares: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def apply_transfer_rule(self, rule_id: str, source_data: Dict[str, Any],
+                           target_context: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Aplica uma regra de transferência.
+        
+        Args:
+            rule_id: ID da regra
+            source_data: Dados fonte
+            target_context: Contexto alvo
+            
+        Returns:
+            Resultado da aplicação da regra
+        """
+        if not self.knowledge_transfer_system:
+            return {"error": "Sistema de transferência de conhecimento não disponível"}
+        
+        try:
+            result = self.knowledge_transfer_system.apply_transfer_rule(
+                rule_id, source_data, target_context
+            )
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro ao aplicar regra de transferência: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def learn_transfer_rule(self, source_pattern: str, target_pattern: str,
+                           examples: List[Dict[str, Any]],
+                           conditions: List[str] = None) -> Dict[str, Any]:
+        """
+        Aprende uma nova regra de transferência.
+        
+        Args:
+            source_pattern: Padrão fonte
+            target_pattern: Padrão alvo
+            examples: Exemplos de transferência
+            conditions: Condições da regra
+            
+        Returns:
+            Resultado do aprendizado da regra
+        """
+        if not self.knowledge_transfer_system:
+            return {"error": "Sistema de transferência de conhecimento não disponível"}
+        
+        try:
+            result = self.knowledge_transfer_system.learn_transfer_rule(
+                source_pattern, target_pattern, examples, conditions
+            )
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro ao aprender regra de transferência: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def get_transfer_analysis(self, domain: str = None) -> Dict[str, Any]:
+        """
+        Obtém análise das transferências de conhecimento.
+        
+        Args:
+            domain: Domínio específico (opcional)
+            
+        Returns:
+            Análise das transferências
+        """
+        if not self.knowledge_transfer_system:
+            return {"error": "Sistema de transferência de conhecimento não disponível"}
+        
+        try:
+            result = self.knowledge_transfer_system.get_transfer_analysis(domain)
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro na análise de transferências: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    # ===== MÉTODOS DE META-COGNIÇÃO =====
+    
+    def perform_self_reflection(self, process_name: str, process_data: Dict[str, Any],
+                               reflection_type: str = "performance_reflection") -> Dict[str, Any]:
+        """
+        Realiza auto-reflexão sobre um processo.
+        
+        Args:
+            process_name: Nome do processo
+            process_data: Dados do processo
+            reflection_type: Tipo de reflexão
+            
+        Returns:
+            Resultado da reflexão
+        """
+        if not self.metacognitive_system:
+            return {"error": "Sistema de meta-cognição não disponível"}
+        
+        try:
+            # Converter string para enum
+            reflection_enum = ReflectionType.PERFORMANCE_REFLECTION
+            if reflection_type == "strategy_reflection":
+                reflection_enum = ReflectionType.STRATEGY_REFLECTION
+            elif reflection_type == "learning_reflection":
+                reflection_enum = ReflectionType.LEARNING_REFLECTION
+            elif reflection_type == "error_reflection":
+                reflection_enum = ReflectionType.ERROR_REFLECTION
+            elif reflection_type == "success_reflection":
+                reflection_enum = ReflectionType.SUCCESS_REFLECTION
+            elif reflection_type == "metacognitive_reflection":
+                reflection_enum = ReflectionType.METACOGNITIVE_REFLECTION
+            
+            result = self.metacognitive_system.perform_self_reflection(
+                process_name, process_data, reflection_enum
+            )
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro na auto-reflexão: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def adapt_strategy(self, original_strategy: str, performance_data: Dict[str, Any],
+                      adaptation_type: str = "parameter_adjustment") -> Dict[str, Any]:
+        """
+        Adapta uma estratégia baseada na performance.
+        
+        Args:
+            original_strategy: Estratégia original
+            performance_data: Dados de performance
+            adaptation_type: Tipo de adaptação
+            
+        Returns:
+            Resultado da adaptação
+        """
+        if not self.metacognitive_system:
+            return {"error": "Sistema de meta-cognição não disponível"}
+        
+        try:
+            # Converter string para enum
+            adaptation_enum = AdaptationStrategy.PARAMETER_ADJUSTMENT
+            if adaptation_type == "strategy_switching":
+                adaptation_enum = AdaptationStrategy.STRATEGY_SWITCHING
+            elif adaptation_type == "learning_rate_adaptation":
+                adaptation_enum = AdaptationStrategy.LEARNING_RATE_ADAPTATION
+            elif adaptation_type == "architecture_modification":
+                adaptation_enum = AdaptationStrategy.ARCHITECTURE_MODIFICATION
+            elif adaptation_type == "knowledge_restructuring":
+                adaptation_enum = AdaptationStrategy.KNOWLEDGE_RESTRUCTURING
+            elif adaptation_type == "metacognitive_adaptation":
+                adaptation_enum = AdaptationStrategy.METACOGNITIVE_ADAPTATION
+            
+            result = self.metacognitive_system.adapt_strategy(
+                original_strategy, performance_data, adaptation_enum
+            )
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro na adaptação de estratégia: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def learn_to_learn(self, learning_context: str, learning_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Aprende como aprender melhor.
+        
+        Args:
+            learning_context: Contexto de aprendizado
+            learning_data: Dados de aprendizado
+            
+        Returns:
+            Resultado do aprendizado
+        """
+        if not self.metacognitive_system:
+            return {"error": "Sistema de meta-cognição não disponível"}
+        
+        try:
+            result = self.metacognitive_system.learn_to_learn(learning_context, learning_data)
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro no aprendizado de como aprender: {e}"
+            logger.error(error_msg)
+            return {"error": error_msg}
+    
+    def get_metacognitive_analysis(self) -> Dict[str, Any]:
+        """
+        Obtém análise meta-cognitiva do sistema.
+        
+        Returns:
+            Análise meta-cognitiva
+        """
+        if not self.metacognitive_system:
+            return {"error": "Sistema de meta-cognição não disponível"}
+        
+        try:
+            result = self.metacognitive_system.get_metacognitive_analysis()
+            return result
+            
+        except Exception as e:
+            error_msg = f"Erro na análise meta-cognitiva: {e}"
             logger.error(error_msg)
             return {"error": error_msg}
     

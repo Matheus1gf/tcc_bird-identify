@@ -1,0 +1,364 @@
+{
+  "causal_relations": {
+    "causal_ae89667fe294": {
+      "relation_id": "causal_ae89667fe294",
+      "cause": "predator_detection",
+      "effect": "flight_response",
+      "relation_type": "contributory",
+      "strength": "weak",
+      "confidence": 0.5850000000000001,
+      "evidence": [
+        {
+          "type": "temporal_order",
+          "strength": 0.9,
+          "temporal_order": true
+        },
+        {
+          "type": "mechanism",
+          "strength": 0.8,
+          "mechanism_description": "Detecção de ameaça ativa resposta de fuga"
+        }
+      ],
+      "temporal_order": true,
+      "mechanism": "Detecção de ameaça ativa resposta de fuga",
+      "context": {
+        "domain": "animal_behavior"
+      },
+      "created_at": 1758946820.217248,
+      "last_updated": 1758946820.217248
+    },
+    "causal_8851efb3e22e": {
+      "relation_id": "causal_8851efb3e22e",
+      "cause": "hunger",
+      "effect": "foraging_behavior",
+      "relation_type": "contributory",
+      "strength": "weak",
+      "confidence": 0.485,
+      "evidence": [
+        {
+          "type": "mechanism",
+          "strength": 0.7,
+          "mechanism_description": "Fome ativa comportamento de busca por comida"
+        },
+        {
+          "type": "temporal_order",
+          "strength": 0.6,
+          "temporal_order": true
+        }
+      ],
+      "temporal_order": true,
+      "mechanism": "Fome ativa comportamento de busca por comida",
+      "context": {
+        "domain": "animal_behavior"
+      },
+      "created_at": 1758946820.217864,
+      "last_updated": 1758946820.217864
+    },
+    "causal_71b6ca446f0a": {
+      "relation_id": "causal_71b6ca446f0a",
+      "cause": "mating_season",
+      "effect": "courtship_display",
+      "relation_type": "contributory",
+      "strength": "weak",
+      "confidence": 0.5850000000000001,
+      "evidence": [
+        {
+          "type": "temporal_order",
+          "strength": 0.8,
+          "temporal_order": true
+        },
+        {
+          "type": "correlation",
+          "strength": 0.9
+        }
+      ],
+      "temporal_order": true,
+      "mechanism": "Época de acasalamento causa comportamento de corte",
+      "context": {
+        "domain": "animal_behavior"
+      },
+      "created_at": 1758946820.218409,
+      "last_updated": 1758946820.218409
+    },
+    "causal_bff4fdb6ffe5": {
+      "relation_id": "causal_bff4fdb6ffe5",
+      "cause": "predator_detection",
+      "effect": "flight_response",
+      "relation_type": "contributory",
+      "strength": "weak",
+      "confidence": 0.5850000000000001,
+      "evidence": [
+        {
+          "type": "temporal_order",
+          "strength": 0.9,
+          "temporal_order": true
+        },
+        {
+          "type": "mechanism",
+          "strength": 0.8,
+          "mechanism_description": "Detecção de ameaça ativa resposta de fuga"
+        }
+      ],
+      "temporal_order": true,
+      "mechanism": "Detecção de ameaça ativa resposta de fuga",
+      "context": {
+        "domain": "animal_behavior"
+      },
+      "created_at": 1758946820.24469,
+      "last_updated": 1758946820.24469
+    },
+    "causal_a835cb25d40c": {
+      "relation_id": "causal_a835cb25d40c",
+      "cause": "hunger",
+      "effect": "foraging_behavior",
+      "relation_type": "contributory",
+      "strength": "weak",
+      "confidence": 0.485,
+      "evidence": [
+        {
+          "type": "mechanism",
+          "strength": 0.7,
+          "mechanism_description": "Fome ativa comportamento de busca por comida"
+        },
+        {
+          "type": "temporal_order",
+          "strength": 0.6,
+          "temporal_order": true
+        }
+      ],
+      "temporal_order": true,
+      "mechanism": "Fome ativa comportamento de busca por comida",
+      "context": {
+        "domain": "animal_behavior"
+      },
+      "created_at": 1758946820.245124,
+      "last_updated": 1758946820.245124
+    },
+    "causal_179d0d6c8003": {
+      "relation_id": "causal_179d0d6c8003",
+      "cause": "mating_season",
+      "effect": "courtship_display",
+      "relation_type": "contributory",
+      "strength": "weak",
+      "confidence": 0.5850000000000001,
+      "evidence": [
+        {
+          "type": "temporal_order",
+          "strength": 0.8,
+          "temporal_order": true
+        },
+        {
+          "type": "correlation",
+          "strength": 0.9
+        }
+      ],
+      "temporal_order": true,
+      "mechanism": "Época de acasalamento causa comportamento de corte",
+      "context": {
+        "domain": "animal_behavior"
+      },
+      "created_at": 1758946820.245624,
+      "last_updated": 1758946820.245624
+    },
+    "causal_e3ff52c140c6": {
+      "relation_id": "causal_e3ff52c140c6",
+      "cause": "predator_detection",
+      "effect": "flight_response",
+      "relation_type": "contributory",
+      "strength": "weak",
+      "confidence": 0.5850000000000001,
+      "evidence": [
+        {
+          "type": "temporal_order",
+          "strength": 0.9,
+          "temporal_order": true
+        },
+        {
+          "type": "mechanism",
+          "strength": 0.8,
+          "mechanism_description": "Detecção de ameaça ativa resposta de fuga"
+        }
+      ],
+      "temporal_order": true,
+      "mechanism": "Detecção de ameaça ativa resposta de fuga",
+      "context": {
+        "domain": "animal_behavior"
+      },
+      "created_at": 1758946820.271123,
+      "last_updated": 1758946820.271123
+    },
+    "causal_eeffaacbfa67": {
+      "relation_id": "causal_eeffaacbfa67",
+      "cause": "hunger",
+      "effect": "foraging_behavior",
+      "relation_type": "contributory",
+      "strength": "weak",
+      "confidence": 0.485,
+      "evidence": [
+        {
+          "type": "mechanism",
+          "strength": 0.7,
+          "mechanism_description": "Fome ativa comportamento de busca por comida"
+        },
+        {
+          "type": "temporal_order",
+          "strength": 0.6,
+          "temporal_order": true
+        }
+      ],
+      "temporal_order": true,
+      "mechanism": "Fome ativa comportamento de busca por comida",
+      "context": {
+        "domain": "animal_behavior"
+      },
+      "created_at": 1758946820.271779,
+      "last_updated": 1758946820.271779
+    },
+    "causal_a8016cb7bcd8": {
+      "relation_id": "causal_a8016cb7bcd8",
+      "cause": "mating_season",
+      "effect": "courtship_display",
+      "relation_type": "contributory",
+      "strength": "weak",
+      "confidence": 0.5850000000000001,
+      "evidence": [
+        {
+          "type": "temporal_order",
+          "strength": 0.8,
+          "temporal_order": true
+        },
+        {
+          "type": "correlation",
+          "strength": 0.9
+        }
+      ],
+      "temporal_order": true,
+      "mechanism": "Época de acasalamento causa comportamento de corte",
+      "context": {
+        "domain": "animal_behavior"
+      },
+      "created_at": 1758946820.272384,
+      "last_updated": 1758946820.272384
+    }
+  },
+  "inference_history": [],
+  "evidence_base": {
+    "causal_ae89667fe294": [
+      {
+        "type": "temporal_order",
+        "strength": 0.9,
+        "temporal_order": true
+      },
+      {
+        "type": "mechanism",
+        "strength": 0.8,
+        "mechanism_description": "Detecção de ameaça ativa resposta de fuga"
+      }
+    ],
+    "causal_8851efb3e22e": [
+      {
+        "type": "mechanism",
+        "strength": 0.7,
+        "mechanism_description": "Fome ativa comportamento de busca por comida"
+      },
+      {
+        "type": "temporal_order",
+        "strength": 0.6,
+        "temporal_order": true
+      }
+    ],
+    "causal_71b6ca446f0a": [
+      {
+        "type": "temporal_order",
+        "strength": 0.8,
+        "temporal_order": true
+      },
+      {
+        "type": "correlation",
+        "strength": 0.9
+      }
+    ],
+    "causal_bff4fdb6ffe5": [
+      {
+        "type": "temporal_order",
+        "strength": 0.9,
+        "temporal_order": true
+      },
+      {
+        "type": "mechanism",
+        "strength": 0.8,
+        "mechanism_description": "Detecção de ameaça ativa resposta de fuga"
+      }
+    ],
+    "causal_a835cb25d40c": [
+      {
+        "type": "mechanism",
+        "strength": 0.7,
+        "mechanism_description": "Fome ativa comportamento de busca por comida"
+      },
+      {
+        "type": "temporal_order",
+        "strength": 0.6,
+        "temporal_order": true
+      }
+    ],
+    "causal_179d0d6c8003": [
+      {
+        "type": "temporal_order",
+        "strength": 0.8,
+        "temporal_order": true
+      },
+      {
+        "type": "correlation",
+        "strength": 0.9
+      }
+    ],
+    "causal_e3ff52c140c6": [
+      {
+        "type": "temporal_order",
+        "strength": 0.9,
+        "temporal_order": true
+      },
+      {
+        "type": "mechanism",
+        "strength": 0.8,
+        "mechanism_description": "Detecção de ameaça ativa resposta de fuga"
+      }
+    ],
+    "causal_eeffaacbfa67": [
+      {
+        "type": "mechanism",
+        "strength": 0.7,
+        "mechanism_description": "Fome ativa comportamento de busca por comida"
+      },
+      {
+        "type": "temporal_order",
+        "strength": 0.6,
+        "temporal_order": true
+      }
+    ],
+    "causal_a8016cb7bcd8": [
+      {
+        "type": "temporal_order",
+        "strength": 0.8,
+        "temporal_order": true
+      },
+      {
+        "type": "correlation",
+        "strength": 0.9
+      }
+    ]
+  },
+  "causal_graph": {
+    "predator_detection": [
+      "flight_response"
+    ],
+    "hunger": [
+      "foraging_behavior"
+    ],
+    "mating_season": [
+      "courtship_display"
+    ]
+  },
+  "last_saved": 1758946820.272418
+}
