@@ -135,7 +135,7 @@ class HybridCurator:
             # 5. Adicionar ao histórico
             self.curator_decisions.append(curator_decision)
             
-            logging.info(f"✅ Decisão do curador: {decision['decision'].value}")
+            logging.info(f"[SUCESSO] Decisão do curador: {decision['decision'].value}")
             return curator_decision
             
         except Exception as e:
@@ -371,7 +371,7 @@ class HybridCurator:
             return {
                 "decision": ValidationDecision.AUTO_APPROVE,
                 "confidence": (api_confidence + grad_cam_strength + keras_confidence) / 3,
-                "reasoning": f"✅ AUTO-APROVAÇÃO: API confirma pássaro, Grad-CAM forte ({grad_cam_strength:.2f}), Keras confiante ({keras_confidence:.2f})",
+                "reasoning": f"[SUCESSO] AUTO-APROVAÇÃO: API confirma pássaro, Grad-CAM forte ({grad_cam_strength:.2f}), Keras confiante ({keras_confidence:.2f})",
                 "human_review_needed": False
             }
         
@@ -380,7 +380,7 @@ class HybridCurator:
             return {
                 "decision": ValidationDecision.AUTO_REJECT,
                 "confidence": api_confidence,
-                "reasoning": f"❌ AUTO-REJEIÇÃO: API confirma que não é pássaro",
+                "reasoning": f"[ERRO] AUTO-REJEIÇÃO: API confirma que não é pássaro",
                 "human_review_needed": False
             }
         
@@ -390,7 +390,7 @@ class HybridCurator:
             return {
                 "decision": ValidationDecision.HUMAN_REVIEW,
                 "confidence": (api_confidence + keras_confidence) / 2,
-                "reasoning": f"⚠️ REVISÃO HUMANA: API confirma pássaro, mas Grad-CAM fraco ({grad_cam_strength:.2f}) - bounding box pode ser impreciso",
+                "reasoning": f"[ALERTA] REVISÃO HUMANA: API confirma pássaro, mas Grad-CAM fraco ({grad_cam_strength:.2f}) - bounding box pode ser impreciso",
                 "human_review_needed": True
             }
         
@@ -408,7 +408,7 @@ class HybridCurator:
             return {
                 "decision": ValidationDecision.HUMAN_REVIEW,
                 "confidence": (api_confidence + grad_cam_strength + keras_confidence) / 3,
-                "reasoning": f"🔄 REVISÃO HUMANA: Conflito de evidências - API: {api_result.value}, Grad-CAM: {grad_cam_strength:.2f}, Keras: {keras_confidence:.2f}",
+                "reasoning": f"[ATUALIZACAO] REVISÃO HUMANA: Conflito de evidências - API: {api_result.value}, Grad-CAM: {grad_cam_strength:.2f}, Keras: {keras_confidence:.2f}",
                 "human_review_needed": True
             }
     
@@ -482,7 +482,7 @@ class HybridCurator:
             with open(decision_file, 'w') as f:
                 json.dump(asdict(decision), f, indent=2, ensure_ascii=False)
             
-            logging.info(f"✅ {action}: {image_name} -> {dest_dir}")
+            logging.info(f"[SUCESSO] {action}: {image_name} -> {dest_dir}")
             return True
             
         except Exception as e:
@@ -540,4 +540,4 @@ if __name__ == "__main__":
     print("2. Use validate_annotation() para validar anotações")
     print("3. Use execute_decision() para executar decisões")
     print()
-    print("🚀 PRÓXIMO PASSO: Implementar Ciclo de Aprendizagem Contínua")
+    print("[RAPIDO] PRÓXIMO PASSO: Implementar Ciclo de Aprendizagem Contínua")

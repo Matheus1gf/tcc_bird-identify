@@ -113,14 +113,14 @@ class ImageRecognitionCache:
         # Verificar cache por hash exato
         if current_hash in self.cache_data["images"]:
             cached_info = self.cache_data["images"][current_hash]
-            logger.info(f"🔄 Imagem reconhecida por hash exato: {os.path.basename(image_path)}")
+            logger.info(f"[ATUALIZACAO] Imagem reconhecida por hash exato: {os.path.basename(image_path)}")
             return cached_info
         
         # Verificar por similaridade
         for cached_hash, cached_info in self.cache_data["images"].items():
             similarity = self._calculate_similarity(image_path, cached_hash)
             if similarity >= similarity_threshold:
-                logger.info(f"🔄 Imagem reconhecida por similaridade ({similarity:.2f}): {os.path.basename(image_path)}")
+                logger.info(f"[ATUALIZACAO] Imagem reconhecida por similaridade ({similarity:.2f}): {os.path.basename(image_path)}")
                 return cached_info
         
         return None
@@ -177,7 +177,7 @@ class ImageRecognitionCache:
         # Salvar cache
         self._save_cache()
         
-        logger.info(f"✅ Imagem adicionada ao cache: {os.path.basename(image_path)} -> {species}")
+        logger.info(f"[SUCESSO] Imagem adicionada ao cache: {os.path.basename(image_path)} -> {species}")
     
     def get_species_statistics(self) -> Dict:
         """Retorna estatísticas das espécies reconhecidas"""
@@ -200,7 +200,7 @@ class ImageRecognitionCache:
         try:
             with open(export_path, 'w', encoding='utf-8') as f:
                 json.dump(self.cache_data, f, indent=2, ensure_ascii=False)
-            logger.info(f"📤 Cache exportado para: {export_path}")
+            logger.info(f"[UPLOAD] Cache exportado para: {export_path}")
         except Exception as e:
             logger.error(f"Erro ao exportar cache: {e}")
 

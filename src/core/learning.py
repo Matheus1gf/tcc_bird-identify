@@ -133,10 +133,10 @@ class ContinuousLearningSystem:
             # Criar diretórios
             self._create_directories()
             
-            logging.info("✅ Sistema de Aprendizado Contínuo inicializado")
+            logging.info("[SUCESSO] Sistema de Aprendizado Contínuo inicializado")
             
         except Exception as e:
-            logging.error(f"❌ Erro na inicialização: {e}")
+            logging.error(f"[ERRO] Erro na inicialização: {e}")
             raise
     
     def _create_directories(self):
@@ -176,7 +176,7 @@ class ContinuousLearningSystem:
             }
         )
         
-        logging.info(f"🚀 Iniciando ciclo de aprendizado: {cycle_id}")
+        logging.info(f"[RAPIDO] Iniciando ciclo de aprendizado: {cycle_id}")
         
         try:
             # Executar ciclo completo
@@ -192,11 +192,11 @@ class ContinuousLearningSystem:
             # Atualizar estatísticas globais
             self._update_global_stats()
             
-            logging.info(f"✅ Ciclo {cycle_id} concluído com sucesso")
+            logging.info(f"[SUCESSO] Ciclo {cycle_id} concluído com sucesso")
             return cycle_id
             
         except Exception as e:
-            logging.error(f"❌ Erro no ciclo {cycle_id}: {e}")
+            logging.error(f"[ERRO] Erro no ciclo {cycle_id}: {e}")
             self.current_cycle.status = LearningCycleStatus.FAILED
             self.current_cycle.end_time = datetime.now().isoformat()
             self._save_learning_cycle()
@@ -206,23 +206,23 @@ class ContinuousLearningSystem:
         """Executa ciclo completo de aprendizado"""
         
         # ESTÁGIO 1: Detecção de Intuição
-        logging.info("🔍 ESTÁGIO 1: Detecção de Intuição")
+        logging.info("[BUSCA] ESTÁGIO 1: Detecção de Intuição")
         candidates = self._detect_intuition_candidates(image_directory)
         self.current_cycle.candidates_processed = len(candidates)
         self.current_cycle.stages_completed.append(LearningCycleStage.INTUITION_DETECTION)
         
         if not candidates:
-            logging.info("ℹ️ Nenhum candidato para aprendizado detectado")
+            logging.info("[INFO] Nenhum candidato para aprendizado detectado")
             return
         
         # ESTÁGIO 2: Geração de Anotações Automáticas
-        logging.info("🎯 ESTÁGIO 2: Geração de Anotações Automáticas")
+        logging.info("[ALVO] ESTÁGIO 2: Geração de Anotações Automáticas")
         annotations = self._generate_auto_annotations(candidates)
         self.current_cycle.annotations_generated = len(annotations)
         self.current_cycle.stages_completed.append(LearningCycleStage.AUTO_ANNOTATION)
         
         if not annotations:
-            logging.info("ℹ️ Nenhuma anotação gerada")
+            logging.info("[INFO] Nenhuma anotação gerada")
             return
         
         # ESTÁGIO 3: Validação Híbrida
@@ -231,19 +231,19 @@ class ContinuousLearningSystem:
         self.current_cycle.stages_completed.append(LearningCycleStage.VALIDATION)
         
         # ESTÁGIO 4: Execução de Decisões
-        logging.info("⚡ ESTÁGIO 4: Execução de Decisões")
+        logging.info("[RAPIDO] ESTÁGIO 4: Execução de Decisões")
         self._execute_decisions(decisions)
         self.current_cycle.stages_completed.append(LearningCycleStage.DECISION_EXECUTION)
         
         # ESTÁGIO 5: Re-treinamento do Modelo (se necessário)
         if self._should_retrain_model():
-            logging.info("🔄 ESTÁGIO 5: Re-treinamento do Modelo")
+            logging.info("[ATUALIZACAO] ESTÁGIO 5: Re-treinamento do Modelo")
             self._retrain_models()
             self.current_cycle.model_retrained = True
             self.current_cycle.stages_completed.append(LearningCycleStage.MODEL_RETRAINING)
         
         # ESTÁGIO 6: Avaliação de Performance
-        logging.info("📊 ESTÁGIO 6: Avaliação de Performance")
+        logging.info("[DADO] ESTÁGIO 6: Avaliação de Performance")
         performance_improvement = self._evaluate_performance()
         self.current_cycle.performance_improvement = performance_improvement
         self.current_cycle.stages_completed.append(LearningCycleStage.EVALUATION)
@@ -277,7 +277,7 @@ class ContinuousLearningSystem:
                 except Exception as e:
                     logging.error(f"Erro ao analisar {filename}: {e}")
         
-        logging.info(f"🎯 {len(candidates)} candidatos detectados para aprendizado")
+        logging.info(f"[ALVO] {len(candidates)} candidatos detectados para aprendizado")
         return candidates
     
     def _generate_auto_annotations(self, candidates: List[LearningCandidate]) -> List[AutoAnnotation]:
@@ -295,12 +295,12 @@ class ContinuousLearningSystem:
                         candidate.image_path, candidate
                     )
                     if visualization_path:
-                        logging.info(f"📊 Grad-CAM visualizado: {visualization_path}")
+                        logging.info(f"[DADO] Grad-CAM visualizado: {visualization_path}")
                         
             except Exception as e:
                 logging.error(f"Erro ao gerar anotação para {candidate.image_path}: {e}")
         
-        logging.info(f"🎯 {len(annotations)} anotações geradas automaticamente")
+        logging.info(f"[ALVO] {len(annotations)} anotações geradas automaticamente")
         return annotations
     
     def _validate_annotations(self, annotations: List[AutoAnnotation]) -> List[CuratorDecision]:
@@ -338,9 +338,9 @@ class ContinuousLearningSystem:
                 )
                 
                 if success:
-                    logging.info(f"✅ Decisão executada: {decision.decision.value}")
+                    logging.info(f"[SUCESSO] Decisão executada: {decision.decision.value}")
                 else:
-                    logging.error(f"❌ Falha ao executar decisão: {decision.decision.value}")
+                    logging.error(f"[ERRO] Falha ao executar decisão: {decision.decision.value}")
                     
             except Exception as e:
                 logging.error(f"Erro ao executar decisão: {e}")
@@ -353,9 +353,9 @@ class ContinuousLearningSystem:
         should_retrain = auto_approved_count >= self.min_candidates_for_retraining
         
         if should_retrain:
-            logging.info(f"🔄 Re-treinamento necessário: {auto_approved_count} amostras aprovadas")
+            logging.info(f"[ATUALIZACAO] Re-treinamento necessário: {auto_approved_count} amostras aprovadas")
         else:
-            logging.info(f"⏳ Aguardando mais dados: {auto_approved_count}/{self.min_candidates_for_retraining}")
+            logging.info(f"<i class="bi bi-hourglass"></i> Aguardando mais dados: {auto_approved_count}/{self.min_candidates_for_retraining}")
         
         return should_retrain
     
@@ -371,10 +371,10 @@ class ContinuousLearningSystem:
             # Re-treinar Keras (se necessário)
             self._retrain_keras()
             
-            logging.info("✅ Modelos re-treinados com sucesso")
+            logging.info("[SUCESSO] Modelos re-treinados com sucesso")
             
         except Exception as e:
-            logging.error(f"❌ Erro no re-treinamento: {e}")
+            logging.error(f"[ERRO] Erro no re-treinamento: {e}")
             raise
     
     def _prepare_retraining_data(self):
@@ -400,7 +400,7 @@ class ContinuousLearningSystem:
                 if os.path.exists(src_annotation):
                     shutil.copy2(src_annotation, dst_annotation)
         
-        logging.info("📁 Dados preparados para re-treinamento")
+        logging.info("[ARQUIVO] Dados preparados para re-treinamento")
     
     def _retrain_yolo(self):
         """Re-treina modelo YOLO"""
@@ -410,27 +410,27 @@ class ContinuousLearningSystem:
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=3600)
             
             if result.returncode == 0:
-                logging.info("✅ YOLO re-treinado com sucesso")
+                logging.info("[SUCESSO] YOLO re-treinado com sucesso")
             else:
-                logging.error(f"❌ Erro no re-treinamento YOLO: {result.stderr}")
+                logging.error(f"[ERRO] Erro no re-treinamento YOLO: {result.stderr}")
                 
         except subprocess.TimeoutExpired:
             logging.error("⏰ Timeout no re-treinamento YOLO")
         except Exception as e:
-            logging.error(f"❌ Erro no re-treinamento YOLO: {e}")
+            logging.error(f"[ERRO] Erro no re-treinamento YOLO: {e}")
     
     def _retrain_keras(self):
         """Re-treina modelo Keras (se necessário)"""
         # Por enquanto, apenas log
         # Implementar re-treinamento Keras se necessário
-        logging.info("📝 Re-treinamento Keras não implementado ainda")
+        logging.info("[ESCRITA] Re-treinamento Keras não implementado ainda")
     
     def _evaluate_performance(self) -> float:
         """Avalia melhoria de performance"""
         # Por enquanto, retornar melhoria simulada
         # Implementar avaliação real de performance
         improvement = 0.05  # 5% de melhoria simulada
-        logging.info(f"📊 Performance melhorada em {improvement:.1%}")
+        logging.info(f"[DADO] Performance melhorada em {improvement:.1%}")
         return improvement
     
     def _save_learning_cycle(self):
@@ -512,25 +512,25 @@ class ContinuousLearningSystem:
         stats = self.global_stats
         
         if stats["total_cycles"] == 0:
-            recommendations.append("🚀 Execute o primeiro ciclo de aprendizado")
+            recommendations.append("[RAPIDO] Execute o primeiro ciclo de aprendizado")
             return recommendations
         
         if stats["total_auto_approved"] < 5:
-            recommendations.append("📈 Aguarde mais dados para re-treinamento")
+            recommendations.append("[PERFORMANCE] Aguarde mais dados para re-treinamento")
         
         if stats["average_performance_improvement"] < 0.02:
-            recommendations.append("🔧 Considere ajustar parâmetros de validação")
+            recommendations.append("[MANUTENCAO] Considere ajustar parâmetros de validação")
         
         if stats["total_human_review"] > stats["total_auto_approved"]:
-            recommendations.append("⚙️ Otimize critérios de auto-aprovação")
+            recommendations.append("[CONFIG] Otimize critérios de auto-aprovação")
         
-        recommendations.append("✅ Sistema funcionando adequadamente")
+        recommendations.append("[SUCESSO] Sistema funcionando adequadamente")
         
         return recommendations
 
 # Exemplo de uso
 if __name__ == "__main__":
-    print("🔄 Sistema de Aprendizado Contínuo - O Santo Graal da IA")
+    print("[ATUALIZACAO] Sistema de Aprendizado Contínuo - O Santo Graal da IA")
     print("=" * 60)
     print("Este sistema implementa aprendizado contínuo com:")
     print("• Detecção de intuição")
@@ -544,4 +544,4 @@ if __name__ == "__main__":
     print("2. Use start_learning_cycle() para iniciar aprendizado")
     print("3. Monitore progresso com get_system_statistics()")
     print()
-    print("🚀 PRÓXIMO PASSO: Criar Sistema Auto-Melhorador Completo")
+    print("[RAPIDO] PRÓXIMO PASSO: Criar Sistema Auto-Melhorador Completo")

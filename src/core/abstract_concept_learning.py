@@ -155,10 +155,10 @@ class PassarinidadeAnalyzer:
             
             if feature_detected["detected"]:
                 essential_score += config["weight"] * feature_detected["confidence"]
-                analysis["reasoning"].append(f"✅ {feature}: {feature_detected['confidence']:.3f}")
+                analysis["reasoning"].append(f"[SUCESSO] {feature}: {feature_detected['confidence']:.3f}")
             else:
                 analysis["missing_features"].append(feature)
-                analysis["reasoning"].append(f"❌ {feature}: não detectado")
+                analysis["reasoning"].append(f"[ERRO] {feature}: não detectado")
             
             essential_weight_sum += config["weight"]
         

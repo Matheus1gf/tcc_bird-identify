@@ -31,6 +31,34 @@ class TinderInterfaceEnhanced:
     def _setup_custom_css(self):
         """Configura CSS personalizado para interface Tinder"""
         st.markdown("""
+        /* Consistência Visual */
+        .metric-container {
+            text-align: center;
+            margin: 10px 0;
+        }
+        
+        .status-indicator {
+            font-weight: bold;
+        }
+        
+        .icon-align {
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+        
+        /* Bootstrap Icons CSS */
+        @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
+        
+        .bi {
+            vertical-align: -.125em;
+            fill: currentColor;
+        }
+        
+        .text-success { color: #198754 !important; }
+        .text-danger { color: #dc3545 !important; }
+        .text-warning { color: #ffc107 !important; }
+        
+        
         <style>
         .tinder-container {
             max-width: 500px;
@@ -167,9 +195,37 @@ class TinderInterfaceEnhanced:
     def render_tinder_interface(self):
         """Renderiza a interface Tinder principal"""
         st.markdown("""
+        /* Consistência Visual */
+        .metric-container {
+            text-align: center;
+            margin: 10px 0;
+        }
+        
+        .status-indicator {
+            font-weight: bold;
+        }
+        
+        .icon-align {
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+        
+        /* Bootstrap Icons CSS */
+        @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
+        
+        .bi {
+            vertical-align: -.125em;
+            fill: currentColor;
+        }
+        
+        .text-success { color: #198754 !important; }
+        .text-danger { color: #dc3545 !important; }
+        .text-warning { color: #ffc107 !important; }
+        
+        
         <div class="tinder-container">
             <h1 style="text-align: center; color: white; margin-bottom: 30px;">
-                🐦 Análise Manual de Pássaros
+                [PASSARO] Análise Manual de Pássaros
             </h1>
             <p style="text-align: center; color: white; margin-bottom: 30px;">
                 Ajude a IA a aprender como uma criança descobrindo pássaros!
@@ -215,8 +271,36 @@ class TinderInterfaceEnhanced:
     def _render_no_images_message(self):
         """Renderiza mensagem quando não há imagens para análise"""
         st.markdown("""
+        /* Consistência Visual */
+        .metric-container {
+            text-align: center;
+            margin: 10px 0;
+        }
+        
+        .status-indicator {
+            font-weight: bold;
+        }
+        
+        .icon-align {
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+        
+        /* Bootstrap Icons CSS */
+        @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
+        
+        .bi {
+            vertical-align: -.125em;
+            fill: currentColor;
+        }
+        
+        .text-success { color: #198754 !important; }
+        .text-danger { color: #dc3545 !important; }
+        .text-warning { color: #ffc107 !important; }
+        
+        
         <div class="tinder-card">
-            <h3>🎯 Nenhuma imagem pendente</h3>
+            <h3>[ALVO] Nenhuma imagem pendente</h3>
             <p>Não há imagens aguardando análise manual no momento.</p>
             <p>Faça upload de uma imagem na aba principal para começar a análise!</p>
         </div>
@@ -297,8 +381,36 @@ class TinderInterfaceEnhanced:
     def _render_image_selection(self, pending_images: List[str]):
         """Renderiza seleção de imagem"""
         st.markdown("""
+        /* Consistência Visual */
+        .metric-container {
+            text-align: center;
+            margin: 10px 0;
+        }
+        
+        .status-indicator {
+            font-weight: bold;
+        }
+        
+        .icon-align {
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+        
+        /* Bootstrap Icons CSS */
+        @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
+        
+        .bi {
+            vertical-align: -.125em;
+            fill: currentColor;
+        }
+        
+        .text-success { color: #198754 !important; }
+        .text-danger { color: #dc3545 !important; }
+        .text-warning { color: #ffc107 !important; }
+        
+        
         <div class="tinder-card">
-            <h3>📸 Selecione uma imagem para análise</h3>
+            <h3>[CAMERA] Selecione uma imagem para análise</h3>
         </div>
         """, unsafe_allow_html=True)
         
@@ -328,7 +440,7 @@ class TinderInterfaceEnhanced:
             
             st.markdown(f"""
             <div class="tinder-card">
-                <h3>🐦 Análise da IA</h3>
+                <h3>[PASSARO] Análise da IA</h3>
                 <img src="data:image/jpeg;base64,{self._image_to_base64(image)}" class="tinder-image">
             </div>
             """, unsafe_allow_html=True)
@@ -379,15 +491,15 @@ class TinderInterfaceEnhanced:
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            if st.button("❌ Não é Pássaro", key="reject"):
+            if st.button("[ERRO] Não é Pássaro", key="reject"):
                 self._handle_rejection(image_path, analysis)
         
         with col2:
-            if st.button("✅ É Pássaro", key="approve"):
+            if st.button("[SUCESSO] É Pássaro", key="approve"):
                 self._handle_approval(image_path, analysis)
         
         with col3:
-            if st.button("🧠 Ensinar IA", key="learn"):
+            if st.button("[IA] Ensinar IA", key="learn"):
                 self._handle_learning(image_path, analysis)
     
     def _handle_rejection(self, image_path: str, analysis: Dict[str, Any]):
@@ -428,7 +540,7 @@ class TinderInterfaceEnhanced:
             if 'current_tinder_image' in st.session_state:
                 del st.session_state['current_tinder_image']
             
-            st.success("✅ Imagem rejeitada e feedback salvo!")
+            st.success('<i class='bi bi-check-circle"></i> Imagem rejeitada e feedback salvo!")
             st.rerun()
             
         except Exception as e:
@@ -472,7 +584,7 @@ class TinderInterfaceEnhanced:
             if 'current_tinder_image' in st.session_state:
                 del st.session_state['current_tinder_image']
             
-            st.success("✅ Imagem aprovada e feedback salvo!")
+            st.success('<i class='bi bi-check-circle"></i> Imagem aprovada e feedback salvo!")
             st.rerun()
             
         except Exception as e:
@@ -483,8 +595,36 @@ class TinderInterfaceEnhanced:
         try:
             # Mostrar formulário de aprendizado
             st.markdown("""
+        /* Consistência Visual */
+        .metric-container {
+            text-align: center;
+            margin: 10px 0;
+        }
+        
+        .status-indicator {
+            font-weight: bold;
+        }
+        
+        .icon-align {
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+        
+        /* Bootstrap Icons CSS */
+        @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
+        
+        .bi {
+            vertical-align: -.125em;
+            fill: currentColor;
+        }
+        
+        .text-success { color: #198754 !important; }
+        .text-danger { color: #dc3545 !important; }
+        .text-warning { color: #ffc107 !important; }
+        
+        
             <div class="learning-feedback">
-                <h4>🧠 Ensinar a IA</h4>
+                <h4>[IA] Ensinar a IA</h4>
                 <p>Ajude a IA a aprender com esta imagem!</p>
             </div>
             """, unsafe_allow_html=True)
@@ -512,7 +652,7 @@ class TinderInterfaceEnhanced:
                 else:
                     reasoning = st.text_area("Por que não é um pássaro?", key="reasoning")
                 
-                submitted = st.form_submit_button("💾 Salvar Aprendizado")
+                submitted = st.form_submit_button("[SALVAR] Salvar Aprendizado")
                 
                 if submitted:
                     self._save_learning_feedback(image_path, analysis, {
@@ -574,7 +714,7 @@ class TinderInterfaceEnhanced:
             if 'current_tinder_image' in st.session_state:
                 del st.session_state['current_tinder_image']
             
-            st.success("🧠 Aprendizado salvo com sucesso!")
+            st.success('<i class='bi bi-cpu"></i> Aprendizado salvo com sucesso!")
             st.rerun()
             
         except Exception as e:

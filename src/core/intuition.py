@@ -563,23 +563,23 @@ class IntuitionEngine:
                         }
                         
                         self.detection_models['yolo_advanced'] = model
-                        logger.info(f"✅ {model_name} carregado com configurações avançadas")
+                        logger.info(f"[SUCESSO] {model_name} carregado com configurações avançadas")
                         return
                         
                 except Exception as e:
-                    logger.warning(f"⚠️ {model_name} falhou: {e}")
+                    logger.warning(f"[ALERTA] {model_name} falhou: {e}")
                     continue
             
             # Tentativa final: YOLOv5 como fallback
             try:
                 import torch.hub
                 self.detection_models['yolo_v5'] = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
-                logger.info("✅ YOLOv5 fallback carregado")
+                logger.info("[SUCESSO] YOLOv5 fallback carregado")
             except Exception as e:
-                logger.warning(f"⚠️ YOLOv5 fallback falhou: {e}")
+                logger.warning(f"[ALERTA] YOLOv5 fallback falhou: {e}")
                         
         except Exception as e:
-            logger.warning(f"⚠️ Erro geral ao carregar YOLO: {e}")
+            logger.warning(f"[ALERTA] Erro geral ao carregar YOLO: {e}")
     
     def _load_opencv_dnn(self):
         """Carrega modelos OpenCV DNN para detecção alternativa"""
@@ -594,16 +594,16 @@ class IntuitionEngine:
                 if os.path.exists(yolo_config) and os.path.exists(yolo_weights):
                     net = cv2.dnn.readNetFromDarknet(yolo_config, yolo_weights)
                     self.detection_models['opencv_yolo'] = net
-                    logger.info("✅ OpenCV YOLO carregado")
+                    logger.info("[SUCESSO] OpenCV YOLO carregado")
             except Exception as e:
-                logger.warning(f"⚠️ OpenCV YOLO não disponível: {e}")
+                logger.warning(f"[ALERTA] OpenCV YOLO não disponível: {e}")
             
             # MobileNet-SSD (mais leve e robusto)
             # OpenCV SSD desabilitado devido a problemas de compatibilidade
-            logger.info("ℹ️ OpenCV SSD desabilitado - usando apenas YOLO")
+            logger.info("[INFO] OpenCV SSD desabilitado - usando apenas YOLO")
                 
         except Exception as e:
-            logger.warning(f"⚠️ Erro ao carregar OpenCV DNN: {e}")
+            logger.warning(f"[ALERTA] Erro ao carregar OpenCV DNN: {e}")
     
     def _load_mediapipe(self):
         """Carrega MediaPipe para detecção de objetos"""
@@ -617,10 +617,10 @@ class IntuitionEngine:
                 min_detection_confidence=0.5,
                 min_tracking_confidence=0.5
             )
-            logger.info("✅ MediaPipe carregado")
+            logger.info("[SUCESSO] MediaPipe carregado")
             
         except Exception as e:
-            logger.warning(f"⚠️ MediaPipe não disponível: {e}")
+            logger.warning(f"[ALERTA] MediaPipe não disponível: {e}")
     
     def _load_keras(self):
         """Carrega modelo Keras"""
@@ -630,13 +630,13 @@ class IntuitionEngine:
             
             # Verificar se TensorFlow está funcionando
             if not hasattr(tf, 'keras'):
-                logger.warning("⚠️ TensorFlow não tem atributo 'keras'")
+                logger.warning("[ALERTA] TensorFlow não tem atributo 'keras'")
                 self.keras_model = None
                 return
             
             # Verificar se tf.keras.models existe
             if not hasattr(tf.keras, 'models'):
-                logger.warning("⚠️ TensorFlow keras.models não disponível")
+                logger.warning("[ALERTA] TensorFlow keras.models não disponível")
                 self.keras_model = None
                 return
             
@@ -656,26 +656,26 @@ class IntuitionEngine:
             if self.keras_model_path and os.path.exists(self.keras_model_path):
                 try:
                     self.keras_model = tf.keras.models.load_model(self.keras_model_path)
-                    logger.info("✅ Modelo Keras carregado")
+                    logger.info("[SUCESSO] Modelo Keras carregado")
                 except Exception as e:
-                    logger.warning(f"⚠️ Erro ao carregar Keras: {e}")
+                    logger.warning(f"[ALERTA] Erro ao carregar Keras: {e}")
                     self.keras_model = None
         except ImportError:
-            logger.warning("⚠️ TensorFlow não disponível")
+            logger.warning("[ALERTA] TensorFlow não disponível")
             self.keras_model = None
 
     def _log_model_status(self):
         """Log do status de todos os modelos carregados"""
         loaded_models = list(self.detection_models.keys())
         if loaded_models:
-            logger.info(f"🎯 Modelos de detecção carregados: {', '.join(loaded_models)}")
+            logger.info(f"[ALVO] Modelos de detecção carregados: {', '.join(loaded_models)}")
         else:
-            logger.warning("⚠️ Nenhum modelo de detecção carregado - usando apenas análise visual")
+            logger.warning("[ALERTA] Nenhum modelo de detecção carregado - usando apenas análise visual")
         
         if self.keras_model is not None:
-            logger.info("✅ Modelo Keras disponível")
+            logger.info("[SUCESSO] Modelo Keras disponível")
         else:
-            logger.info("ℹ️ Modelo Keras não disponível")
+            logger.info("[INFO] Modelo Keras não disponível")
     
     def analyze_image_intuition(self, image_path: str) -> Dict[str, Any]:
         """
@@ -719,7 +719,7 @@ class IntuitionEngine:
             }
             
         except Exception as e:
-            logger.error(f"❌ Erro na análise de intuição: {e}")
+            logger.error(f"[ERRO] Erro na análise de intuição: {e}")
             return {
                 'confidence': 0.0,
                 'species': 'Erro',
@@ -761,7 +761,7 @@ class IntuitionEngine:
             }
             
         except Exception as e:
-            logger.error(f"❌ Erro na análise visual: {e}")
+            logger.error(f"[ERRO] Erro na análise visual: {e}")
             return {'error': str(e)}
     
     def _analyze_colors(self, hsv_image: np.ndarray) -> Dict[str, Any]:
@@ -1072,7 +1072,7 @@ class IntuitionEngine:
             return characteristics
             
         except Exception as e:
-            self.debug_logger.log_error(f"❌ Erro na detecção de características: {str(e)}")
+            self.debug_logger.log_error(f"[ERRO] Erro na detecção de características: {str(e)}")
             return {'error': str(e)}
     
     def _detect_visual_characteristics(self, image: np.ndarray) -> Dict[str, Any]:
@@ -2343,35 +2343,35 @@ class IntuitionEngine:
             reasoning['is_bird'] = True
             reasoning['confidence'] = 0.9
             reasoning['intuition_level'] = 'Alta'
-            reasoning['reasoning_steps'].append(f"✅ {bird_count} características definitivas de pássaro detectadas")
+            reasoning['reasoning_steps'].append(f"[SUCESSO] {bird_count} características definitivas de pássaro detectadas")
             
         # 2. SEGUNDO: Verificar características moderadas + análise visual
         elif bird_count >= 2 and bird_like_features > 0.4:
             reasoning['is_bird'] = True
             reasoning['confidence'] = 0.8
             reasoning['intuition_level'] = 'Alta'
-            reasoning['reasoning_steps'].append(f"✅ {bird_count} características + análise visual positiva")
+            reasoning['reasoning_steps'].append(f"[SUCESSO] {bird_count} características + análise visual positiva")
             
         # 3. TERCEIRO: Verificar características básicas + forma/cores adequadas
         elif bird_count >= 1 and (bird_shape_score > 0.4 or bird_color_score > 0.4):
             reasoning['is_bird'] = True
             reasoning['confidence'] = 0.7
             reasoning['intuition_level'] = 'Média'
-            reasoning['reasoning_steps'].append("✅ Características básicas + forma/cores adequadas")
+            reasoning['reasoning_steps'].append("[SUCESSO] Características básicas + forma/cores adequadas")
             
         # 4. QUARTO: Verificar análise visual muito positiva
         elif bird_like_features > 0.5 and (has_eyes or has_wings):
             reasoning['is_bird'] = True
             reasoning['confidence'] = 0.6
             reasoning['intuition_level'] = 'Média'
-            reasoning['reasoning_steps'].append("✅ Análise visual muito positiva")
+            reasoning['reasoning_steps'].append("[SUCESSO] Análise visual muito positiva")
             
         # 5. QUINTO: Verificar análise visual moderada
         elif bird_like_features > 0.4 and (bird_shape_score > 0.3 or bird_color_score > 0.3):
             reasoning['is_bird'] = True
             reasoning['confidence'] = 0.5
             reasoning['intuition_level'] = 'Média'
-            reasoning['reasoning_steps'].append("✅ Análise visual moderada")
+            reasoning['reasoning_steps'].append("[SUCESSO] Análise visual moderada")
             
         # 5.5. QUINTO E MEIO: Casos com forma perfeita de pássaro (prioridade máxima)
         elif bird_shape_score >= 1.0 and bird_color_score > 0.2:
@@ -2379,7 +2379,7 @@ class IntuitionEngine:
             reasoning['confidence'] = 0.5
             reasoning['intuition_level'] = 'Média'
             reasoning['needs_manual_review'] = True
-            reasoning['reasoning_steps'].append("✅ Forma perfeita de pássaro detectada")
+            reasoning['reasoning_steps'].append("[SUCESSO] Forma perfeita de pássaro detectada")
             
         # 6. SEXTO: Casos duvidosos - pode ser pássaro (MAIS RIGOROSO)
         elif bird_count >= 2 and bird_like_features > 0.4:
@@ -2410,27 +2410,27 @@ class IntuitionEngine:
             reasoning['is_bird'] = False
             reasoning['confidence'] = 0.9
             reasoning['intuition_level'] = 'Alta'
-            reasoning['reasoning_steps'].append("❌ Detectadas características específicas de mamíferos")
+            reasoning['reasoning_steps'].append("[ERRO] Detectadas características específicas de mamíferos")
         
         # 8. OITAVO: Provavelmente não é pássaro
         else:
             reasoning['is_bird'] = False
             reasoning['confidence'] = 0.2
             reasoning['intuition_level'] = 'Baixa'
-            reasoning['reasoning_steps'].append("❌ Poucas evidências de características de pássaro")
+            reasoning['reasoning_steps'].append("[ERRO] Poucas evidências de características de pássaro")
         
         # Determinar espécie (se for pássaro)
         if reasoning['is_bird']:
             species = self._determine_species(visual_analysis, characteristics)
             reasoning['species'] = species
-            reasoning['reasoning_steps'].append(f"🐦 Espécie identificada: {species}")
+            reasoning['reasoning_steps'].append(f"[PASSARO] Espécie identificada: {species}")
         else:
             reasoning['species'] = 'Não-Pássaro'
             reasoning['reasoning_steps'].append("🚫 Não é um pássaro")
         
         # NOVO: Verificação específica para pássaros azuis não detectados
         if not reasoning['is_bird']:
-            logger.info("🔍 Verificando se é um pássaro azul não detectado...")
+            logger.info("[BUSCA] Verificando se é um pássaro azul não detectado...")
             # Verificar se tem características de pássaro azul
             dominant_colors = visual_analysis.get('dominant_colors', [])
             has_blue_color = any('blue' in color.lower() for color in dominant_colors)
@@ -2533,7 +2533,7 @@ class IntuitionEngine:
             analysis['adaptive_thinking'] = min(adaptive_score, 1.0)
             
         except Exception as e:
-            logger.warning(f"⚠️ Erro na análise cognitiva: {e}")
+            logger.warning(f"[ALERTA] Erro na análise cognitiva: {e}")
         
         return analysis
     
@@ -2559,7 +2559,7 @@ class IntuitionEngine:
             return min(neuro_symbolic_score, 1.0)
             
         except Exception as e:
-            logger.warning(f"⚠️ Erro no cálculo do score neuro-simbólico: {e}")
+            logger.warning(f"[ALERTA] Erro no cálculo do score neuro-simbólico: {e}")
             return 0.0
     
     def _assess_learning_potential(self, reasoning: Dict, characteristics: Dict) -> str:
@@ -2589,7 +2589,7 @@ class IntuitionEngine:
                 return 'Baixo'
                 
         except Exception as e:
-            logger.warning(f"⚠️ Erro na avaliação do potencial de aprendizado: {e}")
+            logger.warning(f"[ALERTA] Erro na avaliação do potencial de aprendizado: {e}")
             return 'Baixo'
     
     def _assess_certainty_level(self, reasoning: Dict) -> str:
@@ -2611,7 +2611,7 @@ class IntuitionEngine:
                 return 'Alta Incerteza'
                 
         except Exception as e:
-            logger.warning(f"⚠️ Erro na avaliação do nível de certeza: {e}")
+            logger.warning(f"[ALERTA] Erro na avaliação do nível de certeza: {e}")
             return 'Incerteza'
     
     def _has_mammal_characteristics(self, visual_analysis: Dict, characteristics: Dict) -> bool:
@@ -3253,21 +3253,21 @@ class IntuitionEngine:
         all_detections = []
         
         # 1. Detecção YOLO (todas as versões disponíveis)
-        logger.info(f"🔍 Iniciando detecção YOLO com {len(self.detection_models)} modelos disponíveis")
+        logger.info(f"[BUSCA] Iniciando detecção YOLO com {len(self.detection_models)} modelos disponíveis")
         for model_name, model in self.detection_models.items():
             if 'yolo' in model_name.lower():
-                logger.info(f"🔍 Testando modelo YOLO: {model_name}")
+                logger.info(f"[BUSCA] Testando modelo YOLO: {model_name}")
                 try:
                     yolo_result = self._detect_with_yolo(model, image, model_name)
-                    logger.info(f"🔍 Resultado YOLO {model_name}: detected={yolo_result['detected']}, confidence={yolo_result['confidence']}")
+                    logger.info(f"[BUSCA] Resultado YOLO {model_name}: detected={yolo_result['detected']}, confidence={yolo_result['confidence']}")
                     if yolo_result['detected']:
                         bird_detections.append(yolo_result['confidence'])
                         all_detections.append(f"YOLO_{model_name}")
                         detection_results['yolo_detection'] = True
                         detection_results['detection_votes'][f"yolo_{model_name}"] = yolo_result['confidence']
-                        logger.info(f"✅ YOLO {model_name} detectou pássaro com confiança {yolo_result['confidence']}")
+                        logger.info(f"[SUCESSO] YOLO {model_name} detectou pássaro com confiança {yolo_result['confidence']}")
                 except Exception as e:
-                    logger.warning(f"⚠️ Erro na detecção YOLO {model_name}: {e}")
+                    logger.warning(f"[ALERTA] Erro na detecção YOLO {model_name}: {e}")
         
         # 2. Detecção OpenCV DNN
         for model_name, model in self.detection_models.items():
@@ -3280,7 +3280,7 @@ class IntuitionEngine:
                         detection_results['opencv_detection'] = True
                         detection_results['detection_votes'][f"opencv_{model_name}"] = opencv_result['confidence']
                 except Exception as e:
-                    logger.warning(f"⚠️ Erro na detecção OpenCV {model_name}: {e}")
+                    logger.warning(f"[ALERTA] Erro na detecção OpenCV {model_name}: {e}")
         
         # 3. Detecção MediaPipe
         if 'mediapipe' in self.detection_models:
@@ -3292,7 +3292,7 @@ class IntuitionEngine:
                     detection_results['mediapipe_detection'] = True
                     detection_results['detection_votes']['mediapipe'] = mediapipe_result['confidence']
             except Exception as e:
-                logger.warning(f"⚠️ Erro na detecção MediaPipe: {e}")
+                logger.warning(f"[ALERTA] Erro na detecção MediaPipe: {e}")
         
         # 4. Calcular estatísticas finais
         detection_results['total_detections'] = len(all_detections)
@@ -3344,7 +3344,7 @@ class IntuitionEngine:
                 
                 # NOVO: Verificação pós-processamento para falsos positivos
                 if bird_detected:
-                    logger.info(f"🔍 YOLO detectou pássaro com confiança {max_confidence:.2f}, verificando características visuais...")
+                    logger.info(f"[BUSCA] YOLO detectou pássaro com confiança {max_confidence:.2f}, verificando características visuais...")
                     # Analisar características visuais para confirmar se é realmente um pássaro
                     visual_characteristics = self._detect_visual_characteristics(image)
                     reptile_score = self._calculate_reptile_score(visual_characteristics)
@@ -3357,7 +3357,7 @@ class IntuitionEngine:
                         max_confidence = 0.0
                         logger.info(f"🦎 YOLO detectou pássaro, mas características visuais indicam réptil (score: {reptile_score:.2f}) - REJEITADO")
                     else:
-                        logger.info(f"✅ YOLO detectou pássaro e características visuais confirmam (score réptil: {reptile_score:.2f}) - ACEITO")
+                        logger.info(f"[SUCESSO] YOLO detectou pássaro e características visuais confirmam (score réptil: {reptile_score:.2f}) - ACEITO")
                 
                 return {
                     'detected': bird_detected,
@@ -3397,7 +3397,7 @@ class IntuitionEngine:
                 
                 # NOVO: Verificação pós-processamento para falsos positivos
                 if bird_detected:
-                    logger.info(f"🔍 YOLO detectou pássaro com confiança {max_confidence:.2f}, verificando características visuais...")
+                    logger.info(f"[BUSCA] YOLO detectou pássaro com confiança {max_confidence:.2f}, verificando características visuais...")
                     # Analisar características visuais para confirmar se é realmente um pássaro
                     visual_characteristics = self._detect_visual_characteristics(image)
                     reptile_score = self._calculate_reptile_score(visual_characteristics)
@@ -3410,7 +3410,7 @@ class IntuitionEngine:
                         max_confidence = 0.0
                         logger.info(f"🦎 YOLO detectou pássaro, mas características visuais indicam réptil (score: {reptile_score:.2f}) - REJEITADO")
                     else:
-                        logger.info(f"✅ YOLO detectou pássaro e características visuais confirmam (score réptil: {reptile_score:.2f}) - ACEITO")
+                        logger.info(f"[SUCESSO] YOLO detectou pássaro e características visuais confirmam (score réptil: {reptile_score:.2f}) - ACEITO")
                 
                 return {
                     'detected': bird_detected,
@@ -3421,7 +3421,7 @@ class IntuitionEngine:
                 }
                 
         except Exception as e:
-            logger.warning(f"⚠️ Erro na detecção YOLO {model_name}: {e}")
+            logger.warning(f"[ALERTA] Erro na detecção YOLO {model_name}: {e}")
             return {
                 'detected': False, 
                 'confidence': 0.0, 
@@ -3462,7 +3462,7 @@ class IntuitionEngine:
             }
             
         except Exception as e:
-            logger.warning(f"⚠️ Erro na detecção OpenCV {model_name}: {e}")
+            logger.warning(f"[ALERTA] Erro na detecção OpenCV {model_name}: {e}")
             return {'detected': False, 'confidence': 0.0, 'model': model_name}
     
     def _detect_with_mediapipe(self, model, image: np.ndarray) -> Dict[str, Any]:
@@ -3492,7 +3492,7 @@ class IntuitionEngine:
             }
             
         except Exception as e:
-            logger.warning(f"⚠️ Erro na detecção MediaPipe: {e}")
+            logger.warning(f"[ALERTA] Erro na detecção MediaPipe: {e}")
             return {'detected': False, 'confidence': 0.0, 'model': 'mediapipe'}
     
     def _calculate_model_consensus(self, characteristics: Dict, detection_results: Dict) -> Dict[str, Any]:
@@ -6784,10 +6784,10 @@ class IntuitionEngine:
                             'confidence': human_feedback.get('confidence', 0.8)
                         })
                 
-                logger.info(f"🧠 Aprendizado: {species} adicionado ao conhecimento")
+                logger.info(f"[IA] Aprendizado: {species} adicionado ao conhecimento")
             
         except Exception as e:
-            logger.error(f"❌ Erro no aprendizado: {e}")
+            logger.error(f"[ERRO] Erro no aprendizado: {e}")
     
     def get_learning_statistics(self) -> Dict[str, Any]:
         """Retorna estatísticas de aprendizado"""

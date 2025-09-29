@@ -80,20 +80,20 @@ class GradCAMAnnotator:
             
             # Verificar se o arquivo existe
             if not os.path.exists(self.keras_model_path):
-                logging.warning(f"⚠️ Modelo Keras não encontrado: {self.keras_model_path}")
-                logging.info("📝 Grad-CAM não estará disponível até que o modelo Keras seja treinado")
+                logging.warning(f"[ALERTA] Modelo Keras não encontrado: {self.keras_model_path}")
+                logging.info("[ESCRITA] Grad-CAM não estará disponível até que o modelo Keras seja treinado")
                 self.model = None
                 return
             
             # Verificar se TensorFlow está funcionando
             if not hasattr(tf, 'keras'):
-                logging.error("❌ TensorFlow não tem atributo 'keras'")
+                logging.error("[ERRO] TensorFlow não tem atributo 'keras'")
                 self.model = None
                 return
             
             # Verificar se tf.keras.models existe
             if not hasattr(tf.keras, 'models'):
-                logging.error("❌ TensorFlow keras.models não disponível")
+                logging.error("[ERRO] TensorFlow keras.models não disponível")
                 self.model = None
                 return
             
@@ -115,7 +115,7 @@ class GradCAMAnnotator:
             if self.target_layer_name is None:
                 raise ValueError("Não foi possível encontrar camada convolucional adequada")
             
-            logging.info(f"✅ Modelo carregado. Camada Grad-CAM: {self.target_layer_name}")
+            logging.info(f"[SUCESSO] Modelo carregado. Camada Grad-CAM: {self.target_layer_name}")
             
             # Criar modelo para Grad-CAM
             self.grad_model = Model(
@@ -124,7 +124,7 @@ class GradCAMAnnotator:
             )
             
         except Exception as e:
-            logging.error(f"❌ Erro ao carregar modelo: {e}")
+            logging.error(f"[ERRO] Erro ao carregar modelo: {e}")
             self.model = None
             self.grad_model = None
     
@@ -189,7 +189,7 @@ class GradCAMAnnotator:
             # Adicionar ao histórico
             self.generated_annotations.append(annotation)
             
-            logging.info(f"✅ Anotação gerada: {annotation_file_path}")
+            logging.info(f"[SUCESSO] Anotação gerada: {annotation_file_path}")
             return annotation
             
         except Exception as e:
@@ -488,7 +488,7 @@ class GradCAMAnnotator:
 
 # Exemplo de uso
 if __name__ == "__main__":
-    print("🎯 Anotador Automático - A Invenção da Anotação")
+    print("[ALVO] Anotador Automático - A Invenção da Anotação")
     print("=" * 50)
     print("Este módulo usa Grad-CAM para gerar anotações automáticas")
     print("quando a IA tem intuição mas não consegue detectar partes específicas.")
@@ -498,4 +498,4 @@ if __name__ == "__main__":
     print("2. Use generate_auto_annotation() com candidatos de intuição")
     print("3. Visualize resultados com visualize_gradcam()")
     print()
-    print("🚀 PRÓXIMO PASSO: Implementar Curador Híbrido com APIs de Visão")
+    print("[RAPIDO] PRÓXIMO PASSO: Implementar Curador Híbrido com APIs de Visão")

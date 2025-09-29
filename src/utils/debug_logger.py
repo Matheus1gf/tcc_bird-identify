@@ -46,15 +46,15 @@ class DebugLogger:
     
     def info(self, message):
         """Log de informação"""
-        self.logger.info(f"ℹ️ {message}")
+        self.logger.info(f"[INFO] {message}")
     
     def warning(self, message):
         """Log de aviso"""
-        self.logger.warning(f"⚠️ {message}")
+        self.logger.warning(f"[ALERTA] {message}")
     
     def error(self, message):
         """Log de erro"""
-        self.logger.error(f"❌ {message}")
+        self.logger.error(f"[ERRO] {message}")
     
     def critical(self, message):
         """Log crítico"""
@@ -62,7 +62,7 @@ class DebugLogger:
     
     def success(self, message):
         """Log de sucesso"""
-        self.logger.info(f"✅ {message}")
+        self.logger.info(f"[SUCESSO] {message}")
     
     def button_click(self, button_name, details=""):
         """Log específico para cliques de botão"""
@@ -75,7 +75,7 @@ class DebugLogger:
     def image_upload(self, filename, size=None):
         """Log específico para upload de imagem"""
         timestamp = datetime.now().strftime("%H:%M:%S")
-        message = f"📸 Imagem '{filename}' carregada às {timestamp}"
+        message = f"[CAMERA] Imagem '{filename}' carregada às {timestamp}"
         if size:
             message += f" - Tamanho: {size}"
         self.logger.info(message)
@@ -83,12 +83,12 @@ class DebugLogger:
     def analysis_start(self, analysis_type):
         """Log de início de análise"""
         timestamp = datetime.now().strftime("%H:%M:%S")
-        self.logger.info(f"🔍 Iniciando análise '{analysis_type}' às {timestamp}")
+        self.logger.info(f"[BUSCA] Iniciando análise '{analysis_type}' às {timestamp}")
     
     def analysis_complete(self, analysis_type, result=None):
         """Log de conclusão de análise"""
         timestamp = datetime.now().strftime("%H:%M:%S")
-        message = f"✅ Análise '{analysis_type}' concluída às {timestamp}"
+        message = f"[SUCESSO] Análise '{analysis_type}' concluída às {timestamp}"
         if result:
             message += f" - Resultado: {result}"
         self.logger.info(message)
@@ -96,7 +96,7 @@ class DebugLogger:
     def error_handling(self, error, context=""):
         """Log específico para tratamento de erros"""
         timestamp = datetime.now().strftime("%H:%M:%S")
-        message = f"❌ Erro às {timestamp}"
+        message = f"[ERRO] Erro às {timestamp}"
         if context:
             message += f" - Contexto: {context}"
         message += f" - Erro: {str(error)}"
@@ -104,18 +104,18 @@ class DebugLogger:
     
     def log_session_start(self, filename):
         """Log de início de sessão"""
-        self.logger.info(f"🚀 Sessão iniciada - Arquivo: {filename}")
+        self.logger.info(f"[RAPIDO] Sessão iniciada - Arquivo: {filename}")
     
     def log_error(self, message, error_type=""):
         """Log de erro com tipo"""
         if error_type:
-            self.logger.error(f"❌ [{error_type}] {message}")
+            self.logger.error(f"[ERRO] [{error_type}] {message}")
         else:
-            self.logger.error(f"❌ {message}")
+            self.logger.error(f"[ERRO] {message}")
     
     def log_success(self, message):
         """Log de sucesso"""
-        self.logger.info(f"✅ {message}")
+        self.logger.info(f"[SUCESSO] {message}")
 
 # Instância global do logger
 debug_logger = DebugLogger()

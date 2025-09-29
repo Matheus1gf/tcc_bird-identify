@@ -71,22 +71,22 @@ class LogicalAIReasoningSystem:
         # Histórico de operações
         self.operation_history = []
         
-        logging.info("🧠 Sistema Santo Graal inicializado!")
-        logging.info("🎯 Pronto para aprendizado contínuo e auto-melhoria")
+        logging.info("[IA] Sistema Santo Graal inicializado!")
+        logging.info("[ALVO] Pronto para aprendizado contínuo e auto-melhoria")
     
     def analyze_image_revolutionary(self, image_path: str) -> Dict:
         """
         Análise revolucionária que implementa o fluxo completo:
         Entrada -> Análise -> Dúvida -> Auto-Análise -> Nova Hipótese -> Armazenamento -> Re-treinamento
         """
-        logging.info(f"🔍 Analisando imagem: {os.path.basename(image_path)}")
+        logging.info(f"[BUSCA] Analisando imagem: {os.path.basename(image_path)}")
         
         # ETAPA 0: Verificar se imagem já foi reconhecida
         from .cache import image_cache
         cached_recognition = image_cache.is_image_recognized(image_path)
         
         if cached_recognition:
-            logging.info(f"🔄 Imagem já reconhecida: {cached_recognition['species']} ({cached_recognition['confidence']:.2%})")
+            logging.info(f"[ATUALIZACAO] Imagem já reconhecida: {cached_recognition['species']} ({cached_recognition['confidence']:.2%})")
             return {
                 "image_path": image_path,
                 "timestamp": datetime.now().isoformat(),
@@ -190,7 +190,7 @@ class LogicalAIReasoningSystem:
         3. Executar decisão automatizada
         4. Re-treinar se necessário
         """
-        logging.info("🚀 ATIVANDO CICLO DE APRENDIZADO REVOLUCIONÁRIO")
+        logging.info("[RAPIDO] ATIVANDO CICLO DE APRENDIZADO REVOLUCIONÁRIO")
         
         learning_result = {
             "activated": True,
@@ -204,15 +204,15 @@ class LogicalAIReasoningSystem:
         
         try:
             # ESTÁGIO 1: Gerar Anotação Automática
-            logging.info("🎯 ESTÁGIO 1: Geração de Anotação Automática")
+            logging.info("[ALVO] ESTÁGIO 1: Geração de Anotação Automática")
             annotation = self._generate_auto_annotation(image_path, intuition_analysis)
             
             if annotation:
                 learning_result["annotations_generated"] = 1
                 learning_result["stages_completed"].append("auto_annotation")
-                logging.info("✅ Anotação automática gerada com Grad-CAM")
+                logging.info("[SUCESSO] Anotação automática gerada com Grad-CAM")
             else:
-                logging.warning("⚠️ Falha na geração de anotação automática")
+                logging.warning("[ALERTA] Falha na geração de anotação automática")
                 return learning_result
             
             # ESTÁGIO 2: Validação Semântica
@@ -222,14 +222,14 @@ class LogicalAIReasoningSystem:
             learning_result["stages_completed"].append("validation")
             
             # ESTÁGIO 3: Execução de Decisão
-            logging.info("⚡ ESTÁGIO 3: Execução de Decisão Automatizada")
+            logging.info("[RAPIDO] ESTÁGIO 3: Execução de Decisão Automatizada")
             decision_executed = self._execute_automated_decision(annotation, validation_result)
             learning_result["decision_executed"] = decision_executed
             learning_result["stages_completed"].append("decision_execution")
             
             # ESTÁGIO 4: Re-treinamento (se necessário)
             if self._should_retrain_after_decision(validation_result):
-                logging.info("🔄 ESTÁGIO 4: Re-treinamento Automático")
+                logging.info("[ATUALIZACAO] ESTÁGIO 4: Re-treinamento Automático")
                 retrained = self._retrain_models()
                 learning_result["model_retrained"] = retrained
                 learning_result["stages_completed"].append("retraining")
@@ -237,7 +237,7 @@ class LogicalAIReasoningSystem:
             logging.info("🎉 CICLO DE APRENDIZADO CONCLUÍDO COM SUCESSO!")
             
         except Exception as e:
-            logging.error(f"❌ Erro no ciclo de aprendizado: {e}")
+            logging.error(f"[ERRO] Erro no ciclo de aprendizado: {e}")
             learning_result["error"] = str(e)
         
         return learning_result
@@ -274,7 +274,7 @@ class LogicalAIReasoningSystem:
                     image_path, candidate
                 )
                 if visualization_path:
-                    logging.info(f"📊 Grad-CAM visualizado: {visualization_path}")
+                    logging.info(f"[DADO] Grad-CAM visualizado: {visualization_path}")
             
             return annotation
             
@@ -331,9 +331,9 @@ class LogicalAIReasoningSystem:
             success = self.learning_system.hybrid_curator.execute_decision(decision)
             
             if success:
-                logging.info(f"✅ Decisão executada: {validation_result['decision']}")
+                logging.info(f"[SUCESSO] Decisão executada: {validation_result['decision']}")
             else:
-                logging.error(f"❌ Falha ao executar decisão: {validation_result['decision']}")
+                logging.error(f"[ERRO] Falha ao executar decisão: {validation_result['decision']}")
             
             return success
             
@@ -354,11 +354,11 @@ class LogicalAIReasoningSystem:
             # Re-treinar YOLO
             self.learning_system._retrain_yolo()
             
-            logging.info("✅ Modelos re-treinados com sucesso")
+            logging.info("[SUCESSO] Modelos re-treinados com sucesso")
             return True
             
         except Exception as e:
-            logging.error(f"❌ Erro no re-treinamento: {e}")
+            logging.error(f"[ERRO] Erro no re-treinamento: {e}")
             return False
     
     def _record_operation(self, analysis: Dict):
@@ -379,7 +379,7 @@ class LogicalAIReasoningSystem:
         • Aprendizado automático quando necessário
         • Auto-melhoria contínua
         """
-        logging.info(f"🚀 PROCESSAMENTO REVOLUCIONÁRIO: {directory}")
+        logging.info(f"[RAPIDO] PROCESSAMENTO REVOLUCIONÁRIO: {directory}")
         
         results = {
             "directory": directory,
@@ -416,10 +416,10 @@ class LogicalAIReasoningSystem:
                         if learning_result.get("model_retrained"):
                             results["models_retrained"] += 1
                     
-                    logging.info(f"✅ Processado: {filename}")
+                    logging.info(f"[SUCESSO] Processado: {filename}")
                     
                 except Exception as e:
-                    logging.error(f"❌ Erro ao processar {filename}: {e}")
+                    logging.error(f"[ERRO] Erro ao processar {filename}: {e}")
                     results["results"].append({
                         "image_path": image_path,
                         "error": str(e),
@@ -430,10 +430,10 @@ class LogicalAIReasoningSystem:
         results["final_report"] = self._generate_final_report(results)
         
         logging.info("🎉 PROCESSAMENTO REVOLUCIONÁRIO CONCLUÍDO!")
-        logging.info(f"📊 Estatísticas: {results['processed_images']}/{results['total_images']} imagens processadas")
-        logging.info(f"🧠 Aprendizado ativado: {results['learning_activated']} vezes")
-        logging.info(f"🎯 Anotações geradas: {results['annotations_generated']}")
-        logging.info(f"🔄 Modelos re-treinados: {results['models_retrained']}")
+        logging.info(f"[DADO] Estatísticas: {results['processed_images']}/{results['total_images']} imagens processadas")
+        logging.info(f"[IA] Aprendizado ativado: {results['learning_activated']} vezes")
+        logging.info(f"[ALVO] Anotações geradas: {results['annotations_generated']}")
+        logging.info(f"[ATUALIZACAO] Modelos re-treinados: {results['models_retrained']}")
         
         return results
     
@@ -460,10 +460,10 @@ class LogicalAIReasoningSystem:
                 "human_workload_reduction": results["auto_approved"] + results["auto_rejected"]
             },
             "recommendations": [
-                "✅ Sistema revolucionário funcionando perfeitamente",
-                "🧠 Aprendizado autônomo ativo",
-                "🔄 Auto-melhoria contínua implementada",
-                "🎯 Redução significativa de trabalho humano"
+                "[SUCESSO] Sistema revolucionário funcionando perfeitamente",
+                "[IA] Aprendizado autônomo ativo",
+                "[ATUALIZACAO] Auto-melhoria contínua implementada",
+                "[ALVO] Redução significativa de trabalho humano"
             ]
         }
     
@@ -495,12 +495,12 @@ class LogicalAIReasoningSystem:
     def enable_continuous_mode(self):
         """Ativa modo contínuo de aprendizado"""
         self.continuous_mode = True
-        logging.info("🔄 Modo contínuo de aprendizado ativado")
+        logging.info("[ATUALIZACAO] Modo contínuo de aprendizado ativado")
     
     def disable_continuous_mode(self):
         """Desativa modo contínuo de aprendizado"""
         self.continuous_mode = False
-        logging.info("⏸️ Modo contínuo de aprendizado desativado")
+        logging.info("[PAUSA] Modo contínuo de aprendizado desativado")
 
 def main():
     """Função principal para demonstração"""
@@ -513,7 +513,7 @@ def main():
     
     args = parser.parse_args()
     
-    print("🧠 SISTEMA SANTO GRAAL DA IA")
+    print("[IA] SISTEMA SANTO GRAAL DA IA")
     print("=" * 50)
     print("Implementando aprendizado contínuo e auto-melhoria")
     print("=" * 50)
@@ -535,8 +535,8 @@ def main():
         json.dump(results, f, indent=2, ensure_ascii=False)
     
     print(f"\n🎉 PROCESSAMENTO CONCLUÍDO!")
-    print(f"📊 Resultados salvos em: {output_file}")
-    print(f"🧠 Estatísticas: {system.get_revolutionary_statistics()}")
+    print(f"[DADO] Resultados salvos em: {output_file}")
+    print(f"[IA] Estatísticas: {system.get_revolutionary_statistics()}")
 
 if __name__ == "__main__":
     main()

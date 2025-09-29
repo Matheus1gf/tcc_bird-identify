@@ -229,12 +229,12 @@ class UniversalFeatureAnalyzer:
                 
                 # Adicionar ao raciocínio universal
                 analysis["universal_reasoning"].append(
-                    f"✅ {feature_name}: {feature_analysis['confidence']:.3f} "
+                    f"[SUCESSO] {feature_name}: {feature_analysis['confidence']:.3f} "
                     f"({feature.universal_level.value})"
                 )
             else:
                 analysis["universal_reasoning"].append(
-                    f"❌ {feature_name}: não detectado"
+                    f"[ERRO] {feature_name}: não detectado"
                 )
         
         # Calcular score de universalidade
