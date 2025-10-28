@@ -18,7 +18,7 @@ import time
 
 from .intuition import IntuitionEngine, LearningCandidate
 from .annotator import GradCAMAnnotator, AutoAnnotation
-from utils.debug_logger import DebugLogger
+from src.utils.debug_logger import DebugLogger
 from .curator import HybridCurator, CuratorDecision
 
 logging.basicConfig(level=logging.INFO)
@@ -355,7 +355,7 @@ class ContinuousLearningSystem:
         if should_retrain:
             logging.info(f"[ATUALIZACAO] Re-treinamento necessário: {auto_approved_count} amostras aprovadas")
         else:
-            logging.info(f"<i class="bi bi-hourglass"></i> Aguardando mais dados: {auto_approved_count}/{self.min_candidates_for_retraining}")
+            logging.info(f"<i class='bi bi-hourglass'></i> Aguardando mais dados: {auto_approved_count}/{self.min_candidates_for_retraining}")
         
         return should_retrain
     

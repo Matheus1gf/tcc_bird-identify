@@ -14,6 +14,7 @@ from enum import Enum
 import logging
 import json
 import random
+import time
 
 # Configurar logging primeiro
 logging.basicConfig(level=logging.INFO)
@@ -294,6 +295,10 @@ class LearningCandidate:
 class IntuitionEngine:
     """Motor de Intuição Neuro-Simbólica Simplificado para Pássaros"""
     
+    # Cache global para modelos YOLO
+    _yolo_cache = {}
+    _keras_cache = {}
+    
     def __init__(self, yolo_model_path: str, keras_model_path: str, debug_logger):
         self.yolo_model_path = yolo_model_path
         self.keras_model_path = keras_model_path
@@ -305,7 +310,7 @@ class IntuitionEngine:
         self.auto_modification_system = None
         if AUTO_MODIFICATION_AVAILABLE:
             try:
-                self.auto_modification_system = AutoModificationSystem()
+                self.auto_modification_system = AutoModificationSystem(auto_save=False)  # FIXED: Desabilitar auto_save durante init
                 logger.info("Sistema de auto-modificação inicializado")
             except Exception as e:
                 logger.error(f"Erro ao inicializar sistema de auto-modificação: {e}")
@@ -315,7 +320,7 @@ class IntuitionEngine:
         self.algorithm_evolution_system = None
         if ALGORITHM_EVOLUTION_AVAILABLE:
             try:
-                self.algorithm_evolution_system = AlgorithmEvolutionSystem()
+                self.algorithm_evolution_system = AlgorithmEvolutionSystem(auto_save=False)  # FIXED: Desabilitar auto_save durante init
                 logger.info("Sistema de evolução de algoritmos inicializado")
             except Exception as e:
                 logger.error(f"Erro ao inicializar sistema de evolução de algoritmos: {e}")
@@ -325,7 +330,7 @@ class IntuitionEngine:
         self.auto_optimization_system = None
         if AUTO_OPTIMIZATION_AVAILABLE:
             try:
-                self.auto_optimization_system = AutoOptimizationSystem()
+                self.auto_optimization_system = AutoOptimizationSystem(auto_save=False)  # FIXED: Desabilitar auto_save durante init
                 logger.info("Sistema de auto-otimização inicializado")
             except Exception as e:
                 logger.error(f"Erro ao inicializar sistema de auto-otimização: {e}")
@@ -335,7 +340,7 @@ class IntuitionEngine:
         self.advanced_weight_optimization_system = None
         if ADVANCED_WEIGHT_OPTIMIZATION_AVAILABLE:
             try:
-                self.advanced_weight_optimization_system = AdvancedWeightOptimizationSystem()
+                self.advanced_weight_optimization_system = AdvancedWeightOptimizationSystem(auto_save=False)  # FIXED: Desabilitar auto_save durante init
                 logger.info("Sistema de otimização apurada dos pesos inicializado")
             except Exception as e:
                 logger.error(f"Erro ao inicializar sistema de otimização apurada dos pesos: {e}")
@@ -345,7 +350,7 @@ class IntuitionEngine:
         self.architecture_evolution_system = None
         if ARCHITECTURE_EVOLUTION_AVAILABLE:
             try:
-                self.architecture_evolution_system = ArchitectureEvolutionSystem()
+                self.architecture_evolution_system = ArchitectureEvolutionSystem(auto_save=False)  # FIXED: Desabilitar auto_save durante init
                 logger.info("Sistema de evolução de arquitetura inicializado")
             except Exception as e:
                 logger.error(f"Erro ao inicializar sistema de evolução de arquitetura: {e}")
@@ -365,7 +370,7 @@ class IntuitionEngine:
         self.few_shot_learner = None
         if FEW_SHOT_LEARNING_AVAILABLE:
             try:
-                self.few_shot_learner = FewShotLearner()
+                self.few_shot_learner = FewShotLearner(auto_save=False)  # FIXED: Desabilitar auto_save durante init
                 logger.info("Sistema de few-shot learning inicializado")
             except Exception as e:
                 logger.error(f"Erro ao inicializar sistema de few-shot learning: {e}")
@@ -375,7 +380,7 @@ class IntuitionEngine:
         self.meta_learning_system = None
         if META_LEARNING_AVAILABLE:
             try:
-                self.meta_learning_system = MetaLearningSystem()
+                self.meta_learning_system = MetaLearningSystem(auto_save=False)  # FIXED: Desabilitar auto_save durante init
                 logger.info("Sistema de meta-aprendizado inicializado")
             except Exception as e:
                 logger.error(f"Erro ao inicializar sistema de meta-aprendizado: {e}")
@@ -385,7 +390,7 @@ class IntuitionEngine:
         self.conceptual_reasoning_system = None
         if CONCEPTUAL_REASONING_AVAILABLE:
             try:
-                self.conceptual_reasoning_system = AbstractInferenceEngine()
+                self.conceptual_reasoning_system = AbstractInferenceEngine(auto_save=False)  # Desabilitar auto_save durante init
                 logger.info("Sistema de raciocínio conceitual inicializado")
             except Exception as e:
                 logger.error(f"Erro ao inicializar sistema de raciocínio conceitual: {e}")
@@ -395,7 +400,7 @@ class IntuitionEngine:
         self.analogical_reasoning_system = None
         if ANALOGICAL_REASONING_AVAILABLE:
             try:
-                self.analogical_reasoning_system = StructuralAnalogyEngine()
+                self.analogical_reasoning_system = StructuralAnalogyEngine(auto_save=False)  # Desabilitar auto_save durante init
                 logger.info("Sistema de raciocínio por analogia inicializado")
             except Exception as e:
                 logger.error(f"Erro ao inicializar sistema de raciocínio por analogia: {e}")
@@ -405,7 +410,7 @@ class IntuitionEngine:
         self.universal_pattern_learner = None
         if UNIVERSAL_PATTERN_LEARNING_AVAILABLE:
             try:
-                self.universal_pattern_learner = UniversalPatternLearner()
+                self.universal_pattern_learner = UniversalPatternLearner(auto_save=False)  # FIXED: Desabilitar auto_save durante init
                 logger.info("Sistema de aprendizado por padrões universais inicializado")
             except Exception as e:
                 logger.error(f"Erro ao inicializar sistema de aprendizado por padrões universais: {e}")
@@ -415,7 +420,7 @@ class IntuitionEngine:
         self.episodic_memory_system = None
         if EPISODIC_MEMORY_AVAILABLE:
             try:
-                self.episodic_memory_system = EpisodicMemorySystem()
+                self.episodic_memory_system = EpisodicMemorySystem(auto_save=False)  # Desabilitar auto_save durante init
                 logger.info("Sistema de memória episódica inicializado")
             except Exception as e:
                 logger.error(f"Erro ao inicializar sistema de memória episódica: {e}")
@@ -425,7 +430,7 @@ class IntuitionEngine:
         self.causal_reasoning_system = None
         if CAUSAL_REASONING_AVAILABLE:
             try:
-                self.causal_reasoning_system = CausalReasoningSystem()
+                self.causal_reasoning_system = CausalReasoningSystem(auto_save=False)  # Desabilitar auto_save durante init
                 logger.info("Sistema de raciocínio causal inicializado")
             except Exception as e:
                 logger.error(f"Erro ao inicializar sistema de raciocínio causal: {e}")
@@ -435,7 +440,7 @@ class IntuitionEngine:
         self.concept_hierarchy_manager = None
         if CONCEPT_HIERARCHY_AVAILABLE:
             try:
-                self.concept_hierarchy_manager = ConceptHierarchyManager()
+                self.concept_hierarchy_manager = ConceptHierarchyManager(auto_save=False)  # FIXED: Desabilitar auto_save durante init
                 logger.info("Sistema de hierarquias de conceitos inicializado")
             except Exception as e:
                 logger.error(f"Erro ao inicializar sistema de hierarquias de conceitos: {e}")
@@ -445,7 +450,7 @@ class IntuitionEngine:
         self.relation_learning_system = None
         if RELATION_LEARNING_AVAILABLE:
             try:
-                self.relation_learning_system = RelationLearningSystem()
+                self.relation_learning_system = RelationLearningSystem(auto_save=False)  # FIXED: Desabilitar auto_save durante init
                 logger.info("Sistema de aprendizado de relações inicializado")
             except Exception as e:
                 logger.error(f"Erro ao inicializar sistema de aprendizado de relações: {e}")
@@ -455,7 +460,7 @@ class IntuitionEngine:
         self.knowledge_transfer_system = None
         if KNOWLEDGE_TRANSFER_AVAILABLE:
             try:
-                self.knowledge_transfer_system = KnowledgeTransferSystem()
+                self.knowledge_transfer_system = KnowledgeTransferSystem(auto_save=False)  # FIXED: Desabilitar auto_save durante init
                 logger.info("Sistema de transferência de conhecimento inicializado")
             except Exception as e:
                 logger.error(f"Erro ao inicializar sistema de transferência de conhecimento: {e}")
@@ -465,7 +470,7 @@ class IntuitionEngine:
         self.metacognitive_system = None
         if METACOGNITION_AVAILABLE:
             try:
-                self.metacognitive_system = MetaCognitiveSystem()
+                self.metacognitive_system = MetaCognitiveSystem(auto_save=False)  # FIXED: Desabilitar auto_save durante init
                 logger.info("Sistema de meta-cognição inicializado")
             except Exception as e:
                 logger.error(f"Erro ao inicializar sistema de meta-cognição: {e}")
@@ -478,6 +483,67 @@ class IntuitionEngine:
             'color_combinations': {},
             'shape_patterns': {}
         }
+        
+        # ============================================================================
+        # SISTEMA DE CACHE DE PERFORMANCE - FASE 1.3.2
+        # ============================================================================
+        
+        # Cache de análises de imagem
+        self.analysis_cache = {}
+        self.cache_max_size = 100  # Máximo de análises em cache
+        self.cache_hit_count = 0
+        self.cache_miss_count = 0
+        
+        # Cache de características visuais
+        self.visual_features_cache = {}
+        self.features_cache_max_size = 200
+        
+        # Cache de resultados YOLO
+        self.yolo_results_cache = {}
+        self.yolo_cache_max_size = 50
+        
+        # Estatísticas de performance
+        self.performance_stats = {
+            'total_analyses': 0,
+            'cache_hits': 0,
+            'cache_misses': 0,
+            'avg_analysis_time': 0.0,
+            'total_analysis_time': 0.0
+        }
+        
+        # ============================================================================
+        # ALIASES PARA SISTEMAS COGNITIVOS - FASE 1.2.3
+        # ============================================================================
+        
+        # Criar aliases para facilitar acesso aos sistemas cognitivos
+        self.abstract_inference = self.conceptual_reasoning_system
+        self.analogical_reasoning = self.analogical_reasoning_system
+        self.causal_reasoning = self.causal_reasoning_system
+        self.episodic_memory = self.episodic_memory_system
+        self.few_shot_learning = self.few_shot_learner
+        self.meta_learning = self.meta_learning_system
+        self.metacognition = self.metacognitive_system
+        self.universal_features = self.universal_pattern_learner
+        self.concept_hierarchy = self.concept_hierarchy_manager
+        self.relation_learning = self.relation_learning_system
+        self.knowledge_transfer = self.knowledge_transfer_system
+        
+        # Log dos sistemas conectados
+        connected_systems = []
+        if self.abstract_inference: connected_systems.append("abstract_inference")
+        if self.analogical_reasoning: connected_systems.append("analogical_reasoning")
+        if self.causal_reasoning: connected_systems.append("causal_reasoning")
+        if self.episodic_memory: connected_systems.append("episodic_memory")
+        if self.few_shot_learning: connected_systems.append("few_shot_learning")
+        if self.meta_learning: connected_systems.append("meta_learning")
+        if self.metacognition: connected_systems.append("metacognition")
+        if self.universal_features: connected_systems.append("universal_features")
+        if self.concept_hierarchy: connected_systems.append("concept_hierarchy")
+        if self.relation_learning: connected_systems.append("relation_learning")
+        if self.knowledge_transfer: connected_systems.append("knowledge_transfer")
+        
+        logger.info(f"[CONEXÃO] Sistemas cognitivos conectados: {len(connected_systems)}")
+        logger.info(f"[CONEXÃO] Sistemas: {', '.join(connected_systems)}")
         
         self._load_models()
         
@@ -503,12 +569,19 @@ class IntuitionEngine:
     def _load_yolo_models(self):
         """Carrega modelos YOLO com múltiplas versões e configurações avançadas"""
         try:
+            # Verificar cache primeiro
+            cache_key = f"yolo_{self.yolo_model_path}"
+            if cache_key in self._yolo_cache:
+                self.yolo_model = self._yolo_cache[cache_key]
+                logger.info(f"[CACHE] Modelo YOLO carregado do cache: {cache_key}")
+                return
+            
             # Aplicar patch PyTorch ANTES de importar YOLO
             import sys
             import os
             # Aplicar patch de typing
             try:
-                from utils.typing_patch import apply_typing_patch
+                from src.utils.typing_patch import apply_typing_patch
                 apply_typing_patch()
             except ImportError:
                 pass
@@ -563,6 +636,8 @@ class IntuitionEngine:
                         }
                         
                         self.detection_models['yolo_advanced'] = model
+                        # Adicionar ao cache
+                        self._yolo_cache[cache_key] = model
                         logger.info(f"[SUCESSO] {model_name} carregado com configurações avançadas")
                         return
                         
@@ -623,45 +698,16 @@ class IntuitionEngine:
             logger.warning(f"[ALERTA] MediaPipe não disponível: {e}")
     
     def _load_keras(self):
-        """Carrega modelo Keras"""
+        """Carrega modelo Keras usando carregador alternativo"""
         try:
-            import tensorflow as tf
-            import os
-            
-            # Verificar se TensorFlow está funcionando
-            if not hasattr(tf, 'keras'):
-                logger.warning("[ALERTA] TensorFlow não tem atributo 'keras'")
-                self.keras_model = None
-                return
-            
-            # Verificar se tf.keras.models existe
-            if not hasattr(tf.keras, 'models'):
-                logger.warning("[ALERTA] TensorFlow keras.models não disponível")
-                self.keras_model = None
-                return
-            
-            # Tentar carregar como HDF5 primeiro
-            if self.keras_model_path.endswith('.keras'):
-                # Se é .keras, tentar como HDF5
-                h5_path = self.keras_model_path.replace('.keras', '.h5')
-                if os.path.exists(h5_path):
-                    try:
-                        self.keras_model = tf.keras.models.load_model(h5_path)
-                        logger.info(f"Modelo Keras carregado: {h5_path}")
-                        return
-                    except Exception as e:
-                        logger.warning(f"Erro ao carregar modelo HDF5: {e}")
-            
-            # Carregar modelo Keras se disponível
-            if self.keras_model_path and os.path.exists(self.keras_model_path):
-                try:
-                    self.keras_model = tf.keras.models.load_model(self.keras_model_path)
-                    logger.info("[SUCESSO] Modelo Keras carregado")
-                except Exception as e:
-                    logger.warning(f"[ALERTA] Erro ao carregar Keras: {e}")
-                    self.keras_model = None
-        except ImportError:
-            logger.warning("[ALERTA] TensorFlow não disponível")
+            from src.utils.keras_model_loader import load_keras_model
+            self.keras_model = load_keras_model(self.keras_model_path)
+            if self.keras_model is not None:
+                logger.info(f"[SUCESSO] Modelo Keras carregado: {self.keras_model_path}")
+            else:
+                logger.warning(f"[ALERTA] Modelo Keras não carregado: {self.keras_model_path}")
+        except Exception as e:
+            logger.error(f"[ERRO] Falha ao carregar modelo Keras: {e}")
             self.keras_model = None
 
     def _log_model_status(self):
@@ -677,29 +723,112 @@ class IntuitionEngine:
         else:
             logger.info("[INFO] Modelo Keras não disponível")
     
-    def analyze_image_intuition(self, image_path: str) -> Dict[str, Any]:
+    def analyze_image_intuition(self, image_input) -> Dict[str, Any]:
         """
         Análise principal de intuição - como uma criança descobrindo pássaros
+        Aceita tanto caminho de arquivo quanto numpy array
         """
         try:
+            # Importar logger em tempo real
+            from src.utils.realtime_logger import log_info, log_error, log_warning
+            from src.utils.terminal_logger import log_info as term_log_info, log_error as term_log_error, log_success as term_log_success
+            
+            # ============================================================================
+            # CACHE DE PERFORMANCE - FASE 1.3.2
+            # ============================================================================
+            
+            # Gerar chave de cache
+            cache_key = self._generate_cache_key(image_input)
+            
+            # Verificar cache primeiro
+            cached_result = self._get_cached_analysis(cache_key)
+            if cached_result:
+                logger.info(f"[CACHE] Análise recuperada do cache: {cache_key}")
+                return cached_result['result']
+            
+            # Iniciar medição de tempo
+            analysis_start_time = time.time()
+            
+            term_log_info("Iniciando análise de imagem", "IntuitionEngine", "analyze_image_intuition")
+            log_info("Iniciando análise de imagem", "IntuitionEngine", "analyze_image_intuition")
+            
+            # Determinar tipo de entrada e processar adequadamente
+            if isinstance(image_input, str):
+                # Caminho de arquivo
+                log_info(f"Processando arquivo: {image_input}", "IntuitionEngine", "analyze_image_intuition")
+                image_path = image_input
+                
+                # Verificar se arquivo existe
+                if not os.path.exists(image_path):
+                    log_error(f"Arquivo não encontrado: {image_path}", "IntuitionEngine", "analyze_image_intuition")
+                    return {'error': f'Arquivo não encontrado: {image_path}'}
+                
+                # Carregar imagem
+                image = cv2.imread(image_path)
+                if image is None:
+                    log_error(f"Erro ao carregar imagem: {image_path}", "IntuitionEngine", "analyze_image_intuition")
+                    return {'error': f'Erro ao carregar imagem: {image_path}'}
+                
+                log_info(f"Imagem carregada: {image.shape}", "IntuitionEngine", "analyze_image_intuition")
+                
+            elif isinstance(image_input, np.ndarray):
+                # Numpy array - salvar temporariamente
+                log_info(f"Processando numpy array: {image_input.shape}", "IntuitionEngine", "analyze_image_intuition")
+                
+                # Salvar array como imagem temporária
+                temp_path = f"temp_analysis_{int(time.time())}.png"
+                cv2.imwrite(temp_path, image_input)
+                image_path = temp_path
+                image = image_input
+                
+                log_info(f"Array salvo como: {temp_path}", "IntuitionEngine", "analyze_image_intuition")
+                
+            else:
+                log_error(f"Tipo de entrada não suportado: {type(image_input)}", "IntuitionEngine", "analyze_image_intuition")
+                return {'error': f'Tipo de entrada não suportado: {type(image_input)}'}
+            
             # 1. Análise visual básica (como uma criança vê)
+            term_log_info("Iniciando análise visual", "IntuitionEngine", "analyze_image_intuition")
+            log_info("Iniciando análise visual", "IntuitionEngine", "analyze_image_intuition")
             visual_analysis = self._analyze_visual_characteristics(image_path)
+            term_log_success("Análise visual concluída", "IntuitionEngine", "analyze_image_intuition")
+            
+            if 'error' in visual_analysis:
+                log_error(f"Erro na análise visual: {visual_analysis['error']}", "IntuitionEngine", "analyze_image_intuition")
+                return visual_analysis
             
             # 2. Detecção de características fundamentais
+            term_log_info("Iniciando detecção de características", "IntuitionEngine", "analyze_image_intuition")
+            log_info("Iniciando detecção de características", "IntuitionEngine", "analyze_image_intuition")
             fundamental_characteristics = self._detect_fundamental_characteristics(image_path)
+            term_log_success("Detecção de características concluída", "IntuitionEngine", "analyze_image_intuition")
+            
+            if 'error' in fundamental_characteristics:
+                log_error(f"Erro na detecção de características: {fundamental_characteristics['error']}", "IntuitionEngine", "analyze_image_intuition")
+                return fundamental_characteristics
             
             # 3. Raciocínio lógico (neuro-simbólico)
+            term_log_info("Iniciando raciocínio lógico", "IntuitionEngine", "analyze_image_intuition")
+            log_info("Iniciando raciocínio lógico", "IntuitionEngine", "analyze_image_intuition")
             logical_reasoning = self._logical_reasoning(visual_analysis, fundamental_characteristics)
+            term_log_success("Raciocínio lógico concluído", "IntuitionEngine", "analyze_image_intuition")
             
             # 4. Detecção de candidatos para aprendizado
+            log_info("Iniciando detecção de candidatos", "IntuitionEngine", "analyze_image_intuition")
             learning_candidates = self._detect_learning_candidates(
                 visual_analysis, fundamental_characteristics, logical_reasoning
             )
             
             # 5. Recomendação de ação
+            log_info("Iniciando recomendação de ação", "IntuitionEngine", "analyze_image_intuition")
             recommendation = self._recommend_action(learning_candidates, logical_reasoning)
             
-            return {
+            # Limpar arquivo temporário se criado
+            if isinstance(image_input, np.ndarray) and os.path.exists(temp_path):
+                os.remove(temp_path)
+                log_info(f"Arquivo temporário removido: {temp_path}", "IntuitionEngine", "analyze_image_intuition")
+            
+            result = {
                 'is_bird': logical_reasoning.get('is_bird', False),
                 'confidence': logical_reasoning.get('confidence', 0.0),
                 'species': logical_reasoning.get('species', 'Desconhecida'),
@@ -713,23 +842,59 @@ class IntuitionEngine:
                     'fundamental_characteristics': fundamental_characteristics,
                     'logical_reasoning': logical_reasoning,
                     'learning_candidates': learning_candidates,
-                    'recommendation': recommendation,
-                    'candidates_found': len(learning_candidates)
+                    'recommendation': recommendation
                 }
             }
             
+            log_info("Análise concluída com sucesso", "IntuitionEngine", "analyze_image_intuition")
+            
+            # ============================================================================
+            # ARMAZENAR NO CACHE E ATUALIZAR ESTATÍSTICAS - FASE 1.3.2
+            # ============================================================================
+            
+            # Calcular tempo de análise
+            analysis_time = time.time() - analysis_start_time
+            
+            # Atualizar estatísticas de performance
+            self.performance_stats['total_analyses'] += 1
+            self.performance_stats['total_analysis_time'] += analysis_time
+            self.performance_stats['avg_analysis_time'] = (
+                self.performance_stats['total_analysis_time'] / self.performance_stats['total_analyses']
+            )
+            
+            # Armazenar resultado no cache
+            self._store_cached_analysis(cache_key, result)
+            
+            logger.info(f"[PERFORMANCE] Análise concluída em {analysis_time:.2f}s")
+            
+            return result
+            
         except Exception as e:
-            logger.error(f"[ERRO] Erro na análise de intuição: {e}")
-            return {
+            log_error(f"Erro na análise de intuição: {str(e)}", "IntuitionEngine", "analyze_image_intuition")
+            error_result = {
+                'error': str(e),
+                'is_bird': False,
                 'confidence': 0.0,
                 'species': 'Erro',
+                'intuition_level': 'Erro',
+                'needs_manual_review': True,
+                'reasoning_steps': [],
+                'characteristics_found': [],
                 'color': 'Erro',
                 'intuition_analysis': {
                     'error': str(e),
-                    'candidates_found': 0,
+                    'visual_analysis': {},
+                    'fundamental_characteristics': {},
+                    'logical_reasoning': {},
+                    'learning_candidates': {},
                     'recommendation': 'ERRO_ANALISE'
                 }
             }
+            
+            # Armazenar resultado no cache mesmo em caso de erro
+            self._store_cached_analysis(cache_key, error_result)
+            
+            return error_result
     
     def _analyze_visual_characteristics(self, image_path: str) -> Dict[str, Any]:
         """Análise visual básica - como uma criança vê cores e formas"""
@@ -1072,7 +1237,7 @@ class IntuitionEngine:
             return characteristics
             
         except Exception as e:
-            self.debug_logger.log_error(f"[ERRO] Erro na detecção de características: {str(e)}")
+            self.debug_logger.error(f"[ERRO] Erro na detecção de características: {str(e)}")
             return {'error': str(e)}
     
     def _detect_visual_characteristics(self, image: np.ndarray) -> Dict[str, Any]:
@@ -1137,7 +1302,7 @@ class IntuitionEngine:
             }
             
         except Exception as e:
-            self.debug_logger.log_error(f"Erro na detecção visual: {str(e)}")
+            self.debug_logger.error(f"Erro na detecção visual: {str(e)}")
             return {
                 'has_eyes': False,
                 'has_wings': False,
@@ -2297,7 +2462,7 @@ class IntuitionEngine:
             return 0.0
     
     def _logical_reasoning(self, visual_analysis: Dict, characteristics: Dict) -> Dict[str, Any]:
-        """Raciocínio lógico neuro-simbólico SIMPLIFICADO e EFICAZ"""
+        """Raciocínio lógico neuro-simbólico SIMPLIFICADO e EFICAZ - FASE 1.6.3"""
         reasoning = {
             'is_bird': False,
             'confidence': 0.0,
@@ -2308,6 +2473,27 @@ class IntuitionEngine:
             'intuition_level': 'Baixa',
             'needs_manual_review': False
         }
+        
+        # ============================================================================
+        # PRIORIDADE MÁXIMA: VERIFICAR RESULTADOS DO YOLO - FASE 1.6.3
+        # ============================================================================
+        
+        # Verificar se YOLO detectou pássaro
+        yolo_detection = characteristics.get('yolo_detection', False)
+        bird_confidence_avg = characteristics.get('bird_confidence_avg', 0.0)
+        
+        if yolo_detection and bird_confidence_avg > 0.5:
+            reasoning['is_bird'] = True
+            reasoning['confidence'] = bird_confidence_avg
+            reasoning['intuition_level'] = 'Alta'
+            reasoning['species'] = 'Pássaro de espécie desconhecida'
+            reasoning['reasoning_steps'].append(f"[YOLO] Pássaro detectado com confiança {bird_confidence_avg:.2f}")
+            logger.info(f"[LOGICAL_REASONING] YOLO detectou pássaro - ACEITO com confiança {bird_confidence_avg:.2f}")
+            return reasoning
+        
+        # ============================================================================
+        # ANÁLISE TRADICIONAL (MANTIDA COMO FALLBACK) - FASE 1.6.3
+        # ============================================================================
         
         # Extrair dados básicos
         has_wings = characteristics.get('has_wings', False)
@@ -3302,16 +3488,21 @@ class IntuitionEngine:
         return detection_results
     
     def _detect_with_yolo(self, model, image: np.ndarray, model_name: str) -> Dict[str, Any]:
-        """Detecção usando modelo YOLO com configurações avançadas"""
+        """Detecção usando modelo YOLO com configurações otimizadas - FASE 1.4.2"""
         try:
-            # Configurações avançadas para melhor detecção
+            # ============================================================================
+            # CONFIGURAÇÕES OTIMIZADAS PARA DETECÇÃO DE PÁSSAROS - FASE 1.4.2
+            # ============================================================================
+            
+            # Configurações otimizadas para melhor detecção de pássaros
             detection_params = {
-                'conf': 0.1,  # Confiança mínima muito baixa
-                'iou': 0.3,   # IoU threshold
+                'conf': 0.05,  # Confiança mínima muito baixa para capturar mais pássaros
+                'iou': 0.45,  # IoU threshold otimizado
                 'agnostic_nms': False,
-                'max_det': 1000,
+                'max_det': 100,  # Reduzido para melhor performance
                 'half': False,
-                'device': 'cpu'
+                'device': 'cpu',
+                'verbose': False  # Reduzir logs
             }
             
             if 'v5' in model_name:
@@ -3322,49 +3513,54 @@ class IntuitionEngine:
                 bird_detected = False
                 max_confidence = 0.0
                 bird_features = []
+                all_detections = []
                 
                 for _, detection in detections.iterrows():
                     confidence = detection['confidence']
                     class_id = detection['class']
+                    class_name = detection.get('name', f'class_{class_id}')
                     
-                    if confidence > 0.1:  # Threshold muito baixo
+                    all_detections.append({
+                        'class_id': class_id,
+                        'class_name': class_name,
+                        'confidence': confidence
+                    })
+                    
+                    # Threshold mais baixo para pássaros
+                    if confidence > 0.05:
                         # COCO classes expandidas para pássaros e características
-                        bird_classes = [15]  # Bird class principal
-                        bird_feature_classes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19, 20]  # Outras classes que podem indicar características
+                        bird_classes = [14]  # Bird class principal (corrigido de 15 para 14)
+                        bird_feature_classes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20]  # Removido 14 pois é classe principal
                         
                         if class_id in bird_classes:
                             bird_detected = True
                             max_confidence = max(max_confidence, confidence)
-                        elif class_id in bird_feature_classes and confidence > 0.2:
+                            logger.info(f"[YOLO] Pássaro detectado: {class_name} (conf: {confidence:.3f})")
+                        elif class_id in bird_feature_classes and confidence > 0.15:
                             bird_features.append({
                                 'class': class_id,
                                 'confidence': confidence,
-                                'name': detection.get('name', f'class_{class_id}')
+                                'name': class_name
                             })
                 
-                # NOVO: Verificação pós-processamento para falsos positivos
+                # Log de todas as detecções para debug
+                if all_detections:
+                    logger.info(f"[YOLO] Todas as detecções: {[(d['class_name'], d['confidence']) for d in all_detections]}")
+                
+                # NOVO: Detecção direta sem verificação pós-processamento problemática
                 if bird_detected:
-                    logger.info(f"[BUSCA] YOLO detectou pássaro com confiança {max_confidence:.2f}, verificando características visuais...")
-                    # Analisar características visuais para confirmar se é realmente um pássaro
-                    visual_characteristics = self._detect_visual_characteristics(image)
-                    reptile_score = self._calculate_reptile_score(visual_characteristics)
-                    
-                    logger.info(f"🦎 Score de réptil calculado: {reptile_score:.2f}")
-                    
-                    # Se tem características fortes de réptil, rejeitar detecção de pássaro
-                    if reptile_score > 0.6:
-                        bird_detected = False
-                        max_confidence = 0.0
-                        logger.info(f"🦎 YOLO detectou pássaro, mas características visuais indicam réptil (score: {reptile_score:.2f}) - REJEITADO")
-                    else:
-                        logger.info(f"[SUCESSO] YOLO detectou pássaro e características visuais confirmam (score réptil: {reptile_score:.2f}) - ACEITO")
+                    logger.info(f"[YOLO] Pássaro detectado com confiança {max_confidence:.3f} - ACEITO DIRETAMENTE")
+                    # Aceitar detecção YOLO diretamente sem verificação adicional
+                else:
+                    logger.info(f"[YOLO] Nenhum pássaro detectado")
                 
                 return {
                     'detected': bird_detected,
                     'confidence': max_confidence,
                     'model': model_name,
                     'bird_features': bird_features,
-                    'total_features': len(bird_features)
+                    'total_features': len(bird_features),
+                    'all_detections': all_detections
                 }
             else:
                 # YOLOv8+ tem interface diferente
@@ -3373,61 +3569,67 @@ class IntuitionEngine:
                 bird_detected = False
                 max_confidence = 0.0
                 bird_features = []
+                all_detections = []
                 
                 for result in results:
                     if hasattr(result, 'boxes') and result.boxes is not None:
                         for box in result.boxes:
                             class_id = int(box.cls[0])
                             confidence = float(box.conf[0])
+                            class_name = result.names.get(class_id, f'class_{class_id}')
                             
-                            if confidence > 0.1:  # Threshold muito baixo
+                            all_detections.append({
+                                'class_id': class_id,
+                                'class_name': class_name,
+                                'confidence': confidence
+                            })
+                            
+                            # Threshold mais baixo para pássaros
+                            if confidence > 0.05:
                                 # COCO classes expandidas
-                                bird_classes = [15]  # Bird class principal
-                                bird_feature_classes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19, 20]
+                                bird_classes = [14]  # Bird class principal (corrigido de 15 para 14)
+                                bird_feature_classes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20]  # Removido 14 pois é classe principal
                                 
                                 if class_id in bird_classes:
                                     bird_detected = True
                                     max_confidence = max(max_confidence, confidence)
-                                elif class_id in bird_feature_classes and confidence > 0.2:
+                                    logger.info(f"[YOLO] Pássaro detectado: {class_name} (conf: {confidence:.3f})")
+                                elif class_id in bird_feature_classes and confidence > 0.15:
                                     bird_features.append({
                                         'class': class_id,
                                         'confidence': confidence,
-                                        'name': result.names.get(class_id, f'class_{class_id}')
+                                        'name': class_name
                                     })
                 
-                # NOVO: Verificação pós-processamento para falsos positivos
+                # Log de todas as detecções para debug
+                if all_detections:
+                    logger.info(f"[YOLO] Todas as detecções: {[(d['class_name'], d['confidence']) for d in all_detections]}")
+                
+                # NOVO: Detecção direta sem verificação pós-processamento problemática
                 if bird_detected:
-                    logger.info(f"[BUSCA] YOLO detectou pássaro com confiança {max_confidence:.2f}, verificando características visuais...")
-                    # Analisar características visuais para confirmar se é realmente um pássaro
-                    visual_characteristics = self._detect_visual_characteristics(image)
-                    reptile_score = self._calculate_reptile_score(visual_characteristics)
-                    
-                    logger.info(f"🦎 Score de réptil calculado: {reptile_score:.2f}")
-                    
-                    # Se tem características fortes de réptil, rejeitar detecção de pássaro
-                    if reptile_score > 0.6:
-                        bird_detected = False
-                        max_confidence = 0.0
-                        logger.info(f"🦎 YOLO detectou pássaro, mas características visuais indicam réptil (score: {reptile_score:.2f}) - REJEITADO")
-                    else:
-                        logger.info(f"[SUCESSO] YOLO detectou pássaro e características visuais confirmam (score réptil: {reptile_score:.2f}) - ACEITO")
+                    logger.info(f"[YOLO] Pássaro detectado com confiança {max_confidence:.3f} - ACEITO DIRETAMENTE")
+                    # Aceitar detecção YOLO diretamente sem verificação adicional
+                else:
+                    logger.info(f"[YOLO] Nenhum pássaro detectado")
                 
                 return {
                     'detected': bird_detected,
                     'confidence': max_confidence,
                     'model': model_name,
                     'bird_features': bird_features,
-                    'total_features': len(bird_features)
+                    'total_features': len(bird_features),
+                    'all_detections': all_detections
                 }
                 
         except Exception as e:
-            logger.warning(f"[ALERTA] Erro na detecção YOLO {model_name}: {e}")
+            logger.warning(f"[YOLO] Erro na detecção {model_name}: {e}")
             return {
                 'detected': False, 
                 'confidence': 0.0, 
                 'model': model_name,
                 'bird_features': [],
-                'total_features': 0
+                'total_features': 0,
+                'all_detections': []
             }
     
     def _detect_with_opencv(self, model, image: np.ndarray, model_name: str) -> Dict[str, Any]:
@@ -6799,3 +7001,446 @@ class IntuitionEngine:
                 len(patterns) for patterns in self.learned_patterns['characteristic_patterns'].values()
             )
         }
+    
+    # ============================================================================
+    # MÉTODOS BÁSICOS DE APRENDIZADO - FASE 1.2
+    # ============================================================================
+    
+    def add_knowledge(self, knowledge_type: str, knowledge_data: Dict[str, Any]) -> bool:
+        """
+        Adiciona conhecimento ao sistema.
+        
+        Args:
+            knowledge_type: Tipo de conhecimento (species, pattern, relation, etc.)
+            knowledge_data: Dados do conhecimento
+            
+        Returns:
+            bool: True se adicionado com sucesso
+        """
+        try:
+            if knowledge_type == "species":
+                species_name = knowledge_data.get("name", "unknown")
+                characteristics = knowledge_data.get("characteristics", [])
+                
+                # Adicionar à memória episódica
+                if hasattr(self, 'episodic_memory') and self.episodic_memory:
+                    memory_content = {
+                        "species": species_name,
+                        "characteristics": characteristics,
+                        "confidence": knowledge_data.get("confidence", 0.8)
+                    }
+                    memory_context = {
+                        "learning_type": "species_knowledge",
+                        "timestamp": time.time()
+                    }
+                    self.episodic_memory.store_episodic_memory(
+                        memory_type="species_knowledge",
+                        content=memory_content,
+                        context=memory_context
+                    )
+                
+                # Adicionar aos padrões aprendidos
+                self.learned_patterns['known_species'].add(species_name)
+                
+                logger.info(f"[APRENDIZADO] Espécie adicionada: {species_name}")
+                return True
+                
+            elif knowledge_type == "pattern":
+                pattern_name = knowledge_data.get("name", "unknown")
+                pattern_data = knowledge_data.get("data", {})
+                
+                # Adicionar aos padrões de características
+                if pattern_name not in self.learned_patterns['characteristic_patterns']:
+                    self.learned_patterns['characteristic_patterns'][pattern_name] = []
+                
+                self.learned_patterns['characteristic_patterns'][pattern_name].append(pattern_data)
+                
+                logger.info(f"[APRENDIZADO] Padrão adicionado: {pattern_name}")
+                return True
+                
+            elif knowledge_type == "relation":
+                # Adicionar relação causal
+                if hasattr(self, 'causal_reasoning') and self.causal_reasoning:
+                    source = knowledge_data.get("source", "")
+                    target = knowledge_data.get("target", "")
+                    relation_type = knowledge_data.get("type", "causes")
+                    
+                    self.causal_reasoning.add_relation(source, target, relation_type)
+                    logger.info(f"[APRENDIZADO] Relação adicionada: {source} -> {target}")
+                    return True
+                
+            return False
+            
+        except Exception as e:
+            logger.error(f"[ERRO] Erro ao adicionar conhecimento: {e}")
+            return False
+    
+    def learn_from_example(self, example_data: Dict[str, Any], correct_label: str = None) -> Dict[str, Any]:
+        """
+        Aprende com um exemplo específico.
+        
+        Args:
+            example_data: Dados do exemplo (imagem, características, etc.)
+            correct_label: Rótulo correto (se fornecido)
+            
+        Returns:
+            Dict com resultado do aprendizado
+        """
+        try:
+            result = {
+                "success": False,
+                "learned_concepts": [],
+                "updated_patterns": [],
+                "confidence": 0.0
+            }
+            
+            # Extrair características do exemplo
+            if "image_path" in example_data:
+                visual_analysis = self._analyze_visual_characteristics(example_data["image_path"])
+                characteristics = self._detect_fundamental_characteristics(example_data["image_path"])
+            else:
+                visual_analysis = example_data.get("visual_analysis", {})
+                characteristics = example_data.get("characteristics", {})
+            
+            # Aprender conceitos abstratos
+            if hasattr(self, 'abstract_inference') and self.abstract_inference:
+                concept_result = self.abstract_inference.add_abstract_concept(
+                    name=correct_label or "unknown_concept",
+                    description=f"Conceito aprendido de {correct_label or 'exemplo'}",
+                    abstraction_level="concrete",
+                    properties=characteristics,
+                    examples=[str(characteristics)]
+                )
+                if concept_result.get("success", False):
+                    result["learned_concepts"].append("abstract_concept")
+            
+            # Aprender padrões universais
+            if hasattr(self, 'universal_features') and self.universal_features:
+                pattern_result = self.universal_features.learn_pattern(
+                    pattern_data=characteristics,
+                    species=correct_label or "unknown",
+                    pattern_type="morphological"
+                )
+                if pattern_result:
+                    result["learned_concepts"].append("universal_pattern")
+            
+            # Aprender few-shot
+            if hasattr(self, 'few_shot_learning') and self.few_shot_learning:
+                few_shot_result = self.few_shot_learning.learn_concept_few_shot(
+                    concept_name=correct_label or "unknown_concept",
+                    concept_type="bird_species",
+                    examples=[example_data]
+                )
+                if few_shot_result.success:
+                    result["learned_concepts"].append("few_shot_concept")
+            
+            # Atualizar padrões aprendidos
+            for char_name, char_value in characteristics.items():
+                if char_value and char_name != 'error':
+                    if char_name not in self.learned_patterns['characteristic_patterns']:
+                        self.learned_patterns['characteristic_patterns'][char_name] = []
+                    
+                    pattern_data = {
+                        'visual_features': visual_analysis,
+                        'species': correct_label or "unknown",
+                        'confidence': example_data.get("confidence", 0.8),
+                        'timestamp': time.time()
+                    }
+                    
+                    self.learned_patterns['characteristic_patterns'][char_name].append(pattern_data)
+                    result["updated_patterns"].append(char_name)
+            
+            result["success"] = len(result["learned_concepts"]) > 0
+            result["confidence"] = example_data.get("confidence", 0.8)
+            
+            logger.info(f"[APRENDIZADO] Exemplo processado: {len(result['learned_concepts'])} conceitos aprendidos")
+            return result
+            
+        except Exception as e:
+            logger.error(f"[ERRO] Erro no aprendizado com exemplo: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def update_knowledge(self, knowledge_id: str, update_data: Dict[str, Any]) -> bool:
+        """
+        Atualiza conhecimento existente.
+        
+        Args:
+            knowledge_id: ID do conhecimento a ser atualizado
+            update_data: Novos dados
+            
+        Returns:
+            bool: True se atualizado com sucesso
+        """
+        try:
+            # Atualizar memória episódica
+            if hasattr(self, 'episodic_memory') and self.episodic_memory:
+                # Buscar memória existente através da análise
+                memory_analysis = self.episodic_memory.get_memory_analysis()
+                if memory_analysis and "memories" in memory_analysis:
+                    for memory_id, memory_data in memory_analysis["memories"].items():
+                        if memory_data.get("content", {}).get("species") == knowledge_id:
+                            # Atualizar memória (simplificado)
+                            logger.info(f"[ATUALIZAÇÃO] Conhecimento encontrado na memória: {knowledge_id}")
+                            return True
+            
+            # Atualizar padrões aprendidos
+            if knowledge_id in self.learned_patterns['characteristic_patterns']:
+                patterns = self.learned_patterns['characteristic_patterns'][knowledge_id]
+                for pattern in patterns:
+                    pattern.update(update_data)
+                    pattern["last_updated"] = time.time()
+                logger.info(f"[ATUALIZAÇÃO] Padrão atualizado: {knowledge_id}")
+                return True
+            
+            return False
+            
+        except Exception as e:
+            logger.error(f"[ERRO] Erro ao atualizar conhecimento: {e}")
+            return False
+    
+    def save_knowledge(self, file_path: str = None) -> bool:
+        """
+        Salva todo o conhecimento aprendido.
+        
+        Args:
+            file_path: Caminho do arquivo (opcional)
+            
+        Returns:
+            bool: True se salvo com sucesso
+        """
+        try:
+            if file_path is None:
+                file_path = "data/learned_knowledge.json"
+            
+            knowledge_data = {
+                "learned_patterns": self.learned_patterns,
+                "timestamp": time.time(),
+                "version": "1.0"
+            }
+            
+            # Adicionar dados dos sistemas cognitivos
+            if hasattr(self, 'episodic_memory') and self.episodic_memory:
+                knowledge_data["episodic_memory"] = self.episodic_memory.get_memory_analysis()
+            
+            if hasattr(self, 'abstract_inference') and self.abstract_inference:
+                knowledge_data["abstract_inference"] = self.abstract_inference.get_stats()
+            
+            if hasattr(self, 'universal_features') and self.universal_features:
+                knowledge_data["universal_features"] = self.universal_features.get_stats()
+            
+            # Salvar arquivo
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            with open(file_path, 'w', encoding='utf-8') as f:
+                json.dump(knowledge_data, f, indent=2, ensure_ascii=False)
+            
+            logger.info(f"[SALVAMENTO] Conhecimento salvo em: {file_path}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"[ERRO] Erro ao salvar conhecimento: {e}")
+            return False
+    
+    def load_knowledge(self, file_path: str = None) -> bool:
+        """
+        Carrega conhecimento salvo.
+        
+        Args:
+            file_path: Caminho do arquivo (opcional)
+            
+        Returns:
+            bool: True se carregado com sucesso
+        """
+        try:
+            if file_path is None:
+                file_path = "data/learned_knowledge.json"
+            
+            if not os.path.exists(file_path):
+                logger.warning(f"[CARREGAMENTO] Arquivo não encontrado: {file_path}")
+                return False
+            
+            with open(file_path, 'r', encoding='utf-8') as f:
+                knowledge_data = json.load(f)
+            
+            # Carregar padrões aprendidos
+            if "learned_patterns" in knowledge_data:
+                self.learned_patterns.update(knowledge_data["learned_patterns"])
+            
+            logger.info(f"[CARREGAMENTO] Conhecimento carregado de: {file_path}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"[ERRO] Erro ao carregar conhecimento: {e}")
+            return False
+    
+    # ============================================================================
+    # MÉTODOS DE CACHE DE PERFORMANCE - FASE 1.3.2
+    # ============================================================================
+    
+    def _generate_cache_key(self, image_input) -> str:
+        """Gera chave única para cache baseada na imagem."""
+        try:
+            import hashlib
+            
+            if isinstance(image_input, str):
+                # Para arquivos, usar hash do caminho + tamanho + data de modificação
+                import os
+                if os.path.exists(image_input):
+                    stat = os.stat(image_input)
+                    key_data = f"{image_input}_{stat.st_size}_{stat.st_mtime}"
+                else:
+                    key_data = image_input
+            elif isinstance(image_input, np.ndarray):
+                # Para arrays numpy, usar hash dos dados
+                key_data = f"array_{image_input.shape}_{image_input.tobytes()[:1000]}"
+            else:
+                key_data = str(image_input)
+            
+            return hashlib.md5(key_data.encode()).hexdigest()[:16]
+            
+        except Exception as e:
+            logger.error(f"[ERRO] Erro ao gerar chave de cache: {e}")
+            return str(hash(str(image_input)))[:16]
+    
+    def _get_cached_analysis(self, cache_key: str) -> Optional[Dict[str, Any]]:
+        """Recupera análise do cache."""
+        try:
+            if cache_key in self.analysis_cache:
+                self.cache_hit_count += 1
+                self.performance_stats['cache_hits'] += 1
+                logger.debug(f"[CACHE] Hit: {cache_key}")
+                return self.analysis_cache[cache_key]
+            else:
+                self.cache_miss_count += 1
+                self.performance_stats['cache_misses'] += 1
+                logger.debug(f"[CACHE] Miss: {cache_key}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"[ERRO] Erro ao recuperar cache: {e}")
+            return None
+    
+    def _store_cached_analysis(self, cache_key: str, analysis_result: Dict[str, Any]):
+        """Armazena análise no cache."""
+        try:
+            # Limitar tamanho do cache
+            if len(self.analysis_cache) >= self.cache_max_size:
+                # Remover entrada mais antiga (FIFO)
+                oldest_key = next(iter(self.analysis_cache))
+                del self.analysis_cache[oldest_key]
+            
+            # Armazenar resultado
+            self.analysis_cache[cache_key] = {
+                'result': analysis_result,
+                'timestamp': time.time(),
+                'access_count': 1
+            }
+            
+            logger.debug(f"[CACHE] Stored: {cache_key}")
+            
+        except Exception as e:
+            logger.error(f"[ERRO] Erro ao armazenar cache: {e}")
+    
+    def _get_cached_visual_features(self, image_path: str) -> Optional[Dict[str, Any]]:
+        """Recupera características visuais do cache."""
+        try:
+            if image_path in self.visual_features_cache:
+                logger.debug(f"[CACHE] Visual features hit: {image_path}")
+                return self.visual_features_cache[image_path]
+            return None
+            
+        except Exception as e:
+            logger.error(f"[ERRO] Erro ao recuperar cache de características: {e}")
+            return None
+    
+    def _store_cached_visual_features(self, image_path: str, features: Dict[str, Any]):
+        """Armazena características visuais no cache."""
+        try:
+            # Limitar tamanho do cache
+            if len(self.visual_features_cache) >= self.features_cache_max_size:
+                # Remover entrada mais antiga
+                oldest_key = next(iter(self.visual_features_cache))
+                del self.visual_features_cache[oldest_key]
+            
+            self.visual_features_cache[image_path] = {
+                'features': features,
+                'timestamp': time.time()
+            }
+            
+            logger.debug(f"[CACHE] Visual features stored: {image_path}")
+            
+        except Exception as e:
+            logger.error(f"[ERRO] Erro ao armazenar cache de características: {e}")
+    
+    def _get_cached_yolo_result(self, image_path: str) -> Optional[Dict[str, Any]]:
+        """Recupera resultado YOLO do cache."""
+        try:
+            if image_path in self.yolo_results_cache:
+                logger.debug(f"[CACHE] YOLO hit: {image_path}")
+                return self.yolo_results_cache[image_path]
+            return None
+            
+        except Exception as e:
+            logger.error(f"[ERRO] Erro ao recuperar cache YOLO: {e}")
+            return None
+    
+    def _store_cached_yolo_result(self, image_path: str, result: Dict[str, Any]):
+        """Armazena resultado YOLO no cache."""
+        try:
+            # Limitar tamanho do cache
+            if len(self.yolo_results_cache) >= self.yolo_cache_max_size:
+                # Remover entrada mais antiga
+                oldest_key = next(iter(self.yolo_results_cache))
+                del self.yolo_results_cache[oldest_key]
+            
+            self.yolo_results_cache[image_path] = {
+                'result': result,
+                'timestamp': time.time()
+            }
+            
+            logger.debug(f"[CACHE] YOLO result stored: {image_path}")
+            
+        except Exception as e:
+            logger.error(f"[ERRO] Erro ao armazenar cache YOLO: {e}")
+    
+    def get_cache_statistics(self) -> Dict[str, Any]:
+        """Retorna estatísticas do cache."""
+        try:
+            total_requests = self.cache_hit_count + self.cache_miss_count
+            hit_rate = (self.cache_hit_count / total_requests * 100) if total_requests > 0 else 0
+            
+            return {
+                'analysis_cache_size': len(self.analysis_cache),
+                'visual_features_cache_size': len(self.visual_features_cache),
+                'yolo_cache_size': len(self.yolo_results_cache),
+                'cache_hits': self.cache_hit_count,
+                'cache_misses': self.cache_miss_count,
+                'hit_rate_percent': round(hit_rate, 2),
+                'performance_stats': self.performance_stats
+            }
+            
+        except Exception as e:
+            logger.error(f"[ERRO] Erro ao obter estatísticas de cache: {e}")
+            return {}
+    
+    def clear_cache(self, cache_type: str = "all"):
+        """Limpa cache especificado."""
+        try:
+            if cache_type in ["all", "analysis"]:
+                self.analysis_cache.clear()
+                logger.info("[CACHE] Analysis cache cleared")
+            
+            if cache_type in ["all", "visual"]:
+                self.visual_features_cache.clear()
+                logger.info("[CACHE] Visual features cache cleared")
+            
+            if cache_type in ["all", "yolo"]:
+                self.yolo_results_cache.clear()
+                logger.info("[CACHE] YOLO cache cleared")
+            
+            if cache_type == "all":
+                self.cache_hit_count = 0
+                self.cache_miss_count = 0
+                logger.info("[CACHE] All caches cleared")
+                
+        except Exception as e:
+            logger.error(f"[ERRO] Erro ao limpar cache: {e}")

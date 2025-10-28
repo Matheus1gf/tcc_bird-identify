@@ -99,17 +99,19 @@ class InferenceResult:
 class AbstractInferenceEngine:
     """Motor de inferência abstrata."""
     
-    def __init__(self):
+    def __init__(self, auto_save=True):
         self.concepts: Dict[str, Concept] = {}
         self.inference_rules: List[InferenceRule] = []
         self.inference_history: List[InferenceResult] = []
         self.concept_graph: Dict[str, Set[str]] = defaultdict(set)
+        self._auto_save = auto_save  # Flag para controlar salvamento automático
         
         # Carregar dados existentes
         self._load_data()
         
-        # Inicializar regras básicas
-        self._initialize_basic_rules()
+        # Inicializar regras básicas APENAS se não há dados
+        if len(self.inference_rules) == 0:
+            self._initialize_basic_rules()
     
     def infer_abstract_properties(self, concept_name: str, target_property: str = None) -> Dict[str, Any]:
         """Infere propriedades abstratas de um conceito."""
@@ -474,8 +476,9 @@ class AbstractInferenceEngine:
             # Atualizar grafo de conceitos
             self._update_concept_graph(concept)
             
-            # Salvar dados
-            self._save_data()
+            # Salvar dados apenas se auto_save estiver ativo
+            if self._auto_save:
+                self._save_data()
             
             return True
             

@@ -95,17 +95,19 @@ class AnalogyResult:
 class StructuralAnalogyEngine:
     """Motor de analogia estrutural."""
     
-    def __init__(self):
+    def __init__(self, auto_save=True):
         self.analogies: Dict[str, Analogy] = {}
         self.analogy_results: List[AnalogyResult] = []
         self.concept_structures: Dict[str, Dict[str, Any]] = {}
         self.structural_patterns: Dict[str, List[str]] = defaultdict(list)
+        self._auto_save = auto_save  # Flag para controlar salvamento automático
         
         # Carregar dados existentes
         self._load_data()
         
-        # Inicializar analogias básicas
-        self._initialize_basic_analogies()
+        # Inicializar analogias básicas APENAS se não há dados
+        if len(self.concept_structures) == 0:
+            self._initialize_basic_analogies()
     
     def find_structural_analogy(self, source_concept: str, target_concept: str) -> Dict[str, Any]:
         """Encontra analogia estrutural entre dois conceitos."""
@@ -362,8 +364,9 @@ class StructuralAnalogyEngine:
             # Atualizar padrões estruturais
             self._update_structural_patterns(concept_name, structure)
             
-            # Salvar dados
-            self._save_data()
+            # Salvar dados apenas se auto_save estiver ativo
+            if self._auto_save:
+                self._save_data()
             
             return True
             

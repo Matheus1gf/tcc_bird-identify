@@ -31,6 +31,7 @@ class TinderInterfaceEnhanced:
     def _setup_custom_css(self):
         """Configura CSS personalizado para interface Tinder"""
         st.markdown("""
+        <style>
         /* Consistência Visual */
         .metric-container {
             text-align: center;
@@ -57,9 +58,6 @@ class TinderInterfaceEnhanced:
         .text-success { color: #198754 !important; }
         .text-danger { color: #dc3545 !important; }
         .text-warning { color: #ffc107 !important; }
-        
-        
-        <style>
         .tinder-container {
             max-width: 500px;
             margin: 0 auto;
@@ -195,34 +193,6 @@ class TinderInterfaceEnhanced:
     def render_tinder_interface(self):
         """Renderiza a interface Tinder principal"""
         st.markdown("""
-        /* Consistência Visual */
-        .metric-container {
-            text-align: center;
-            margin: 10px 0;
-        }
-        
-        .status-indicator {
-            font-weight: bold;
-        }
-        
-        .icon-align {
-            vertical-align: middle;
-            margin-right: 5px;
-        }
-        
-        /* Bootstrap Icons CSS */
-        @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
-        
-        .bi {
-            vertical-align: -.125em;
-            fill: currentColor;
-        }
-        
-        .text-success { color: #198754 !important; }
-        .text-danger { color: #dc3545 !important; }
-        .text-warning { color: #ffc107 !important; }
-        
-        
         <div class="tinder-container">
             <h1 style="text-align: center; color: white; margin-bottom: 30px;">
                 [PASSARO] Análise Manual de Pássaros
@@ -252,9 +222,9 @@ class TinderInterfaceEnhanced:
     
     def _get_pending_images(self) -> List[str]:
         """Obtém lista de imagens pendentes para análise"""
-        pending_dir = "manual_analysis/pending"
+        pending_dir = "data/manual_analysis/pending"  # FIXED: Caminho correto
         if not os.path.exists(pending_dir):
-            os.makedirs(pending_dir)
+            os.makedirs(pending_dir, exist_ok=True)
             return []
         
         image_files = []
@@ -271,36 +241,8 @@ class TinderInterfaceEnhanced:
     def _render_no_images_message(self):
         """Renderiza mensagem quando não há imagens para análise"""
         st.markdown("""
-        /* Consistência Visual */
-        .metric-container {
-            text-align: center;
-            margin: 10px 0;
-        }
-        
-        .status-indicator {
-            font-weight: bold;
-        }
-        
-        .icon-align {
-            vertical-align: middle;
-            margin-right: 5px;
-        }
-        
-        /* Bootstrap Icons CSS */
-        @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
-        
-        .bi {
-            vertical-align: -.125em;
-            fill: currentColor;
-        }
-        
-        .text-success { color: #198754 !important; }
-        .text-danger { color: #dc3545 !important; }
-        .text-warning { color: #ffc107 !important; }
-        
-        
         <div class="tinder-card">
-            <h3>[ALVO] Nenhuma imagem pendente</h3>
+            <h3>🎯 Nenhuma imagem pendente</h3>
             <p>Não há imagens aguardando análise manual no momento.</p>
             <p>Faça upload de uma imagem na aba principal para começar a análise!</p>
         </div>
@@ -334,8 +276,8 @@ class TinderInterfaceEnhanced:
     def _get_learning_statistics(self) -> Dict[str, int]:
         """Obtém estatísticas de aprendizado"""
         # Contar imagens analisadas
-        approved_dir = "manual_analysis/approved"
-        rejected_dir = "manual_analysis/rejected"
+        approved_dir = "data/manual_analysis/approved"  # FIXED: Caminho correto
+        rejected_dir = "data/manual_analysis/rejected"  # FIXED: Caminho correto
         
         total_analyzed = 0
         birds_identified = 0
@@ -374,7 +316,7 @@ class TinderInterfaceEnhanced:
         return {
             'total_analyzed': total_analyzed,
             'birds_identified': birds_identified,
-            'species_learned': species_identified,
+            'species_learned': species_learned,
             'learning_events': learning_events
         }
     
@@ -427,7 +369,8 @@ class TinderInterfaceEnhanced:
             with col2:
                 if st.button(f"Analisar", key=f"select_{i}"):
                     st.session_state['current_tinder_image'] = image_path
-                    st.rerun()
+                    # FIXED: st.rerun() removido para prevenir loops
+                    # st.rerun() # Comentado: não necessário aqui
     
     def _render_image_card(self, image_path: str):
         """Renderiza card da imagem atual"""
@@ -506,7 +449,7 @@ class TinderInterfaceEnhanced:
         """Processa rejeição da imagem"""
         try:
             # Mover para pasta de rejeitados
-            rejected_dir = "manual_analysis/rejected"
+            rejected_dir = "data/manual_analysis/rejected"  # FIXED: Caminho correto
             os.makedirs(rejected_dir, exist_ok=True)
             
             filename = os.path.basename(image_path)
@@ -540,8 +483,9 @@ class TinderInterfaceEnhanced:
             if 'current_tinder_image' in st.session_state:
                 del st.session_state['current_tinder_image']
             
-            st.success('<i class='bi bi-check-circle"></i> Imagem rejeitada e feedback salvo!")
-            st.rerun()
+            st.success("Imagem rejeitada e feedback salvo!")
+            # FIXED: st.rerun() removido para prevenir loops
+            # st.rerun() # Comentado: não necessário após ação bem-sucedida
             
         except Exception as e:
             st.error(f"Erro ao processar rejeição: {e}")
@@ -550,7 +494,7 @@ class TinderInterfaceEnhanced:
         """Processa aprovação da imagem"""
         try:
             # Mover para pasta de aprovados
-            approved_dir = "manual_analysis/approved"
+            approved_dir = "data/manual_analysis/approved"  # FIXED: Caminho correto
             os.makedirs(approved_dir, exist_ok=True)
             
             filename = os.path.basename(image_path)
@@ -584,8 +528,9 @@ class TinderInterfaceEnhanced:
             if 'current_tinder_image' in st.session_state:
                 del st.session_state['current_tinder_image']
             
-            st.success('<i class='bi bi-check-circle"></i> Imagem aprovada e feedback salvo!")
-            st.rerun()
+            st.success("Imagem aprovada e feedback salvo!")
+            # FIXED: st.rerun() removido para prevenir loops
+            # st.rerun() # Comentado: não necessário após ação bem-sucedida
             
         except Exception as e:
             st.error(f"Erro ao processar aprovação: {e}")
@@ -696,9 +641,9 @@ class TinderInterfaceEnhanced:
             
             # Mover imagem para pasta apropriada
             if feedback['is_bird']:
-                target_dir = "manual_analysis/approved"
+                target_dir = "data/manual_analysis/approved"  # FIXED: Caminho correto
             else:
-                target_dir = "manual_analysis/rejected"
+                target_dir = "data/manual_analysis/rejected"  # FIXED: Caminho correto
             
             os.makedirs(target_dir, exist_ok=True)
             
@@ -714,8 +659,9 @@ class TinderInterfaceEnhanced:
             if 'current_tinder_image' in st.session_state:
                 del st.session_state['current_tinder_image']
             
-            st.success('<i class='bi bi-cpu"></i> Aprendizado salvo com sucesso!")
-            st.rerun()
+            st.success("Aprendizado salvo com sucesso!")
+            # FIXED: st.rerun() removido para prevenir loops
+            # st.rerun() # Comentado: não necessário após ação bem-sucedida
             
         except Exception as e:
             st.error(f"Erro ao salvar aprendizado: {e}")
@@ -733,7 +679,7 @@ class TinderInterfaceEnhanced:
     def load_pending_images(self) -> int:
         """Carrega e retorna o número de imagens pendentes de análise"""
         try:
-            pending_dir = "manual_analysis/pending"
+            pending_dir = "data/manual_analysis/pending"  # FIXED: Caminho correto
             if not os.path.exists(pending_dir):
                 return 0
             

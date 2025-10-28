@@ -103,17 +103,19 @@ class AbstractInference:
 class AbstractInferenceEngine:
     """Sistema de inferência abstrata."""
     
-    def __init__(self):
+    def __init__(self, auto_save=True):
         self.abstract_concepts: Dict[str, AbstractConcept] = {}
         self.inference_rules: Dict[str, InferenceRule] = {}
         self.inference_history: List[AbstractInference] = []
         self.concept_graph: Dict[str, Set[str]] = defaultdict(set)
+        self._auto_save = auto_save  # Flag para controlar salvamento automático
         
         # Carregar dados existentes
         self._load_data()
         
-        # Inicializar conceitos e regras básicas
-        self._initialize_basic_concepts()
+        # Inicializar conceitos e regras básicas APENAS se não há dados
+        if len(self.abstract_concepts) == 0:
+            self._initialize_basic_concepts()
         self._initialize_basic_rules()
     
     def add_abstract_concept(self, name: str, description: str, 
@@ -144,8 +146,9 @@ class AbstractInferenceEngine:
             # Atualizar grafo de conceitos
             self._update_concept_graph(concept)
             
-            # Salvar dados
-            self._save_data()
+            # Salvar dados apenas se auto_save estiver ativo
+            if self._auto_save:
+                self._save_data()
             
             return {
                 "success": True,
@@ -223,8 +226,9 @@ class AbstractInferenceEngine:
             # Armazenar regra
             self.inference_rules[rule_id] = rule
             
-            # Salvar dados
-            self._save_data()
+            # Salvar dados apenas se auto_save estiver ativo
+            if self._auto_save:
+                self._save_data()
             
             return {
                 "success": True,
@@ -336,8 +340,9 @@ class AbstractInferenceEngine:
             
             self.inference_history.append(abstract_inference)
             
-            # Salvar dados
-            self._save_data()
+            # Salvar dados apenas se auto_save estiver ativo
+            if self._auto_save:
+                self._save_data()
             
             return {
                 "success": True,

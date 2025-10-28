@@ -5,6 +5,15 @@ Versão limpa e funcional
 """
 
 import streamlit as st
+
+# Configuração da página - DEVE SER A PRIMEIRA COISA APÓS IMPORTAR STREAMLIT
+st.set_page_config(
+    page_title="Sistema de Identificação de Pássaros",
+    page_icon="🐦",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
 import os
 import json
 import cv2
@@ -15,33 +24,56 @@ import plotly.graph_objects as go
 from datetime import datetime
 from PIL import Image
 import io
+import traceback
 
 # Imports locais
-from core.intuition import IntuitionEngine
-from core.reasoning import LogicalAIReasoningSystem
-from core.learning import ContinuousLearningSystem
-from core.cache import image_cache
-from interfaces.manual_analysis import manual_analysis
-from interfaces.tinder_interface_enhanced import TinderInterfaceEnhanced
-from utils.debug_logger import DebugLogger
+from src.core.intuition import IntuitionEngine
+from src.core.reasoning import LogicalAIReasoningSystem
+from src.core.learning import ContinuousLearningSystem
+from src.core.cache import image_cache
+from src.interfaces.manual_analysis import manual_analysis
+from src.interfaces.tinder_interface_enhanced import TinderInterfaceEnhanced
+from src.interfaces.realtime_logs import render_realtime_logs
+from src.utils.debug_logger import DebugLogger
+from src.utils.realtime_logger import log_info, log_error, log_warning, log_success
+from src.utils.terminal_logger import log_info as term_log_info, log_error as term_log_error, log_warning as term_log_warning, log_success as term_log_success, log_debug as term_log_debug
+from src.utils.frontend_logger import log_info_frontend as frontend_log_info, log_error_frontend as frontend_log_error, log_warning_frontend as frontend_log_warning, log_success_frontend as frontend_log_success, log_debug_frontend as frontend_log_debug, render_frontend_logs
 
 def main():
     """Função principal da aplicação web"""
     
-    # Configuração da página
-    st.set_page_config(
-        page_title="Sistema de Identificação de Pássaros",
-        page_icon="🐦",
-        layout="wide",
-        initial_sidebar_state="expanded"
-    )
+    # Log de inicialização APENAS NA PRIMEIRA VEZ
+    if 'logged_start' not in st.session_state:
+        st.session_state.logged_start = True
+        term_log_info("Iniciando aplicação web Streamlit", "WebApp", "main")
+        frontend_log_info("Iniciando aplicação web Streamlit", "WebApp", "main")
     
-    # CSS personalizado para responsividade
+    # REMOVER Bootstrap Icons completamente - usar apenas emojis
+    st.markdown("""
+    <style>
+        /* CSS limpo sem Bootstrap Icons */
+        .metric-container {
+            text-align: center;
+            margin: 10px 0;
+        }
+        .status-indicator {
+            font-weight: bold;
+        }
+        .icon-align {
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    term_log_info("Configuração da página definida", "WebApp", "main")
+    
+    # CSS personalizado para responsividade (limpo - sem ícones Bootstrap)
     st.markdown("""
     <style>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    /* CSS para responsividade */
+    /* CSS para responsividade - Versão limpa sem ícones Bootstrap */
     .stTabs {
         display: flex !important;
         flex-wrap: wrap !important;
@@ -175,54 +207,134 @@ def main():
     </style>
     """, unsafe_allow_html=True)
     
-    # Título principal
-    st.title("🐦 Sistema de Identificação de Pássaros")
+    # Título principal - CORRIGIDO
+    st.markdown("""
+    <h1>🐦 Sistema de Identificação de Pássaros</h1>
+    """, unsafe_allow_html=True)
     st.markdown("---")
     
-    # Inicializar sistemas
-    try:
-        # Inicializar debug logger
-        debug_logger = DebugLogger()
+    # Inicializar sistemas de forma ULTRA EFICIENTE
+    @st.cache_resource
+    def initialize_systems(_force_reload=False):
+        """Inicializa apenas sistemas essenciais sem loops infinitos
         
-        # Inicializar motores
-        intuition_engine = IntuitionEngine("data/models/yolov8n.pt", "data/models/modelo_classificacao_passaros.keras", debug_logger)
-        reasoning_system = LogicalAIReasoningSystem()
-        learning_system = ContinuousLearningSystem("data/models/yolov8n.pt", "data/models/modelo_classificacao_passaros.keras")
-        tinder_interface = TinderInterfaceEnhanced(manual_analysis)
+        Args:
+            _force_reload: Parâmetro interno para invalidar cache
+        """
+        try:
+            # Apenas sistemas críticos para funcionamento básico
+            debug_logger = DebugLogger()
+            
+            # IntuitionEngine com configuração mínima
+            intuition_engine = IntuitionEngine(
+                "data/models/yolov8n.pt", 
+                "data/models/modelo_classificacao_passaros.keras", 
+                debug_logger
+            )
+            
+            # Desabilitar salvamento automático para evitar loops
+            if hasattr(intuition_engine, 'disable_auto_save'):
+                intuition_engine.disable_auto_save()
+            
+            # IMPORTANTE: Evitar salvamentos durante inicialização
+            # Desabilitar todos os sistemas de salvamento automático
+            if hasattr(intuition_engine, '_episodic_memory_system'):
+                if hasattr(intuition_engine._episodic_memory_system, '_auto_save'):
+                    intuition_engine._episodic_memory_system._auto_save = False
+            
+            if hasattr(intuition_engine, '_causal_reasoning_system'):
+                if hasattr(intuition_engine._causal_reasoning_system, '_auto_save'):
+                    intuition_engine._causal_reasoning_system._auto_save = False
+            
+            if hasattr(intuition_engine, '_abstract_inference_system'):
+                if hasattr(intuition_engine._abstract_inference_system, '_auto_save'):
+                    intuition_engine._abstract_inference_system._auto_save = False
+            
+            return {
+                'debug_logger': debug_logger,
+                'intuition_engine': intuition_engine,
+                'reasoning_system': None,
+                'learning_system': None,
+                'tinder_interface': None
+            }
+            
+        except Exception as e:
+            print(f"Erro ao inicializar sistemas: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
+    
+    # Inicializar sistemas UMA VEZ
+    # Usar session_state para persistir entre reloads
+    if 'systems_initialized' not in st.session_state:
+        st.session_state.systems_initialized = False  # Marcar como iniciando
         
-        st.success("✅ Todos os sistemas inicializados com sucesso!")
-        
-    except Exception as e:
-        st.error(f"❌ Erro ao inicializar sistemas: {e}")
+        with st.spinner("🔄 Inicializando sistemas pela primeira vez..."):
+            systems = initialize_systems()
+            
+            if systems is not None:
+                st.session_state.systems_initialized = True  # Marcar como completo
+                st.session_state.systems = systems
+    
+    # Recuperar sistemas da sessão
+    if 'systems' not in st.session_state:
+        st.error("❌ Erro: sistemas não inicializados")
+        st.stop()
         return
     
-    # Menu principal com tabs
+    systems = st.session_state.systems
+    
+    if systems is None:
+        st.error("❌ Falha na inicialização dos sistemas")
+        st.stop()
+        return
+    
+    # Extrair sistemas
+    debug_logger = systems['debug_logger']
+    intuition_engine = systems['intuition_engine']
+    reasoning_system = systems['reasoning_system']
+    learning_system = systems['learning_system']
+    tinder_interface = systems['tinder_interface']
+    
+    # Verificar sistemas essenciais
+    if intuition_engine is None:
+        st.error("❌ IntuitionEngine não foi inicializado")
+        st.stop()
+        return
+    
+    # Proteção contra renderização duplicada por hot-reload
+    if 'tabs_created' not in st.session_state:
+        st.session_state.tabs_created = True
+    
+    # Menu principal com tabs - RESTAURADO
     tab_names = [
-        "🏠 Início",
-        "📸 Análise de Imagem", 
-        "🧠 Sistema Santo Graal",
-        "📊 Dashboard",
-        "🎯 Aprendizado Contínuo",
-        "👥 Análise Manual",
-        "💡 Tinder Interface",
-        "⚙️ Configurações",
-        "📈 Relatórios"
+        '🏠 Início',
+        '📸 Análise de Imagem', 
+        '🧠 Sistema Santo Graal',
+        '📊 Dashboard',
+        '📚 Aprendizado Contínuo',
+        '👥 Análise Manual',
+        '💖 Tinder Interface',
+        '⚙️ Configurações',
+        '📄 Relatórios',
+        '📝 Logs em Tempo Real',
+        '💻 Logs Frontend'
     ]
     
-    # Criar tabs
-    if len(tab_names) >= 9:
-        tabs = st.tabs(tab_names)
-        inicio_tab, analise_tab, santo_graal_tab, dashboard_tab, aprendizado_tab, manual_tab, tinder_tab, config_tab, relatorios_tab = tabs
-    else:
-        st.error("❌ Erro: Número insuficiente de tabs")
-        return
+    # Criar tabs UMA VEZ
+    tabs = st.tabs(tab_names)
+    inicio_tab, analise_tab, santo_graal_tab, dashboard_tab, aprendizado_tab, manual_tab, tinder_tab, config_tab, relatorios_tab, logs_tab, frontend_logs_tab = tabs
     
-    # TAB 1: INÍCIO
+    # TAB 1: INÍCIO - RESTAURADO
     with inicio_tab:
-        st.header("🏠 Página Inicial")
+        st.markdown("""
+        <h2>🏠 Página Inicial</h2>
+        """, unsafe_allow_html=True)
         
         # Status dos sistemas
-        st.subheader("📊 Status dos Sistemas")
+        st.markdown("""
+        <h3>📊 Status dos Sistemas</h3>
+        """, unsafe_allow_html=True)
         
         col1, col2, col3 = st.columns(3)
         
@@ -231,15 +343,17 @@ def main():
             st.metric("🎯 YOLO", "✅ Ativo", "100%")
         
         with col2:
-            st.metric("🧠 Keras", "✅ Ativo", "100%")
-            st.metric("📊 Grad-CAM", "✅ Ativo", "100%")
+            st.metric("🤖 Keras", "✅ Ativo", "100%")
+            st.metric("📈 Grad-CAM", "✅ Ativo", "100%")
         
         with col3:
             st.metric("🔄 Aprendizado", "✅ Ativo", "100%")
             st.metric("💾 Cache", "✅ Ativo", "100%")
         
         # Estatísticas gerais
-        st.subheader("📈 Estatísticas Gerais")
+        st.markdown("""
+        <h3>📊 Estatísticas Gerais</h3>
+        """, unsafe_allow_html=True)
         
         stats_data = {
             "Métrica": ["Imagens Analisadas", "Pássaros Identificados", "Taxa de Sucesso", "Tempo Médio"],
@@ -250,11 +364,11 @@ def main():
         stats_df = pd.DataFrame(stats_data)
         st.dataframe(stats_df, use_container_width=True)
     
-    # TAB 2: ANÁLISE DE IMAGEM
+    # TAB 2: ANÁLISE DE IMAGEM - SIMPLIFICADO
     with analise_tab:
-        st.header("📸 Análise de Imagem")
+        st.markdown("## 📸 Análise de Imagem")
         
-        # Upload de imagem
+        # Upload de imagem - SIMPLIFICADO
         uploaded_file = st.file_uploader(
             "Escolha uma imagem de pássaro",
             type=['jpg', 'jpeg', 'png'],
@@ -262,36 +376,53 @@ def main():
         )
         
         if uploaded_file is not None:
-            # Converter para imagem
-            image = Image.open(uploaded_file)
-            
-            # Converter para numpy array se necessário
-            if isinstance(image, np.ndarray):
-                image = Image.fromarray(image)
-            
-            # Exibir imagem
-            st.subheader("🖼️ Imagem Carregada")
-            
-            # Container para imagem
-            with st.container():
+            try:
+                st.info("🔄 Processando imagem...")
+                
+                # Converter para imagem
+                image = Image.open(uploaded_file)
+                
+                # Exibir imagem
+                st.subheader("🖼️ Imagem Carregada")
                 st.image(image, width=300)
+                
+                st.success("✅ Imagem carregada com sucesso!")
+                
+            except Exception as e:
+                st.error(f"❌ Erro ao processar imagem: {str(e)}")
+                return
             
-            # Botão de análise
-            if st.button("🔍 Analisar Imagem", type="primary", key="analyze_image_btn"):
+            # Botão de análise - ULTRA SIMPLIFICADO
+            # PROTEÇÃO: Não permitir clicar enquanto análise está em andamento
+            if 'analysis_in_progress' not in st.session_state:
+                st.session_state['analysis_in_progress'] = False
+            if 'analysis_complete' not in st.session_state:
+                st.session_state['analysis_complete'] = False
+            
+            # Botão desabilitado se análise já estiver em execução
+            if st.button("🔍 Analisar Imagem", type="primary", key="analyze_image_btn", disabled=st.session_state.get('analysis_in_progress', False)):
+                # Marcar análise como em execução para evitar loops
+                if st.session_state['analysis_in_progress']:
+                    st.warning("⏳ Análise já está em execução. Aguarde...")
+                    return
+                
+                st.session_state['analysis_in_progress'] = True
+                
                 with st.spinner("Analisando imagem..."):
                     try:
-                        # Iniciar logging
-                        debug_logger.log_session_start(uploaded_file.name)
+                        # Criar pasta para arquivos temporários se não existir
+                        os.makedirs("temp_uploads", exist_ok=True)
                         
-                        # Salvar imagem temporariamente
-                        temp_path = f"temp_{uploaded_file.name}.png"
+                        # Salvar imagem temporariamente em pasta separada
+                        temp_path = f"temp_uploads/temp_{uploaded_file.name}.png"
                         image.save(temp_path)
                         
-                        # Análise com sistema de intuição
+                        # Análise simples
+                        st.info("🔄 Iniciando análise...")
                         results = intuition_engine.analyze_image_intuition(temp_path)
                         
-                        # Exibir resultados
-                        st.subheader("📊 Resultados da Análise")
+                        # Exibir resultados simples
+                        st.markdown("### 📊 Resultados da Análise")
                         
                         if results:
                             col1, col2 = st.columns(2)
@@ -377,33 +508,111 @@ def main():
                         # Log de sucesso
                         debug_logger.log_success("Análise concluída com sucesso")
                         
+                        # Limpar arquivo temporário
+                        try:
+                            if os.path.exists(temp_path):
+                                os.remove(temp_path)
+                        except:
+                            pass  # Ignorar erro de limpeza
+                        
+                        # Marcar análise como completa
+                        st.session_state['analysis_in_progress'] = False
+                        st.session_state['analysis_complete'] = True
+                        
                     except Exception as e:
-                        st.error(f"❌ Erro na análise: {e}")
-                        debug_logger.log_error(f"Erro na análise: {e}", "ANALYSIS_ERROR")
+                        st.error(f"❌ Erro na análise: {str(e)}")
+                        debug_logger.log_error(f"Erro na análise: {str(e)}", "ANALYSIS_ERROR")
+                        
+                        # Mostrar detalhes do erro para debug
+                        with st.expander("🔍 Detalhes do Erro"):
+                            st.code(str(e))
+                            st.code(traceback.format_exc())
+                        
+                        # Limpar arquivo temporário em caso de erro
+                        try:
+                            if 'temp_path' in locals() and os.path.exists(temp_path):
+                                os.remove(temp_path)
+                        except:
+                            pass
+                        
+                        # Marcar análise como completa mesmo em caso de erro
+                        st.session_state['analysis_in_progress'] = False
         
         # Seção de análise manual
         st.markdown("---")
         st.subheader("📋 Análise Manual")
         
-        # Verificar arquivos temporários
-        temp_files = [f for f in os.listdir('.') if f.startswith('temp_') and (f.endswith('.jpg') or f.endswith('.png'))]
-        
-        if temp_files:
-            temp_path = temp_files[0]
-            st.info(f"📁 Arquivo temporário disponível: `{temp_path}`")
+        # Sempre mostrar opção de análise manual após upload
+        if uploaded_file is not None:
+            st.info("💡 Você pode marcar esta imagem para análise manual")
             
-            if st.button("📝 Marcar para Análise Manual", type="primary", key="mark_manual_analysis_btn"):
-                try:
-                    # Chamar análise manual
-                    result = manual_analysis(temp_path)
-                    
-                    if result:
-                        st.success("✅ Análise manual concluída!")
-                    else:
-                        st.warning("⚠️ Análise manual não concluída")
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                if st.button("📝 Marcar para Análise Manual", type="primary", key="mark_manual_analysis_btn"):
+                    try:
+                        # Salvar imagem para análise manual
+                        manual_path = f"manual_analysis_{uploaded_file.name}"
+                        image.save(manual_path)
                         
-                except Exception as e:
-                    st.error(f"❌ Erro na análise manual: {e}")
+                        # Salvar para análise posterior (SEM chamar analyze_image que causa log)
+                        detection_data = {
+                            "uploaded_file": uploaded_file.name,
+                            "image_size": image.size,
+                            "image_mode": image.mode,
+                            "timestamp": datetime.now().isoformat(),
+                            "source": "web_upload"
+                        }
+                        
+                        saved_path = manual_analysis.add_image_for_analysis(manual_path, detection_data)
+                        
+                        st.success("✅ Análise manual marcada!")
+                        st.info(f"📁 Imagem salva para análise posterior")
+                        debug_logger.log_success(f"Imagem marcada para análise manual: {saved_path}")
+                        
+                        # Limpar arquivo temporário
+                        if os.path.exists(manual_path):
+                            os.remove(manual_path)
+                            
+                    except Exception as e:
+                        st.error(f"❌ Erro ao marcar: {e}")
+                        debug_logger.log_error(f"Erro ao marcar para análise manual: {e}", "MANUAL_ANALYSIS_ERROR")
+            
+            with col2:
+                if st.button("📁 Salvar para Análise Posterior", type="secondary", key="save_for_later_btn"):
+                    try:
+                        # Salvar imagem temporariamente para análise
+                        temp_manual_path = f"temp_manual_{uploaded_file.name}"
+                        image.save(temp_manual_path)
+                        
+                        # Usar o sistema de análise manual para salvar
+                        detection_data = {
+                            "uploaded_file": uploaded_file.name,
+                            "image_size": image.size,
+                            "image_mode": image.mode,
+                            "timestamp": datetime.now().isoformat(),
+                            "source": "web_upload"
+                        }
+                        
+                        saved_path = manual_analysis.add_image_for_analysis(temp_manual_path, detection_data)
+                        
+                        st.success(f"✅ Imagem salva para análise posterior!")
+                        st.info(f"📁 **Caminho:** `{saved_path}`")
+                        debug_logger.log_success(f"Imagem salva para análise posterior: {saved_path}")
+                        
+                        # Limpar arquivo temporário
+                        if os.path.exists(temp_manual_path):
+                            os.remove(temp_manual_path)
+                        
+                    except Exception as e:
+                        st.error(f"❌ Erro ao salvar: {e}")
+                        debug_logger.log_error(f"Erro ao salvar para análise posterior: {e}", "SAVE_ERROR")
+                        
+                        # Limpar arquivo temporário em caso de erro
+                        if 'temp_manual_path' in locals() and os.path.exists(temp_manual_path):
+                            os.remove(temp_manual_path)
+        else:
+            st.info("📁 Faça upload de uma imagem para acessar a análise manual")
     
     # TAB 3: SISTEMA SANTO GRAAL
     with santo_graal_tab:
@@ -510,46 +719,143 @@ def main():
     # TAB 6: ANÁLISE MANUAL
     with manual_tab:
         st.header("👥 Análise Manual")
+        st.info("🔄 Interface de análise manual temporariamente simplificada para evitar loops")
         
-        # Interface de análise manual
-        st.subheader("📝 Interface de Análise")
+        # TEMPORARIAMENTE DESABILITADO PARA DEBUG
+        # Usar o sistema de análise manual
+        # pending_images = manual_analysis.get_pending_images()
+        pending_images = []  # TEMPORÁRIO
         
-        # Lista de imagens pendentes
-        pending_images = tinder_interface.load_pending_images()
+        # Debug: mostrar informações detalhadas
+        st.info(f"🔍 Debug: Sistema carregado, {len(pending_images)} imagens pendentes")
         
-        if pending_images > 0:
-            st.info(f"📁 {pending_images} imagens pendentes de análise")
+        # Mostrar informações de debug adicionais
+        with st.expander("🔍 Debug Detalhado"):
+            st.write(f"**Pasta pending:** `data/manual_analysis/pending/`")
+            st.write(f"**Existe pasta:** {os.path.exists('data/manual_analysis/pending')}")
+        
+        # TEMPORARIAMENTE DESABILITADO
+        if False and pending_images:
+            st.success(f"📁 {len(pending_images)} imagens pendentes de análise")
             
-            if st.button("👀 Ver Próxima Imagem", type="primary", key="next_image_btn"):
-                st.success("✅ Próxima imagem carregada!")
+            # Mostrar primeira imagem pendente
+            first_image_data = pending_images[0]
+            image_path = first_image_data['image_path']
+            filename = first_image_data['filename']
+            
+            st.info(f"🔍 Debug: Carregando imagem: {filename}")
+            
+            try:
+                # Carregar e exibir imagem
+                pending_image = Image.open(image_path)
+                st.image(pending_image, width=400, caption=f"Imagem: {filename}")
+                
+                # Mostrar dados de detecção se disponíveis
+                detection_data = first_image_data.get('detection_data', {})
+                if detection_data:
+                    with st.expander("📊 Dados de Detecção"):
+                        st.json(detection_data)
+                else:
+                    st.info("ℹ️ Nenhum dado de detecção disponível")
+                
+                # Controles para esta imagem
+                st.subheader("⚙️ Controles")
+                
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    # Formulário de aprovação - FORA do button para evitar loops
+                    species = st.text_input("🐦 Espécie identificada:", value="generic_bird", key="species_input")
+                    confidence = st.slider("🎯 Confiança:", 0.0, 1.0, 0.8, key="confidence_input")
+                    notes = st.text_area("📝 Notas:", key="notes_input")
+                    
+                    if st.button("✅ Confirmar Aprovação", type="primary", key="confirm_approve_btn"):
+                        try:
+                            approved_path = manual_analysis.approve_image(
+                                filename, species, confidence, notes,
+                                "Aprovação manual via interface web",
+                                ["uploaded_by_user"],
+                                "Análise manual realizada pelo usuário"
+                            )
+                            st.success("✅ Imagem aprovada!")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"❌ Erro ao aprovar: {e}")
+                
+                with col2:
+                    # Formulário de rejeição - FORA do button para evitar loops
+                    reason = st.text_input("❌ Motivo da rejeição:", key="reject_reason_input")
+                    
+                    if st.button("❌ Confirmar Rejeição", type="secondary", key="confirm_reject_btn"):
+                        try:
+                            rejected_path = manual_analysis.reject_image(
+                                filename, reason,
+                                "Rejeição manual via interface web",
+                                ["uploaded_by_user"],
+                                "Análise manual realizada pelo usuário"
+                            )
+                            st.warning("⚠️ Imagem rejeitada!")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"❌ Erro ao rejeitar: {e}")
+                
+                with col3:
+                    if st.button("⏭️ Pular", type="secondary", key="skip_image_btn"):
+                        st.info("ℹ️ Imagem pulada!")
+                        st.rerun()
+                
+            except Exception as e:
+                st.error(f"❌ Erro ao carregar imagem: {e}")
+                st.error(f"   Caminho: {image_path}")
+                st.error(f"   Arquivo existe: {os.path.exists(image_path)}")
         else:
-            st.info("📁 Nenhuma imagem pendente de análise")
-        
-        # Controles
-        st.subheader("⚙️ Controles")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            if st.button("✅ Aprovar", type="primary", key="approve_image_btn"):
-                st.success("✅ Imagem aprovada!")
+            st.warning("📁 Nenhuma imagem pendente de análise")
             
-            if st.button("❌ Rejeitar", type="secondary", key="reject_image_btn"):
-                st.warning("⚠️ Imagem rejeitada!")
-        
-        with col2:
-            if st.button("⏭️ Pular", type="secondary", key="skip_image_btn"):
-                st.info("ℹ️ Imagem pulada!")
+            # Mostrar estatísticas usando o sistema
+            st.subheader("📊 Estatísticas")
             
-            if st.button("📊 Ver Estatísticas", type="secondary", key="view_tinder_stats_btn"):
-                st.info("ℹ️ Estatísticas carregadas!")
+            stats = manual_analysis.get_statistics()
+            
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.metric("✅ Aprovadas", stats['approved'])
+            
+            with col2:
+                st.metric("❌ Rejeitadas", stats['rejected'])
+            
+            with col3:
+                st.metric("📝 Anotações", stats['annotations'])
     
     # TAB 7: TINDER INTERFACE
     with tinder_tab:
         st.header("💡 Tinder Interface")
         
-        # Interface real estilo Tinder
-        tinder_interface.render_tinder_interface()
+        # SEMPRE inicializar a interface (lazy loading)
+        if 'tinder_initialized' not in st.session_state:
+            st.session_state.tinder_initialized = False
+        
+        if not st.session_state.tinder_initialized:
+            # Botão para inicializar
+            if st.button("🚀 Inicializar Tinder Interface", key="init_tinder_btn"):
+                try:
+                    # Criar instância da interface
+                    st.session_state.tinder_interface = TinderInterfaceEnhanced(manual_analysis)
+                    st.session_state.tinder_initialized = True
+                    st.success("✅ Tinder Interface inicializada!")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"❌ Erro ao inicializar Tinder Interface: {e}")
+                    import traceback
+                    st.exception(e)
+        else:
+            # Interface já inicializada
+            if 'tinder_interface' in st.session_state:
+                tinder_interface = st.session_state.tinder_interface
+                tinder_interface.render_tinder_interface()
+            else:
+                st.error("❌ Erro: Tinder Interface não encontrada no session_state")
+                st.session_state.tinder_initialized = False
     
     # TAB 8: CONFIGURAÇÕES
     with config_tab:
@@ -617,6 +923,26 @@ def main():
         trend_df = pd.DataFrame(trend_data)
         fig = px.line(trend_df, x="Dia", y="Performance", title="Tendência de Performance (30 dias)")
         st.plotly_chart(fig, use_container_width=True)
+    
+    # TAB 10: LOGS EM TEMPO REAL
+    with logs_tab:
+        st.markdown("""
+        <h2><i class="bi bi-journal-text bi-primary"></i>Logs em Tempo Real</h2>
+        """, unsafe_allow_html=True)
+        st.info("🔍 Sistema de monitoramento estilo CloudWatch AWS")
+        
+        # Renderizar logs em tempo real
+        render_realtime_logs()
+    
+    # TAB 11: LOGS FRONTEND
+    with frontend_logs_tab:
+        st.markdown("""
+        <h2><i class="bi bi-terminal bi-primary"></i>Logs Frontend</h2>
+        """, unsafe_allow_html=True)
+        st.info("🖥️ Logs do console do navegador em tempo real")
+        
+        # Renderizar logs frontend
+        render_frontend_logs()
     
     # Sidebar
     with st.sidebar:

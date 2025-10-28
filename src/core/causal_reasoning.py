@@ -86,17 +86,19 @@ class CausalInference:
 class CausalReasoningSystem:
     """Sistema de raciocínio causal."""
     
-    def __init__(self):
+    def __init__(self, auto_save=True):
         self.causal_relations: Dict[str, CausalRelation] = {}
         self.inference_history: List[CausalInference] = []
         self.evidence_base: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
         self.causal_graph: Dict[str, Set[str]] = defaultdict(set)
+        self._auto_save = auto_save  # Flag para controlar salvamento automático
         
         # Carregar dados existentes
         self._load_data()
         
-        # Inicializar relações causais básicas
-        self._initialize_basic_causal_relations()
+        # Inicializar relações causais básicas APENAS se não há dados
+        if len(self.causal_relations) == 0:
+            self._initialize_basic_causal_relations()
     
     def identify_causal_relation(self, cause: str, effect: str, 
                               evidence: List[Dict[str, Any]] = None,
@@ -150,8 +152,9 @@ class CausalReasoningSystem:
             # Armazenar evidências
             self._store_evidence(relation_id, evidence or [])
             
-            # Salvar dados
-            self._save_data()
+            # Salvar dados apenas se auto_save estiver ativo
+            if self._auto_save:
+                self._save_data()
             
             return {
                 "success": True,
@@ -413,8 +416,9 @@ class CausalReasoningSystem:
             
             self.inference_history.append(inference_result)
             
-            # Salvar dados
-            self._save_data()
+            # Salvar dados apenas se auto_save estiver ativo
+            if self._auto_save:
+                self._save_data()
             
             return {
                 "success": True,
@@ -808,7 +812,14 @@ class CausalReasoningSystem:
                     self.evidence_base = defaultdict(list, data["evidence_base"])
                 
                 if "causal_graph" in data:
-                    self.causal_graph = defaultdict(set, data["causal_graph"])
+                    # Converter listas para sets no grafo causal
+                    causal_graph_data = {}
+                    for key, value in data["causal_graph"].items():
+                        if isinstance(value, list):
+                            causal_graph_data[key] = set(value)
+                        else:
+                            causal_graph_data[key] = set()
+                    self.causal_graph = defaultdict(set, causal_graph_data)
                 
                 logger.info(f"Dados de raciocínio causal carregados: {len(self.causal_relations)} relações")
                 

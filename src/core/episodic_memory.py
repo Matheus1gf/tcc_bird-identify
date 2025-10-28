@@ -92,18 +92,20 @@ class MemoryRetrieval:
 class EpisodicMemorySystem:
     """Sistema de memória episódica."""
     
-    def __init__(self):
+    def __init__(self, auto_save=True):
         self.memories: Dict[str, EpisodicMemory] = {}
         self.memory_index: Dict[str, Set[str]] = defaultdict(set)
         self.retrieval_history: List[MemoryRetrieval] = []
         self.consolidation_queue: List[str] = []
         self.forgetting_schedule: Dict[str, float] = {}
+        self._auto_save = auto_save  # Flag para controlar salvamento automático
         
         # Carregar dados existentes
         self._load_data()
         
-        # Inicializar memórias básicas
-        self._initialize_basic_memories()
+        # Inicializar memórias básicas APENAS se não há dados
+        if len(self.memories) == 0:
+            self._initialize_basic_memories()
     
     def store_episodic_memory(self, memory_type: str, content: Dict[str, Any], 
                             context: Dict[str, Any] = None, location: str = None,
@@ -158,8 +160,9 @@ class EpisodicMemorySystem:
             # Agendar esquecimento
             self._schedule_forgetting(memory_id, forgetting_rate)
             
-            # Salvar dados
-            self._save_data()
+            # Salvar dados apenas se auto_save estiver ativo
+            if self._auto_save:
+                self._save_data()
             
             return {
                 "success": True,
@@ -407,8 +410,9 @@ class EpisodicMemorySystem:
             
             self.retrieval_history.append(retrieval_result)
             
-            # Salvar dados
-            self._save_data()
+            # Salvar dados apenas se auto_save estiver ativo
+            if self._auto_save:
+                self._save_data()
             
             return {
                 "success": True,
