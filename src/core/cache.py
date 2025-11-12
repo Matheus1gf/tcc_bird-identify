@@ -125,6 +125,128 @@ class ImageRecognitionCache:
         
         return None
     
+    def is_image_rejected(self, image_path: str, similarity_threshold: float = 0.8) -> Optional[Dict]:
+        """
+        Verifica se a imagem (ou similar) já foi rejeitada anteriormente
+        
+        Args:
+            image_path: Caminho para a imagem
+            similarity_threshold: Limiar de similaridade (0.0 a 1.0)
+            
+        Returns:
+            Dict com informações da rejeição ou None se não rejeitada
+        """
+        if not os.path.exists(image_path):
+            return None
+        
+        current_hash = self._calculate_image_hash(image_path)
+        if not current_hash:
+            return None
+        
+        # Verificar pasta de rejeitados
+        rejected_dir = "data/manual_analysis/rejected"
+        if not os.path.exists(rejected_dir):
+            return None
+        
+        # ESTRATÉGIA MELHORADA: Comparar hash com TODAS as imagens rejeitadas primeiro
+        # Isso garante detecção mesmo quando imagens têm nomes diferentes
+        for filename in os.listdir(rejected_dir):
+            # Processar apenas imagens, não JSONs
+            if not filename.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp')):
+                continue
+            
+            image_path_in_rejected = os.path.join(rejected_dir, filename)
+            if not os.path.exists(image_path_in_rejected):
+                continue
+            
+            # Calcular hash da imagem rejeitada
+            rejected_hash = self._calculate_image_hash(image_path_in_rejected)
+            if not rejected_hash:
+                continue
+            
+            # Comparar hash exato
+            if rejected_hash == current_hash:
+                # Encontrar JSON correspondente se existir
+                json_path = os.path.join(rejected_dir, f"{filename}.json")
+                rejection_data = {}
+                human_feedback = {'is_bird': False, 'confidence': 1.0, 'reasoning': 'Imagem rejeitada pelo usuário'}
+                
+                if os.path.exists(json_path):
+                    try:
+                        with open(json_path, 'r', encoding='utf-8') as f:
+                            rejection_data = json.load(f)
+                            human_feedback = rejection_data.get('human_feedback', human_feedback)
+                    except:
+                        pass
+                
+                logger.info(f"[REJEIÇÃO] Imagem já foi rejeitada (hash exato): {os.path.basename(image_path)}")
+                return {
+                    'rejected': True,
+                    'reason': rejection_data.get('reason', 'Não é um pássaro'),
+                    'human_feedback': human_feedback,
+                    'timestamp': rejection_data.get('timestamp', ''),
+                    'confidence': human_feedback.get('confidence', 1.0),
+                    'reasoning': human_feedback.get('reasoning', 'Imagem rejeitada pelo usuário')
+                }
+            
+            # Verificar por similaridade
+            similarity = self._calculate_similarity(image_path, rejected_hash)
+            if similarity >= similarity_threshold:
+                # Encontrar JSON correspondente
+                json_path = os.path.join(rejected_dir, f"{filename}.json")
+                rejection_data = {}
+                human_feedback = {'is_bird': False, 'confidence': 1.0, 'reasoning': 'Imagem rejeitada pelo usuário'}
+                
+                if os.path.exists(json_path):
+                    try:
+                        with open(json_path, 'r', encoding='utf-8') as f:
+                            rejection_data = json.load(f)
+                            human_feedback = rejection_data.get('human_feedback', human_feedback)
+                    except:
+                        pass
+                
+                logger.info(f"[REJEIÇÃO] Imagem similar já foi rejeitada ({similarity:.2f}): {os.path.basename(image_path)}")
+                return {
+                    'rejected': True,
+                    'reason': rejection_data.get('reason', 'Não é um pássaro'),
+                    'human_feedback': human_feedback,
+                    'timestamp': rejection_data.get('timestamp', ''),
+                    'confidence': human_feedback.get('confidence', 1.0),
+                    'reasoning': human_feedback.get('reasoning', 'Imagem rejeitada pelo usuário'),
+                    'similarity': similarity
+                }
+        
+        return None
+    
+    def add_rejection_to_cache(self, image_path: str, rejection_data: Dict):
+        """
+        Adiciona rejeição ao cache para consulta rápida futura
+        
+        Args:
+            image_path: Caminho para a imagem rejeitada
+            rejection_data: Dados da rejeição
+        """
+        if not os.path.exists(image_path):
+            return
+        
+        image_hash = self._calculate_image_hash(image_path)
+        if not image_hash:
+            return
+        
+        # Adicionar hash negativo ao cache (para indicar rejeição)
+        self.cache_data["images"][f"rejected_{image_hash}"] = {
+            "image_path": image_path,
+            "rejected": True,
+            "species": "Não é um pássaro",
+            "confidence": 0.0,
+            "rejection_data": rejection_data,
+            "timestamp": rejection_data.get('timestamp', datetime.now().isoformat()),
+            "recognition_type": "rejected_by_human"
+        }
+        
+        self._save_cache()
+        logger.info(f"[CACHE] Rejeição adicionada ao cache: {os.path.basename(image_path)}")
+    
     def add_recognized_image(self, image_path: str, species: str, confidence: float, 
                            analysis_data: Dict, notes: str = ""):
         """

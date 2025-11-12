@@ -81,8 +81,36 @@ class LogicalAIReasoningSystem:
         """
         logging.info(f"[BUSCA] Analisando imagem: {os.path.basename(image_path)}")
         
-        # ETAPA 0: Verificar se imagem já foi reconhecida
+        # ETAPA 0.1: Verificar se imagem já foi REJEITADA (prioridade sobre cache)
         from .cache import image_cache
+        rejection_info = image_cache.is_image_rejected(image_path)
+        
+        if rejection_info and rejection_info.get('rejected', False):
+            logging.info(f"[REJEIÇÃO] Imagem já foi rejeitada: {rejection_info.get('reason', 'Não é um pássaro')}")
+            # Retornar resultado baseado no feedback humano
+            human_feedback = rejection_info.get('human_feedback', {})
+            return {
+                "image_path": image_path,
+                "timestamp": datetime.now().isoformat(),
+                "recognition_type": "rejected_by_human",
+                "species": "Não é um pássaro",
+                "confidence": 0.0,  # Confiança zero = não é pássaro
+                "is_bird": False,
+                "human_feedback": human_feedback,
+                "rejection_reason": rejection_info.get('reason', 'Não é um pássaro'),
+                "rejection_reasoning": rejection_info.get('reasoning', 'Imagem rejeitada pelo usuário'),
+                "analysis_data": {
+                    "yolo_analysis": {"detections": [], "status": "rejected"},
+                    "keras_analysis": {"species": "Não é um pássaro", "confidence": 0.0},
+                    "human_rejection": True,
+                    "rejection_timestamp": rejection_info.get('timestamp')
+                },
+                "notes": f"Imagem rejeitada anteriormente: {rejection_info.get('reason', 'Não é um pássaro')}",
+                "original_timestamp": rejection_info.get('timestamp'),
+                "revolutionary_action": "HUMAN_REJECTION_APPLIED"
+            }
+        
+        # ETAPA 0.2: Verificar se imagem já foi reconhecida (aprovada)
         cached_recognition = image_cache.is_image_recognized(image_path)
         
         if cached_recognition:

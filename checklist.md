@@ -944,6 +944,210 @@ afetam a funcionalidade principal do sistema.
 - 🔄 **Auto-refresh:** Atualização automática configurável
 
 ---
+
+## 🎯 MELHORIAS FUTURAS - SISTEMA DE INTUIÇÃO BALANCEADO
+
+### 📋 Visão Geral
+Melhorias propostas para balancear precisão e recall, criando um sistema de intuição mais robusto e adaptativo.
+
+---
+
+### 🎯 MELHORIA 1: Sistema de Confiança em Camadas ✅ **CONCLUÍDA**
+
+**Objetivo:** Implementar sistema de confiança em múltiplas camadas para melhor balancear precisão e recall.
+
+**Tarefas:**
+- [x] **1.1** Definir níveis de confiança claros: ✅
+  - [x] Alta confiança (0.8+): Características fundamentais + análise visual positiva ✅
+  - [x] Média confiança (0.5-0.8): Análise visual forte, mas características parciais ✅
+  - [x] Baixa confiança (0.3-0.5): Apenas intuição visual (casos duvidosos) ✅
+  - [x] Muito baixa (<0.3): Rejeitar ✅
+
+- [x] **1.2** Modificar `_logical_reasoning` para aplicar níveis de confiança baseados em evidências ✅
+- [x] **1.3** Criar função `_calculate_confidence_tier()` que determina nível baseado em múltiplos fatores ✅
+- [x] **1.4** Atualizar interface para exibir nível de confiança de forma clara ✅
+
+**Arquivos:** `src/core/intuition.py`, `src/interfaces/web_app.py`, `src/interfaces/tinder_interface_enhanced.py`
+**Prioridade:** 🔴 Alta | **Complexidade:** ⭐⭐⭐ Média
+
+**Status:** ✅ **IMPLEMENTADO E TESTADO**
+- Função `_calculate_confidence_tier()` criada e integrada
+- Todos os casos de decisão em `_logical_reasoning` atualizados para usar tiers
+- Interfaces atualizadas com exibição visual de tiers (cores e ícones)
+- Testado com 7 imagens da pasta "Teste Projeto"
+- Resultados: 3 Alta, 3 Média, 1 Muito Baixa
+
+---
+
+### 🎯 MELHORIA 2: Sistema de Priorização de Casos Duvidosos ✅ **CONCLUÍDA**
+
+**Objetivo:** Garantir que casos com intuição alta mas sem características fundamentais sejam marcados para revisão manual.
+
+**Tarefas:**
+- [x] **2.1** Melhorar lógica de `needs_manual_review` para casos específicos ✅
+- [x] **2.2** Criar função `_identify_dubious_cases()` que detecta casos duvidosos ✅
+- [x] **2.3** Adicionar flag `is_dubious_case` ao resultado com razão da dúvida ✅
+- [x] **2.4** Criar fila de revisão manual com pasta específica e interface dedicada ✅
+
+**Arquivos:** `src/core/intuition.py`, `src/interfaces/web_app.py`, `src/interfaces/dubious_review_interface.py`
+**Prioridade:** 🔴 Alta | **Complexidade:** ⭐⭐ Baixa-Média
+
+**Status:** ✅ **IMPLEMENTADO E TESTADO**
+- Função `_identify_dubious_cases()` criada com 6 critérios de detecção
+- Flag `is_dubious_case` adicionada ao resultado com razões e sugestões
+- Interface dedicada `DubiousReviewInterface` criada para revisão manual
+- Nova aba "Casos Duvidosos" adicionada ao web_app.py
+- Exibição de casos duvidosos atualizada nas interfaces
+- Testado com 7 imagens da pasta "Teste Projeto"
+- Sistema detecta casos duvidosos baseado em contradições e zonas de dúvida
+
+---
+
+### 🎯 MELHORIA 3: Sistema de Aprendizado Incremental Adaptativo ✅ CONCLUÍDA
+
+**Objetivo:** Implementar sistema que começa permissivo e aprende a ser mais preciso com o tempo através de feedback.
+
+**Tarefas:**
+- [x] **3.1** Criar sistema de "aprendizado incremental" com thresholds dinâmicos ✅
+- [x] **3.2** Implementar ajuste dinâmico de thresholds baseado em feedback ✅
+- [x] **3.3** Criar função `_adjust_thresholds_based_on_feedback()` com análise histórico ✅
+- [x] **3.4** Adicionar métricas de aprendizado (falsos positivos/negativos ao longo do tempo) ✅
+- [x] **3.5** Implementar "modos de aprendizado" (inicial/intermediário/experiente) ✅
+
+**Arquivos:** `src/core/intuition.py`, `src/core/adaptive_learning.py`, `src/utils/learning_metrics.py`, `src/interfaces/web_app.py`, `src/interfaces/tinder_interface_enhanced.py`
+**Prioridade:** 🟡 Média | **Complexidade:** ⭐⭐⭐⭐ Alta
+
+**Status:** ✅ **CONCLUÍDA** - Sistema implementado e testado com sucesso
+
+**Resumo da Implementação:**
+- ✅ Criado `AdaptiveLearningSystem` com thresholds dinâmicos que se ajustam baseado em feedback
+- ✅ Implementado sistema de métricas (`LearningMetrics`) para rastrear falsos positivos/negativos ao longo do tempo
+- ✅ Criados 3 modos de aprendizado: Inicial (permissivo), Intermediário (balanceado), Experiente (rigoroso)
+- ✅ Integrado com `IntuitionEngine` para usar thresholds adaptativos em todas as decisões
+- ✅ Integrado com `learn_from_feedback` para registrar feedback e ajustar thresholds automaticamente
+- ✅ Adicionada seção no Dashboard para visualizar métricas e estado do sistema adaptativo
+- ✅ Testado com todas as imagens da pasta "Teste Projeto" - sistema funcionando corretamente
+
+---
+
+### 🎯 MELHORIA 4: Sistema de Contexto de Uso ✅ CONCLUÍDA
+
+**Objetivo:** Permitir que o sistema se adapte ao contexto de uso (pesquisa vs produção).
+
+**Tarefas:**
+- [x] **4.1** Criar sistema de "modos de operação" (Pesquisa/Produção/Balanceado) ✅
+- [x] **4.2** Implementar configuração de modo (arquivo JSON + variável ambiente) ✅
+- [x] **4.3** Ajustar lógica baseada no modo (thresholds diferentes por modo) ✅
+- [x] **4.4** Adicionar filtragem por confiança mínima ✅
+- [x] **4.5** Criar dashboard de contexto com estatísticas por modo ✅
+
+**Arquivos:** `src/core/system_mode.py`, `config/system_mode.json`, `src/core/intuition.py`, `src/interfaces/web_app.py`
+**Prioridade:** 🟡 Média | **Complexidade:** ⭐⭐⭐ Média
+
+**Status:** ✅ **CONCLUÍDA** - Sistema implementado e testado com sucesso
+
+**Resumo da Implementação:**
+- ✅ Criado `SystemModeManager` com 3 modos: Pesquisa (permissivo), Produção (rigoroso), Balanceado (padrão)
+- ✅ Configuração via arquivo JSON (`config/system_mode.json`) e variável de ambiente `BIRD_IDENTIFY_MODE`
+- ✅ Thresholds diferentes por modo: Pesquisa (0.3), Produção (0.7), Balanceado (0.5) para confiança mínima
+- ✅ Integrado com `IntuitionEngine` para usar thresholds do modo de operação (prioridade sobre adaptativo)
+- ✅ Filtragem por confiança mínima implementada no final de `_logical_reasoning`
+- ✅ Dashboard completo com seleção de modo, thresholds, estatísticas por modo e comparação entre modos
+- ✅ Sistema registra estatísticas por modo para análise de performance
+
+---
+
+### 🎯 MELHORIA 5: Refinamento da Lógica de Intuição Visual ✅ CONCLUÍDA
+
+**Objetivo:** Melhorar precisão da análise visual para reduzir falsos positivos sem perder recall.
+
+**Tarefas:**
+- [x] **5.1** Revisar `_calculate_bird_like_score()` com pesos ajustados e penalidades ✅
+- [x] **5.2** Melhorar detecção de características de não-pássaro (répteis, mamíferos, insetos) ✅
+- [x] **5.3** Adicionar "regras de exclusão" (escamas → reduzir score, pelos → reduzir score) ✅
+- [x] **5.4** Melhorar análise de textura (diferenciar penas vs escamas vs pelos) ✅
+- [x] **5.5** Adicionar análise de proporções (cabeça/corpo, asa/corpo, bico/cabeça) ✅
+
+**Arquivos:** `src/core/intuition.py`, `src/core/exclusion_rules.py`
+**Prioridade:** 🔴 Alta | **Complexidade:** ⭐⭐⭐⭐ Alta
+
+**Status:** ✅ **CONCLUÍDA** - Sistema implementado e testado com sucesso
+
+**Resumo da Implementação:**
+- ✅ Criado `ExclusionRules` com detecção de escamas, pelos, pele lisa, exoesqueleto de inseto, etc.
+- ✅ Revisado `_calculate_bird_like_score()` com pesos ajustados (forma: 45%, textura: 30%, cor: 25%)
+- ✅ Implementadas penalidades automáticas baseadas em características de não-pássaro
+- ✅ Melhorada análise de textura com diferenciação entre penas, escamas e pelos
+- ✅ Adicionadas funções `_calculate_scale_score()` e `_calculate_fur_score()` para detectar texturas não-pássaro
+- ✅ Implementada análise de proporções (`_analyze_proportions()`) com razões cabeça/corpo, asa/corpo, bico/cabeça
+- ✅ Integrado sistema de exclusão em `_analyze_visual_characteristics()` para aplicar penalidades automaticamente
+
+---
+
+### 🎯 MELHORIA 6: Sistema de Peso Dinâmico de Evidências
+
+**Objetivo:** Fazer com que o sistema aprenda quais tipos de evidência são mais confiáveis para diferentes situações.
+
+**Tarefas:**
+- [ ] **6.1** Criar sistema de pesos dinâmicos para diferentes tipos de evidência
+- [ ] **6.2** Implementar aprendizado de pesos baseado em feedback
+- [ ] **6.3** Criar função `_calculate_weighted_confidence()` com pesos aprendidos
+- [ ] **6.4** Adicionar análise de confiabilidade de evidências (taxa de acerto histórico)
+
+**Arquivos:** Criar `src/core/evidence_weighting.py`, `src/core/intuition.py`
+**Prioridade:** 🟡 Média | **Complexidade:** ⭐⭐⭐⭐ Alta
+
+---
+
+### 🎯 MELHORIA 7: Sistema de Explicabilidade Aprimorado
+
+**Objetivo:** Melhorar capacidade do sistema de explicar por que classificou uma imagem como pássaro ou não.
+
+**Tarefas:**
+- [ ] **7.1** Adicionar explicações detalhadas com todas as evidências encontradas
+- [ ] **7.2** Criar função `_generate_explanation()` em linguagem natural
+- [ ] **7.3** Adicionar visualização de evidências (highlight de características)
+- [ ] **7.4** Melhorar exibição de razões com formato amigável e ícones
+
+**Arquivos:** Criar `src/core/explanation_generator.py`, `src/interfaces/web_app.py`, `src/interfaces/tinder_interface_enhanced.py`
+**Prioridade:** 🟢 Baixa | **Complexidade:** ⭐⭐⭐ Média
+
+---
+
+### 📊 Resumo de Prioridades
+
+**🔴 Alta Prioridade (Implementar Primeiro):**
+1. MELHORIA 1: Sistema de Confiança em Camadas
+2. MELHORIA 2: Sistema de Priorização de Casos Duvidosos
+3. MELHORIA 5: Refinamento da Lógica de Intuição Visual
+
+**🟡 Média Prioridade (Implementar Depois):**
+4. MELHORIA 3: Sistema de Aprendizado Incremental Adaptativo
+5. MELHORIA 4: Sistema de Contexto de Uso
+6. MELHORIA 6: Sistema de Peso Dinâmico de Evidências
+
+**🟢 Baixa Prioridade (Implementar Por Último):**
+7. MELHORIA 7: Sistema de Explicabilidade Aprimorado
+
+---
+
+### 📝 Notas de Implementação
+
+**Ordem Sugerida:**
+1. **Fase 1:** Melhorias 1, 2 e 5 (base sólida)
+2. **Fase 2:** Melhorias 3 e 4 (funcionalidades avançadas)
+3. **Fase 3:** Melhorias 6 e 7 (refinamentos finais)
+
+**Métricas de Sucesso:**
+- Redução de falsos positivos mantendo recall alto
+- Melhoria na taxa de aprendizado
+- Aumento na confiança do usuário no sistema
+- Redução no tempo de revisão manual
+
+---
+
+---
 *Atualizado em: 2025-10-10 21:45:00*
 *Status: PROBLEMAS RESOLVIDOS E SISTEMA MELHORADO ✅*
 *Correções: 3/3 aplicadas | Funcionalidades: 2/2 implementadas*
+*Melhorias Futuras: 7 melhorias adicionadas ao checklist ✅*

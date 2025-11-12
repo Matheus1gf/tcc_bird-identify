@@ -466,6 +466,36 @@ class IntuitionEngine:
                 logger.error(f"Erro ao inicializar sistema de transferência de conhecimento: {e}")
                 self.knowledge_transfer_system = None
         
+        # Sistema de modo de operação (MELHORIA 4)
+        self.system_mode_manager = None
+        try:
+            from src.core.system_mode import SystemModeManager
+            self.system_mode_manager = SystemModeManager()
+            logger.info(f"Sistema de modo de operação inicializado: {self.system_mode_manager.get_current_mode().value}")
+        except Exception as e:
+            logger.error(f"Erro ao inicializar sistema de modo de operação: {e}")
+            self.system_mode_manager = None
+        
+        # Sistema de aprendizado adaptativo (MELHORIA 3)
+        self.adaptive_learning_system = None
+        try:
+            from src.core.adaptive_learning import AdaptiveLearningSystem
+            self.adaptive_learning_system = AdaptiveLearningSystem()
+            logger.info("Sistema de aprendizado adaptativo inicializado")
+        except Exception as e:
+            logger.error(f"Erro ao inicializar sistema de aprendizado adaptativo: {e}")
+            self.adaptive_learning_system = None
+        
+        # Sistema de métricas de aprendizado (MELHORIA 3)
+        self.learning_metrics = None
+        try:
+            from src.utils.learning_metrics import LearningMetrics
+            self.learning_metrics = LearningMetrics()
+            logger.info("Sistema de métricas de aprendizado inicializado")
+        except Exception as e:
+            logger.error(f"Erro ao inicializar sistema de métricas de aprendizado: {e}")
+            self.learning_metrics = None
+        
         # Sistema de meta-cognição
         self.metacognitive_system = None
         if METACOGNITION_AVAILABLE:
@@ -734,17 +764,9 @@ class IntuitionEngine:
             from src.utils.terminal_logger import log_info as term_log_info, log_error as term_log_error, log_success as term_log_success
             
             # ============================================================================
-            # CACHE DE PERFORMANCE - FASE 1.3.2
+            # PRIORIDADE 1: VERIFICAR REJEIÇÃO ANTES DO CACHE!
+            # O cache pode ter resultado antigo ERRADO - rejeição tem prioridade ABSOLUTA
             # ============================================================================
-            
-            # Gerar chave de cache
-            cache_key = self._generate_cache_key(image_input)
-            
-            # Verificar cache primeiro
-            cached_result = self._get_cached_analysis(cache_key)
-            if cached_result:
-                logger.info(f"[CACHE] Análise recuperada do cache: {cache_key}")
-                return cached_result['result']
             
             # Iniciar medição de tempo
             analysis_start_time = time.time()
@@ -763,6 +785,75 @@ class IntuitionEngine:
                     log_error(f"Arquivo não encontrado: {image_path}", "IntuitionEngine", "analyze_image_intuition")
                     return {'error': f'Arquivo não encontrado: {image_path}'}
                 
+                # PRIMEIRO (ANTES DO CACHE!): Verificar se imagem já foi rejeitada
+                from .cache import image_cache
+                rejection_info = image_cache.is_image_rejected(image_path)
+                logger.info(f"[DEBUG REJEIÇÃO] rejection_info para {os.path.basename(image_path)}: {rejection_info}")
+                if rejection_info and rejection_info.get('rejected', False):
+                    logger.info(f"[REJEIÇÃO] Imagem rejeitada anteriormente: {rejection_info.get('reason', 'Não é um pássaro')}")
+                    log_info(f"Imagem já foi rejeitada: {rejection_info.get('reason', 'Não é um pássaro')}", 
+                            "IntuitionEngine", "analyze_image_intuition")
+                    
+                    # Construir resultado de rejeição
+                    human_feedback = rejection_info.get('human_feedback', {})
+                    result_rejected = {
+                        'confidence': 0.0,
+                        'species': 'Não é um pássaro',
+                        'color': 'unknown',
+                        'is_bird': False,
+                        'rejection_info': rejection_info,
+                        'intuition_analysis': {
+                            'logical_reasoning': {
+                                'is_bird': False,
+                                'confidence': 0.0,
+                                'reasoning': rejection_info.get('reasoning', 'Imagem rejeitada pelo usuário'),
+                                'needs_manual_review': False,
+                                'characteristics_found': [],
+                                'missing_characteristics': ['Não é um pássaro - já rejeitado anteriormente']
+                            },
+                            'candidates': []
+                        },
+                        'analysis_type': 'rejected_by_human',
+                        'notes': f"Imagem rejeitada anteriormente: {rejection_info.get('reason', 'Não é um pássaro')}"
+                    }
+                    
+                    # CACHE: Salvar resultado de rejeição no cache para evitar re-processamento
+                    try:
+                        cache_key = self._generate_cache_key(image_input)
+                        self._store_cached_analysis(cache_key, result_rejected)
+                    except Exception as cache_error:
+                        logger.warning(f"Erro ao cachear rejeição: {cache_error}")
+                    
+                    return result_rejected
+            
+            # ============================================================================
+            # PRIORIDADE 2: CACHE DE PERFORMANCE (DEPOIS DE VERIFICAR REJEIÇÃO)
+            # ============================================================================
+            
+            # Gerar chave de cache
+            cache_key = self._generate_cache_key(image_input)
+            
+            # Verificar cache (MAS APENAS SE NÃO FOI REJEITADO!)
+            cached_result = self._get_cached_analysis(cache_key)
+            if cached_result:
+                try:
+                    cached_result_data = cached_result.get('result', cached_result) if cached_result else None
+                    if cached_result_data is None:
+                        logger.warning(f"[CACHE] Cache retornou None para: {cache_key}")
+                    else:
+                        # Verificar se cache é de rejeição
+                        if cached_result_data.get('analysis_type') == 'rejected_by_human':
+                            logger.info(f"[CACHE] Rejeição recuperada do cache: {cache_key}")
+                        else:
+                            logger.info(f"[CACHE] Análise recuperada do cache: {cache_key}")
+                        return cached_result_data
+                except Exception as cache_read_error:
+                    logger.error(f"[CACHE] Erro ao ler cache: {cache_read_error}")
+            
+            # Carrar imagem
+            if isinstance(image_input, str):
+                image_path = image_input
+                log_info(f"Processando arquivo: {image_path}", "IntuitionEngine", "analyze_image_intuition")
                 # Carregar imagem
                 image = cv2.imread(image_path)
                 if image is None:
@@ -803,14 +894,80 @@ class IntuitionEngine:
             fundamental_characteristics = self._detect_fundamental_characteristics(image_path)
             term_log_success("Detecção de características concluída", "IntuitionEngine", "analyze_image_intuition")
             
+            # Verificar se fundamental_characteristics retornou None
+            if fundamental_characteristics is None:
+                log_error("fundamental_characteristics retornou None", "IntuitionEngine", "analyze_image_intuition")
+                fundamental_characteristics = {}
             if 'error' in fundamental_characteristics:
                 log_error(f"Erro na detecção de características: {fundamental_characteristics['error']}", "IntuitionEngine", "analyze_image_intuition")
                 return fundamental_characteristics
             
+            # Log para debug
+            logger.info(f"[DEBUG] fundamental_characteristics após obter: keys={list(fundamental_characteristics.keys())[:5] if isinstance(fundamental_characteristics, dict) else 'N/A'}, has_wings={fundamental_characteristics.get('has_wings', 'N/A')}, yolo_detection={fundamental_characteristics.get('yolo_detection', 'N/A')}, bird_count={sum([fundamental_characteristics.get('has_wings', False), fundamental_characteristics.get('has_beak', False), fundamental_characteristics.get('has_feathers', False), fundamental_characteristics.get('has_eyes', False), fundamental_characteristics.get('has_claws', False)])}")
+            
             # 3. Raciocínio lógico (neuro-simbólico)
             term_log_info("Iniciando raciocínio lógico", "IntuitionEngine", "analyze_image_intuition")
             log_info("Iniciando raciocínio lógico", "IntuitionEngine", "analyze_image_intuition")
+            
+            # Garantir que visual_analysis e fundamental_characteristics não são None
+            if visual_analysis is None:
+                log_error("visual_analysis é None", "IntuitionEngine", "analyze_image_intuition")
+                visual_analysis = {}
+            if fundamental_characteristics is None:
+                log_error("fundamental_characteristics é None", "IntuitionEngine", "analyze_image_intuition")
+                fundamental_characteristics = {}
+            
+            # Log dos dados antes de chamar _logical_reasoning para debug
+            logger.info(f"[DEBUG PRE-REASONING] visual_analysis keys: {list(visual_analysis.keys())[:10] if isinstance(visual_analysis, dict) else 'N/A'}, bird_shape_score={visual_analysis.get('bird_shape_score', 'N/A') if isinstance(visual_analysis, dict) else 'N/A'}")
+            logger.info(f"[DEBUG PRE-REASONING] fundamental_characteristics keys: {list(fundamental_characteristics.keys())[:10] if isinstance(fundamental_characteristics, dict) else 'N/A'}, yolo_detection={fundamental_characteristics.get('yolo_detection', 'N/A') if isinstance(fundamental_characteristics, dict) else 'N/A'}")
+            
+            try:
             logical_reasoning = self._logical_reasoning(visual_analysis, fundamental_characteristics)
+                logger.info(f"[DEBUG POST-REASONING] logical_reasoning retornado: is_bird={logical_reasoning.get('is_bird', 'N/A') if isinstance(logical_reasoning, dict) else 'N/A'}, confidence={logical_reasoning.get('confidence', 'N/A') if isinstance(logical_reasoning, dict) else 'N/A'}, reasoning_steps={len(logical_reasoning.get('reasoning_steps', [])) if isinstance(logical_reasoning, dict) else 'N/A'}")
+            except Exception as reasoning_error:
+                log_error(f"Erro ao executar raciocínio lógico: {reasoning_error}", "IntuitionEngine", "analyze_image_intuition")
+                import traceback
+                logger.error(f"Traceback completo: {traceback.format_exc()}")
+                logical_reasoning = {
+                    'is_bird': False,
+                    'confidence': 0.0,
+                    'species': 'Erro',
+                    'reasoning': f'Erro no raciocínio lógico: {str(reasoning_error)}',
+                    'intuition_level': 'Erro',
+                    'needs_manual_review': True,
+                    'reasoning_steps': [],
+                    'characteristics_found': []
+                }
+            
+            # Verificar se logical_reasoning retornou None ou tem erro
+            if logical_reasoning is None:
+                log_error("Raciocínio lógico retornou None", "IntuitionEngine", "analyze_image_intuition")
+                logical_reasoning = {
+                    'is_bird': False,
+                    'confidence': 0.0,
+                    'species': 'Erro',
+                    'reasoning': 'Erro no raciocínio lógico - retornou None',
+                    'intuition_level': 'Erro',
+                    'needs_manual_review': True,
+                    'reasoning_steps': [],
+                    'characteristics_found': []
+                }
+            elif isinstance(logical_reasoning, dict) and 'error' in logical_reasoning:
+                log_error(f"Erro no raciocínio lógico: {logical_reasoning['error']}", "IntuitionEngine", "analyze_image_intuition")
+                return logical_reasoning
+            elif not isinstance(logical_reasoning, dict):
+                log_error(f"logical_reasoning não é um dict: {type(logical_reasoning)}", "IntuitionEngine", "analyze_image_intuition")
+                logical_reasoning = {
+                    'is_bird': False,
+                    'confidence': 0.0,
+                    'species': 'Erro',
+                    'reasoning': f'Erro no raciocínio lógico - tipo incorreto: {type(logical_reasoning)}',
+                    'intuition_level': 'Erro',
+                    'needs_manual_review': True,
+                    'reasoning_steps': [],
+                    'characteristics_found': []
+                }
+            
             term_log_success("Raciocínio lógico concluído", "IntuitionEngine", "analyze_image_intuition")
             
             # 4. Detecção de candidatos para aprendizado
@@ -892,12 +1049,18 @@ class IntuitionEngine:
             }
             
             # Armazenar resultado no cache mesmo em caso de erro
+            try:
+                cache_key = self._generate_cache_key(image_input)
             self._store_cached_analysis(cache_key, error_result)
+            except Exception as cache_error:
+                logger.warning(f"Erro ao cachear erro: {cache_error}")
             
             return error_result
     
     def _analyze_visual_characteristics(self, image_path: str) -> Dict[str, Any]:
-        """Análise visual básica - como uma criança vê cores e formas"""
+        """
+        Análise visual básica - MELHORIA 5: Melhorada com regras de exclusão e análise de proporções
+        """
         try:
             image = cv2.imread(image_path)
             if image is None:
@@ -912,17 +1075,39 @@ class IntuitionEngine:
             # Análise de formas básicas
             shape_analysis = self._analyze_shapes(image)
             
+            # MELHORIA 5: Análise de proporções (cabeça/corpo, asa/corpo, bico/cabeça)
+            proportions_analysis = self._analyze_proportions(image)
+            
             # Análise de texturas
             texture_analysis = self._analyze_textures(image)
+            
+            # MELHORIA 5: Detectar características de não-pássaro (regras de exclusão)
+            exclusion_features = None
+            try:
+                from src.core.exclusion_rules import ExclusionRules
+                exclusion_rules = ExclusionRules()
+                visual_analysis_temp = {
+                    'bird_shape_score': shape_analysis.get('bird_shape_score', 0),
+                    'bird_color_score': color_analysis.get('bird_color_score', 0),
+                    'bird_like_features': 0  # Será calculado depois
+                }
+                exclusion_features = exclusion_rules.detect_non_bird_features(image, visual_analysis_temp)
+            except Exception as e:
+                logger.warning(f"[VISUAL_ANALYSIS] Erro ao detectar características de exclusão: {e}")
+            
+            # Calcular score de pássaro com penalidades de exclusão
+            bird_like_score = self._calculate_bird_like_score(
+                color_analysis, shape_analysis, texture_analysis, exclusion_features
+            )
             
             return {
                 'dominant_color': color_analysis['dominant_color'],
                 'color_distribution': color_analysis['distribution'],
                 'shape_characteristics': shape_analysis,
                 'texture_characteristics': texture_analysis,
-                'bird_like_features': self._calculate_bird_like_score(
-                    color_analysis, shape_analysis, texture_analysis
-                )
+                'proportions_analysis': proportions_analysis,  # MELHORIA 5
+                'exclusion_features': exclusion_features,  # MELHORIA 5
+                'bird_like_features': bird_like_score
             }
             
         except Exception as e:
@@ -1098,8 +1283,98 @@ class IntuitionEngine:
             'bird_shape_score': self._calculate_shape_score(aspect_ratio, compactness)
         }
     
+    def _analyze_proportions(self, image: np.ndarray) -> Dict[str, Any]:
+        """
+        MELHORIA 5: Análise de proporções (cabeça/corpo, asa/corpo, bico/cabeça)
+        
+        Args:
+            image: Imagem para análise
+        
+        Returns:
+            Dicionário com análise de proporções
+        """
+        try:
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            
+            # Detectar contornos
+            edges = cv2.Canny(gray, 50, 150)
+            contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            
+            if not contours:
+                return {
+                    'head_body_ratio': 0.0,
+                    'wing_body_ratio': 0.0,
+                    'beak_head_ratio': 0.0,
+                    'proportions_score': 0.0
+                }
+            
+            # Encontrar maior contorno
+            largest_contour = max(contours, key=cv2.contourArea)
+            x, y, w, h = cv2.boundingRect(largest_contour)
+            
+            # MELHORIA 5: Análise simplificada de proporções
+            # Pássaros típicos têm:
+            # - Cabeça pequena em relação ao corpo (0.1 a 0.3)
+            # - Asas grandes em relação ao corpo (0.3 a 0.6)
+            # - Bico pequeno em relação à cabeça (0.1 a 0.3)
+            
+            # Estimativa simplificada baseada em bounding box
+            body_area = w * h
+            body_length = max(w, h)
+            
+            # Estimativa de cabeça (assumindo parte superior do bounding box)
+            head_estimate = body_length * 0.15  # ~15% do comprimento
+            head_body_ratio = head_estimate / body_length if body_length > 0 else 0.0
+            
+            # Estimativa de asas (assumindo largura do bounding box)
+            wing_estimate = w * 0.4  # ~40% da largura
+            wing_body_ratio = wing_estimate / body_length if body_length > 0 else 0.0
+            
+            # Estimativa de bico (assumindo pequena parte da cabeça)
+            beak_estimate = head_estimate * 0.2  # ~20% da cabeça
+            beak_head_ratio = beak_estimate / head_estimate if head_estimate > 0 else 0.0
+            
+            # Calcular score de proporções
+            proportions_score = 0.0
+            
+            # Cabeça/corpo: ideal entre 0.1 e 0.3
+            if 0.1 <= head_body_ratio <= 0.3:
+                proportions_score += 0.4
+            elif 0.05 <= head_body_ratio <= 0.4:
+                proportions_score += 0.2
+            
+            # Asa/corpo: ideal entre 0.3 e 0.6
+            if 0.3 <= wing_body_ratio <= 0.6:
+                proportions_score += 0.4
+            elif 0.2 <= wing_body_ratio <= 0.7:
+                proportions_score += 0.2
+            
+            # Bico/cabeça: ideal entre 0.1 e 0.3
+            if 0.1 <= beak_head_ratio <= 0.3:
+                proportions_score += 0.2
+            elif 0.05 <= beak_head_ratio <= 0.4:
+                proportions_score += 0.1
+            
+            return {
+                'head_body_ratio': head_body_ratio,
+                'wing_body_ratio': wing_body_ratio,
+                'beak_head_ratio': beak_head_ratio,
+                'proportions_score': min(proportions_score, 1.0)
+            }
+            
+        except Exception as e:
+            logger.warning(f"[PROPORTIONS] Erro na análise de proporções: {e}")
+            return {
+                'head_body_ratio': 0.0,
+                'wing_body_ratio': 0.0,
+                'beak_head_ratio': 0.0,
+                'proportions_score': 0.0
+        }
+    
     def _analyze_textures(self, image: np.ndarray) -> Dict[str, Any]:
-        """Analisa texturas como uma criança reconheceria"""
+        """
+        Analisa texturas - MELHORIA 5: Melhor diferenciação entre penas, escamas e pelos
+        """
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         
         # Análise de textura usando gradientes
@@ -1112,38 +1387,95 @@ class IntuitionEngine:
         # Análise de uniformidade da textura
         texture_variance = np.var(magnitude)
         texture_uniformity = 1.0 / (1.0 + texture_variance) if texture_variance > 0 else 0.5
+        
+        # MELHORIA 5: Análise de bordas para diferenciar texturas
+        edges = cv2.Canny(gray, 30, 100)
+        edge_density = np.sum(edges > 0) / (edges.shape[0] * edges.shape[1])
+        
+        # MELHORIA 5: Detectar padrões repetitivos (escamas vs penas)
+        f_transform = np.fft.fft2(gray)
+        f_shift = np.fft.fftshift(f_transform)
+        magnitude_spectrum = np.log(np.abs(f_shift) + 1)
+        center_y, center_x = magnitude_spectrum.shape[0] // 2, magnitude_spectrum.shape[1] // 2
+        medium_freq_energy = np.sum(magnitude_spectrum[center_y-15:center_y+15, center_x-15:center_x+15])
+        total_energy = np.sum(magnitude_spectrum)
+        pattern_regularity = medium_freq_energy / total_energy if total_energy > 0 else 0
+        
+        # MELHORIA 5: Calcular scores específicos para diferentes texturas
+        feather_score = self._calculate_feather_score(texture_variance, texture_uniformity, edge_density, pattern_regularity)
+        scale_score = self._calculate_scale_score(texture_variance, edge_density, pattern_regularity)
+        fur_score = self._calculate_fur_score(texture_variance, edge_density)
+        
+        # Score de penas (prioridade)
+        feather_like_score = feather_score
+        
+        # Penalizar se detectar escamas ou pelos
+        if scale_score > 0.3:
+            feather_like_score *= 0.7  # Reduzir 30% se parece escama
+        if fur_score > 0.3:
+            feather_like_score *= 0.6  # Reduzir 40% se parece pelo
             
         return {
             'texture_variance': texture_variance,
             'texture_uniformity': texture_uniformity,
-            'feather_like_score': self._calculate_feather_score(texture_variance, texture_uniformity)
+            'edge_density': edge_density,
+            'pattern_regularity': pattern_regularity,
+            'feather_like_score': feather_like_score,
+            'scale_score': scale_score,
+            'fur_score': fur_score
         }
     
-    def _calculate_bird_like_score(self, color_analysis: Dict, shape_analysis: Dict, texture_analysis: Dict) -> float:
-        """Calcula score geral de características de pássaro - mais sensível"""
+    def _calculate_bird_like_score(self, color_analysis: Dict, shape_analysis: Dict, texture_analysis: Dict, 
+                                   exclusion_features: Optional[Dict[str, Any]] = None) -> float:
+        """
+        Calcula score geral de características de pássaro - MELHORIA 5
+        
+        Args:
+            color_analysis: Análise de cores
+            shape_analysis: Análise de formas
+            texture_analysis: Análise de texturas
+            exclusion_features: Características de exclusão (não-pássaro)
+        
+        Returns:
+            Score ajustado de características de pássaro
+        """
         color_score = color_analysis.get('bird_color_score', 0)
         shape_score = shape_analysis.get('bird_shape_score', 0)
         texture_score = texture_analysis.get('feather_like_score', 0)
         
-        # Score baseado em características individuais
-        base_score = (color_score * 0.3 + 
-                     shape_score * 0.4 + 
-                     texture_score * 0.3)
+        # MELHORIA 5: Pesos ajustados (forma é mais importante)
+        base_score = (color_score * 0.25 + 
+                     shape_score * 0.45 + 
+                     texture_score * 0.30)
         
-        # Bonus para múltiplas características positivas
+        # MELHORIA 5: Bonus para múltiplas características positivas (ajustado)
         positive_features = sum([1 for score in [color_score, shape_score, texture_score] if score > 0.3])
         
-        if positive_features >= 2:
-            bonus = 0.2  # Bonus de 20% para múltiplas características
+        if positive_features >= 3:
+            bonus = 0.15  # Bonus de 15% para todas características
+        elif positive_features >= 2:
+            bonus = 0.10  # Bonus de 10% para múltiplas características
         elif positive_features >= 1:
-            bonus = 0.1  # Bonus de 10% para pelo menos uma característica
+            bonus = 0.05  # Bonus de 5% para pelo menos uma característica
         else:
             bonus = 0.0
         
-        # Score final com bonus
-        final_score = min(base_score + bonus, 1.0)
+        # Score com bonus
+        score_with_bonus = min(base_score + bonus, 1.0)
         
-        return final_score
+        # MELHORIA 5: Aplicar penalidades de exclusão se disponíveis
+        if exclusion_features:
+            try:
+                from src.core.exclusion_rules import ExclusionRules
+                exclusion_rules = ExclusionRules()
+                final_score = exclusion_rules.apply_penalties(score_with_bonus, exclusion_features)
+            except Exception as e:
+                logger.warning(f"[BIRD_LIKE_SCORE] Erro ao aplicar penalidades: {e}")
+                final_score = score_with_bonus
+        else:
+            final_score = score_with_bonus
+        
+        return max(0.0, min(final_score, 1.0))
     
     def _calculate_shape_score(self, aspect_ratio: float, compactness: float) -> float:
         """Calcula score de forma baseado em características de pássaro - mais sensível"""
@@ -1163,13 +1495,98 @@ class IntuitionEngine:
         
         return (aspect_score + compactness_score) / 2
     
-    def _calculate_feather_score(self, variance: float, uniformity: float) -> float:
-        """Calcula score de textura de penas"""
+    def _calculate_feather_score(self, variance: float, uniformity: float, edge_density: float = 0.0, pattern_regularity: float = 0.0) -> float:
+        """
+        Calcula score de textura de penas - MELHORIA 5
+        
+        Args:
+            variance: Variância da textura
+            uniformity: Uniformidade da textura
+            edge_density: Densidade de bordas
+            pattern_regularity: Regularidade de padrões
+        
+        Returns:
+            Score de textura de penas (0.0 a 1.0)
+        """
         # Penas têm textura variada mas não muito uniforme
         variance_score = min(1.0, variance / 1000.0)  # Normalizar
         uniformity_score = uniformity
         
-        return (variance_score + uniformity_score) / 2
+        # MELHORIA 5: Penas têm densidade de bordas média (não muito alta, não muito baixa)
+        if 0.1 <= edge_density <= 0.25:
+            edge_score = 1.0
+        elif 0.05 <= edge_density <= 0.3:
+            edge_score = 0.7
+        else:
+            edge_score = 0.3
+        
+        # MELHORIA 5: Penas têm padrões menos regulares que escamas
+        if pattern_regularity < 0.2:
+            pattern_score = 1.0
+        elif pattern_regularity < 0.3:
+            pattern_score = 0.7
+        else:
+            pattern_score = 0.4  # Muito regular = provavelmente escama
+        
+        # Score combinado (pesos ajustados)
+        return (variance_score * 0.3 + uniformity_score * 0.2 + edge_score * 0.3 + pattern_score * 0.2)
+    
+    def _calculate_scale_score(self, variance: float, edge_density: float, pattern_regularity: float) -> float:
+        """
+        Calcula score de textura de escamas - MELHORIA 5
+        
+        Args:
+            variance: Variância da textura
+            edge_density: Densidade de bordas
+            pattern_regularity: Regularidade de padrões
+        
+        Returns:
+            Score de textura de escamas (0.0 a 1.0)
+        """
+        # Escamas têm padrões muito regulares
+        if pattern_regularity > 0.15:
+            pattern_score = 1.0
+        elif pattern_regularity > 0.1:
+            pattern_score = 0.7
+        else:
+            pattern_score = 0.2
+        
+        # Escamas têm densidade de bordas média-alta
+        if 0.1 <= edge_density <= 0.3:
+            edge_score = 1.0
+        else:
+            edge_score = 0.5
+        
+        return (pattern_score * 0.6 + edge_score * 0.4)
+    
+    def _calculate_fur_score(self, variance: float, edge_density: float) -> float:
+        """
+        Calcula score de textura de pelos - MELHORIA 5
+        
+        Args:
+            variance: Variância da textura
+            edge_density: Densidade de bordas
+        
+        Returns:
+            Score de textura de pelos (0.0 a 1.0)
+        """
+        # Pelos têm variância baixa
+        if variance < 500:
+            variance_score = 1.0
+        elif variance < 800:
+            variance_score = 0.7
+        else:
+            variance_score = 0.3
+        
+        # Pelos têm densidade de bordas baixa
+        if edge_density < 0.15:
+            edge_score = 1.0
+        elif edge_density < 0.2:
+            edge_score = 0.6
+        else:
+            edge_score = 0.2
+        
+        return (variance_score * 0.5 + edge_score * 0.5)
     
     def _detect_fundamental_characteristics(self, image_path: str) -> Dict[str, Any]:
         """Detecção híbrida multi-biblioteca de características fundamentais de pássaros"""
@@ -2461,8 +2878,144 @@ class IntuitionEngine:
         else:
             return 0.0
     
+    def _identify_dubious_cases(self, visual_analysis: Dict, characteristics: Dict, 
+                                confidence: float, bird_count: int, 
+                                bird_like_features: float, bird_shape_score: float,
+                                bird_color_score: float) -> Dict[str, Any]:
+        """
+        Identifica casos duvidosos que precisam de revisão manual.
+        
+        Um caso é considerado duvidoso quando:
+        - bird_like_features > 0.5 mas bird_count == 0 (sem características fundamentais)
+        - bird_shape_score > 0.9 mas nenhuma característica específica detectada
+        - Confiança entre 0.3-0.6 (zona de dúvida)
+        - Contradição entre análise visual e características fundamentais
+        
+        Args:
+            visual_analysis: Análise visual da imagem
+            characteristics: Características fundamentais detectadas
+            confidence: Confiança calculada
+            bird_count: Número de características fundamentais detectadas
+            bird_like_features: Score de características de pássaro
+            bird_shape_score: Score de forma de pássaro
+            bird_color_score: Score de cor de pássaro
+        
+        Returns:
+            Dict com 'is_dubious', 'reason', 'suggestion' (aprovar/rejeitar/revisar)
+        """
+        is_dubious = False
+        reasons = []
+        suggestion = 'revisar'
+        
+        # Caso 1: Análise visual alta mas sem características fundamentais
+        if bird_like_features > 0.5 and bird_count == 0:
+            is_dubious = True
+            reasons.append("Análise visual indica pássaro (score > 0.5) mas nenhuma característica fundamental detectada")
+            suggestion = 'revisar'
+        
+        # Caso 2: Forma perfeita de pássaro mas sem características específicas
+        if bird_shape_score > 0.9 and bird_count == 0:
+            is_dubious = True
+            reasons.append(f"Forma perfeita de pássaro detectada (score {bird_shape_score:.2f}) mas sem características fundamentais")
+            suggestion = 'revisar'
+        
+        # Caso 3: Zona de dúvida (confiança média)
+        if 0.3 <= confidence <= 0.6:
+            is_dubious = True
+            reasons.append(f"Confiança na zona de dúvida ({confidence:.2%}) - evidências parciais")
+            suggestion = 'revisar'
+        
+        # Caso 4: Contradição entre análise visual e características fundamentais
+        has_high_visual = bird_like_features > 0.6 or bird_shape_score > 0.7
+        has_low_fundamentals = bird_count <= 1
+        if has_high_visual and has_low_fundamentals:
+            is_dubious = True
+            reasons.append(f"Contradição: análise visual forte (score {bird_like_features:.2f}) mas apenas {bird_count} característica(s) fundamental(is)")
+            suggestion = 'revisar'
+        
+        # Caso 5: Análise visual muito forte mas características de não-pássaro presentes
+        has_mammal_features = characteristics.get('has_mammal_features', False)
+        has_fur_texture = characteristics.get('has_fur_texture', False)
+        has_mammal_body = characteristics.get('has_mammal_body', False)
+        if (bird_like_features > 0.5 or bird_shape_score > 0.7) and (has_mammal_features or has_fur_texture or has_mammal_body):
+            is_dubious = True
+            reasons.append("Contradição: análise visual indica pássaro mas características de mamífero detectadas")
+            suggestion = 'revisar'
+        
+        # Caso 6: Múltiplas características mas análise visual fraca
+        if bird_count >= 2 and bird_like_features < 0.3:
+            is_dubious = True
+            reasons.append(f"Contradição: {bird_count} características fundamentais mas análise visual fraca (score {bird_like_features:.2f})")
+            suggestion = 'revisar'
+        
+        return {
+            'is_dubious': is_dubious,
+            'reasons': reasons,
+            'suggestion': suggestion,
+            'dubious_score': len(reasons)  # Quanto mais razões, mais duvidoso
+        }
+    
+    def _calculate_confidence_tier(self, confidence: float, bird_count: int, 
+                                   has_fundamental_features: bool, 
+                                   visual_scores: Dict[str, float],
+                                   has_non_bird_features: bool = False) -> Dict[str, Any]:
+        """
+        Calcula o nível (tier) de confiança baseado em múltiplos fatores.
+        
+        Níveis de confiança:
+        - Alta (0.8+): Características fundamentais + análise visual positiva
+        - Média (0.5-0.8): Análise visual forte, mas características parciais
+        - Baixa (0.3-0.5): Apenas intuição visual (casos duvidosos)
+        - Muito Baixa (<0.3): Rejeitar
+        
+        Args:
+            confidence: Confiança numérica calculada (0.0 a 1.0)
+            bird_count: Número de características fundamentais detectadas
+            has_fundamental_features: Se tem características fundamentais (bico, penas, asas)
+            visual_scores: Dicionário com scores visuais (shape, color, texture, bird_like_features)
+            has_non_bird_features: Se detectou características de não-pássaro (réptil, mamífero, etc)
+        
+        Returns:
+            Dict com 'tier' (Alta/Média/Baixa/Muito Baixa), 'confidence' ajustada, e 'explanation'
+        """
+        # Penalizar se tem características de não-pássaro
+        if has_non_bird_features:
+            confidence = max(0.0, confidence - 0.3)
+        
+        # Determinar tier baseado em confiança e características
+        if confidence >= 0.8 and has_fundamental_features and bird_count >= 2:
+            tier = "Alta"
+            explanation = "Alta confiança: Características fundamentais detectadas + análise visual positiva"
+        elif confidence >= 0.5 and (has_fundamental_features or visual_scores.get('bird_like_features', 0) > 0.6):
+            tier = "Média"
+            if has_fundamental_features:
+                explanation = "Média confiança: Características fundamentais parciais + análise visual"
+            else:
+                explanation = "Média confiança: Análise visual forte, mas sem características fundamentais completas"
+        elif confidence >= 0.3:
+            tier = "Baixa"
+            explanation = "Baixa confiança: Apenas intuição visual, sem características fundamentais suficientes"
+        else:
+            tier = "Muito Baixa"
+            explanation = "Muito baixa confiança: Poucas evidências de características de pássaro"
+        
+        return {
+            'tier': tier,
+            'confidence': confidence,
+            'explanation': explanation,
+            'bird_count': bird_count,
+            'has_fundamental_features': has_fundamental_features
+        }
+    
     def _logical_reasoning(self, visual_analysis: Dict, characteristics: Dict) -> Dict[str, Any]:
         """Raciocínio lógico neuro-simbólico SIMPLIFICADO e EFICAZ - FASE 1.6.3"""
+        try:
+            # Garantir que parâmetros não são None
+            if visual_analysis is None:
+                visual_analysis = {}
+            if characteristics is None:
+                characteristics = {}
+            
         reasoning = {
             'is_bird': False,
             'confidence': 0.0,
@@ -2471,8 +3024,54 @@ class IntuitionEngine:
             'characteristics_found': [],
             'missing_characteristics': [],
             'intuition_level': 'Baixa',
-            'needs_manual_review': False
-        }
+                'confidence_tier': 'Muito Baixa',
+                'confidence_tier_explanation': '',
+                'needs_manual_review': False,
+                'is_dubious_case': False,
+                'dubious_reasons': [],
+                'dubious_suggestion': 'revisar'
+            }
+            
+            # ============================================================================
+            # PRIORIDADE 0: VERIFICAR PADRÕES REJEITADOS APRENDIDOS (ANTES DE TUDO!)
+            # ============================================================================
+            if hasattr(self, 'learned_patterns') and 'rejected_patterns' in self.learned_patterns:
+                rejected_patterns = self.learned_patterns.get('rejected_patterns', [])
+                if rejected_patterns:
+                    # Comparar características visuais e fundamentais com padrões rejeitados
+                    for rejected_pattern in rejected_patterns[-50:]:  # Verificar apenas os 50 mais recentes para performance
+                        rejected_visual = rejected_pattern.get('visual_features', {})
+                        rejected_chars = rejected_pattern.get('characteristics', {})
+                        
+                        # Comparar características principais
+                        similarity_score = 0.0
+                        matches = 0
+                        total = 0
+                        
+                        # Comparar características fundamentais
+                        for key in ['has_wings', 'has_beak', 'has_feathers', 'has_eyes', 'has_claws']:
+                            if key in characteristics and key in rejected_chars:
+                                total += 1
+                                if characteristics[key] == rejected_chars[key]:
+                                    matches += 1
+                        
+                        if total > 0:
+                            similarity_score = matches / total
+                            
+                            # Se similaridade > 70%, é provavelmente um padrão rejeitado
+                            if similarity_score > 0.7:
+                                logger.info(f"[LOGICAL_REASONING] Padrão similar a rejeição detectado (similaridade: {similarity_score:.2f})")
+                                tier_info = self._calculate_confidence_tier(
+                                    0.0, 0, False, {}, True
+                                )
+                                reasoning['is_bird'] = False
+                                reasoning['confidence'] = tier_info['confidence']
+                                reasoning['confidence_tier'] = tier_info['tier']
+                                reasoning['confidence_tier_explanation'] = tier_info['explanation']
+                                reasoning['species'] = 'Não é um pássaro'
+                                reasoning['reasoning_steps'].append(f"[REJEIÇÃO APRENDIDA] Padrão similar a imagem rejeitada anteriormente")
+                                reasoning['intuition_level'] = tier_info['tier']
+                                return reasoning
         
         # ============================================================================
         # PRIORIDADE MÁXIMA: VERIFICAR RESULTADOS DO YOLO - FASE 1.6.3
@@ -2483,9 +3082,20 @@ class IntuitionEngine:
         bird_confidence_avg = characteristics.get('bird_confidence_avg', 0.0)
         
         if yolo_detection and bird_confidence_avg > 0.5:
+                # YOLO detectou pássaro - usar tier de confiança
+                visual_scores = {
+                    'bird_shape_score': visual_analysis.get('bird_shape_score', 0),
+                    'bird_color_score': visual_analysis.get('bird_color_score', 0),
+                    'bird_like_features': visual_analysis.get('bird_like_features', 0)
+                }
+                tier_info = self._calculate_confidence_tier(
+                    bird_confidence_avg, 3, True, visual_scores, False
+                )
             reasoning['is_bird'] = True
-            reasoning['confidence'] = bird_confidence_avg
-            reasoning['intuition_level'] = 'Alta'
+                reasoning['confidence'] = tier_info['confidence']
+                reasoning['confidence_tier'] = tier_info['tier']
+                reasoning['confidence_tier_explanation'] = tier_info['explanation']
+                reasoning['intuition_level'] = tier_info['tier']
             reasoning['species'] = 'Pássaro de espécie desconhecida'
             reasoning['reasoning_steps'].append(f"[YOLO] Pássaro detectado com confiança {bird_confidence_avg:.2f}")
             logger.info(f"[LOGICAL_REASONING] YOLO detectou pássaro - ACEITO com confiança {bird_confidence_avg:.2f}")
@@ -2502,10 +3112,37 @@ class IntuitionEngine:
         has_eyes = characteristics.get('has_eyes', False)
         has_claws = characteristics.get('has_claws', False)
         
+            # MELHORIA 4: Obter thresholds do modo de operação (tem prioridade)
+            mode_thresholds = None
+            if hasattr(self, 'system_mode_manager') and self.system_mode_manager:
+                mode_thresholds = self.system_mode_manager.get_thresholds()
+            
+            # MELHORIA 3: Obter thresholds adaptativos (fallback)
+            adaptive_thresholds = None
+            if hasattr(self, 'adaptive_learning_system') and self.adaptive_learning_system:
+                adaptive_thresholds = self.adaptive_learning_system.get_thresholds()
+            
         bird_shape_score = visual_analysis.get('bird_shape_score', 0)
         bird_color_score = visual_analysis.get('bird_color_score', 0)
         bird_like_features = visual_analysis.get('bird_like_features', 0)
         
+            # Aplicar thresholds (modo de operação tem prioridade sobre adaptativo)
+            if mode_thresholds:
+                # Usar thresholds do modo de operação
+                bird_like_threshold = mode_thresholds.get('bird_like_features', 0.35)
+                shape_threshold = mode_thresholds.get('bird_shape_score', 0.25)
+                color_threshold = mode_thresholds.get('bird_color_score', 0.25)
+            elif adaptive_thresholds:
+                # Usar thresholds adaptativos como fallback
+                bird_like_threshold = adaptive_thresholds.get('bird_like_features', 0.4)
+                shape_threshold = adaptive_thresholds.get('bird_shape_score', 0.3)
+                color_threshold = adaptive_thresholds.get('bird_color_score', 0.3)
+            else:
+                # Thresholds padrão
+                bird_like_threshold = 0.4
+                shape_threshold = 0.3
+                color_threshold = 0.3
+            
         # Detectar características de mamíferos
         has_mammal_features = characteristics.get('has_mammal_features', False)
         has_mammal_body = characteristics.get('has_mammal_body', False)
@@ -2523,86 +3160,160 @@ class IntuitionEngine:
         if has_claws: reasoning['characteristics_found'].append('garras')
         
         # LÓGICA SIMPLIFICADA E EFICAZ - PRIORIZANDO PÁSSAROS
+            # Preparar dados para cálculo de tier de confiança
+            has_fundamental_features = bird_count >= 2
+            has_non_bird_features = has_mammal_features or has_fur_texture or has_mammal_body
+            visual_scores = {
+                'bird_shape_score': bird_shape_score,
+                'bird_color_score': bird_color_score,
+                'bird_like_features': bird_like_features
+            }
         
         # 1. PRIMEIRO: Verificar características definitivas de pássaro (PRIORIDADE MÁXIMA)
         if bird_count >= 3:
+                confidence = 0.9
+                tier_info = self._calculate_confidence_tier(
+                    confidence, bird_count, True, visual_scores, has_non_bird_features
+                )
             reasoning['is_bird'] = True
-            reasoning['confidence'] = 0.9
-            reasoning['intuition_level'] = 'Alta'
+                reasoning['confidence'] = tier_info['confidence']
+                reasoning['confidence_tier'] = tier_info['tier']
+                reasoning['confidence_tier_explanation'] = tier_info['explanation']
+                reasoning['intuition_level'] = tier_info['tier']
             reasoning['reasoning_steps'].append(f"[SUCESSO] {bird_count} características definitivas de pássaro detectadas")
             
-        # 2. SEGUNDO: Verificar características moderadas + análise visual
-        elif bird_count >= 2 and bird_like_features > 0.4:
+            # 2. SEGUNDO: Verificar características moderadas + análise visual (usando thresholds adaptativos)
+            elif bird_count >= 2 and bird_like_features > bird_like_threshold:
+                confidence = 0.8
+                tier_info = self._calculate_confidence_tier(
+                    confidence, bird_count, True, visual_scores, has_non_bird_features
+                )
             reasoning['is_bird'] = True
-            reasoning['confidence'] = 0.8
-            reasoning['intuition_level'] = 'Alta'
+                reasoning['confidence'] = tier_info['confidence']
+                reasoning['confidence_tier'] = tier_info['tier']
+                reasoning['confidence_tier_explanation'] = tier_info['explanation']
+                reasoning['intuition_level'] = tier_info['tier']
             reasoning['reasoning_steps'].append(f"[SUCESSO] {bird_count} características + análise visual positiva")
             
-        # 3. TERCEIRO: Verificar características básicas + forma/cores adequadas
-        elif bird_count >= 1 and (bird_shape_score > 0.4 or bird_color_score > 0.4):
+            # 3. TERCEIRO: Verificar características básicas + forma/cores adequadas (usando thresholds adaptativos)
+            elif bird_count >= 1 and (bird_shape_score > shape_threshold or bird_color_score > color_threshold):
+                confidence = 0.7
+                tier_info = self._calculate_confidence_tier(
+                    confidence, bird_count, bird_count >= 1, visual_scores, has_non_bird_features
+                )
             reasoning['is_bird'] = True
-            reasoning['confidence'] = 0.7
-            reasoning['intuition_level'] = 'Média'
+                reasoning['confidence'] = tier_info['confidence']
+                reasoning['confidence_tier'] = tier_info['tier']
+                reasoning['confidence_tier_explanation'] = tier_info['explanation']
+                reasoning['intuition_level'] = tier_info['tier']
             reasoning['reasoning_steps'].append("[SUCESSO] Características básicas + forma/cores adequadas")
             
-        # 4. QUARTO: Verificar análise visual muito positiva
-        elif bird_like_features > 0.5 and (has_eyes or has_wings):
+            # 4. QUARTO: Verificar análise visual muito positiva (usando thresholds adaptativos)
+            elif bird_like_features > (bird_like_threshold + 0.1) and (has_eyes or has_wings):
+                confidence = 0.6
+                tier_info = self._calculate_confidence_tier(
+                    confidence, bird_count, bird_count >= 1, visual_scores, has_non_bird_features
+                )
             reasoning['is_bird'] = True
-            reasoning['confidence'] = 0.6
-            reasoning['intuition_level'] = 'Média'
+                reasoning['confidence'] = tier_info['confidence']
+                reasoning['confidence_tier'] = tier_info['tier']
+                reasoning['confidence_tier_explanation'] = tier_info['explanation']
+                reasoning['intuition_level'] = tier_info['tier']
             reasoning['reasoning_steps'].append("[SUCESSO] Análise visual muito positiva")
             
-        # 5. QUINTO: Verificar análise visual moderada
-        elif bird_like_features > 0.4 and (bird_shape_score > 0.3 or bird_color_score > 0.3):
+            # 5. QUINTO: Verificar análise visual moderada (usando thresholds adaptativos)
+            elif bird_like_features > bird_like_threshold and (bird_shape_score > shape_threshold or bird_color_score > color_threshold):
+                confidence = 0.5
+                tier_info = self._calculate_confidence_tier(
+                    confidence, bird_count, False, visual_scores, has_non_bird_features
+                )
             reasoning['is_bird'] = True
-            reasoning['confidence'] = 0.5
-            reasoning['intuition_level'] = 'Média'
+                reasoning['confidence'] = tier_info['confidence']
+                reasoning['confidence_tier'] = tier_info['tier']
+                reasoning['confidence_tier_explanation'] = tier_info['explanation']
+                reasoning['intuition_level'] = tier_info['tier']
             reasoning['reasoning_steps'].append("[SUCESSO] Análise visual moderada")
             
         # 5.5. QUINTO E MEIO: Casos com forma perfeita de pássaro (prioridade máxima)
         elif bird_shape_score >= 1.0 and bird_color_score > 0.2:
+                confidence = 0.5
+                tier_info = self._calculate_confidence_tier(
+                    confidence, bird_count, False, visual_scores, has_non_bird_features
+                )
             reasoning['is_bird'] = True
-            reasoning['confidence'] = 0.5
-            reasoning['intuition_level'] = 'Média'
+                reasoning['confidence'] = tier_info['confidence']
+                reasoning['confidence_tier'] = tier_info['tier']
+                reasoning['confidence_tier_explanation'] = tier_info['explanation']
+                reasoning['intuition_level'] = tier_info['tier']
             reasoning['needs_manual_review'] = True
             reasoning['reasoning_steps'].append("[SUCESSO] Forma perfeita de pássaro detectada")
             
-        # 6. SEXTO: Casos duvidosos - pode ser pássaro (MAIS RIGOROSO)
-        elif bird_count >= 2 and bird_like_features > 0.4:
+            # 6. SEXTO: Casos duvidosos - pode ser pássaro (usando thresholds adaptativos)
+            elif bird_count >= 2 and bird_like_features > bird_like_threshold:
+                confidence = 0.4
+                tier_info = self._calculate_confidence_tier(
+                    confidence, bird_count, True, visual_scores, has_non_bird_features
+                )
             reasoning['is_bird'] = True
-            reasoning['confidence'] = 0.4
-            reasoning['intuition_level'] = 'Baixa'
+                reasoning['confidence'] = tier_info['confidence']
+                reasoning['confidence_tier'] = tier_info['tier']
+                reasoning['confidence_tier_explanation'] = tier_info['explanation']
+                reasoning['intuition_level'] = tier_info['tier']
             reasoning['needs_manual_review'] = True
             reasoning['reasoning_steps'].append("❓ Caso duvidoso - recomenda análise manual")
             
-        # 6.5. SEXTO E MEIO: Casos com 1 característica mas análise visual muito forte
-        elif bird_count >= 1 and bird_like_features > 0.6 and (bird_shape_score > 0.7 or bird_color_score > 0.7):
+            # 6.5. SEXTO E MEIO: Casos com 1 característica mas análise visual muito forte (usando thresholds adaptativos)
+            elif bird_count >= 1 and bird_like_features > (bird_like_threshold + 0.2) and (bird_shape_score > (shape_threshold + 0.4) or bird_color_score > (color_threshold + 0.4)):
+                confidence = 0.4
+                tier_info = self._calculate_confidence_tier(
+                    confidence, bird_count, bird_count >= 1, visual_scores, has_non_bird_features
+                )
             reasoning['is_bird'] = True
-            reasoning['confidence'] = 0.4
-            reasoning['intuition_level'] = 'Baixa'
+                reasoning['confidence'] = tier_info['confidence']
+                reasoning['confidence_tier'] = tier_info['tier']
+                reasoning['confidence_tier_explanation'] = tier_info['explanation']
+                reasoning['intuition_level'] = tier_info['tier']
             reasoning['needs_manual_review'] = True
             reasoning['reasoning_steps'].append("❓ Uma característica + análise visual muito forte")
             
-        # 6.6. SEXTO E MEIO: Casos com análise visual extremamente forte (mesmo sem características específicas)
-        elif bird_shape_score > 0.9 and bird_color_score > 0.2 and bird_like_features > 0.3:
+            # 6.6. SEXTO E MEIO: Casos com análise visual extremamente forte (usando thresholds adaptativos)
+            elif bird_shape_score > 0.9 and bird_color_score > color_threshold and bird_like_features > (bird_like_threshold - 0.1):
+                confidence = 0.4
+                tier_info = self._calculate_confidence_tier(
+                    confidence, bird_count, False, visual_scores, has_non_bird_features
+                )
             reasoning['is_bird'] = True
-            reasoning['confidence'] = 0.4
-            reasoning['intuition_level'] = 'Baixa'
+                reasoning['confidence'] = tier_info['confidence']
+                reasoning['confidence_tier'] = tier_info['tier']
+                reasoning['confidence_tier_explanation'] = tier_info['explanation']
+                reasoning['intuition_level'] = tier_info['tier']
             reasoning['needs_manual_review'] = True
             reasoning['reasoning_steps'].append("❓ Análise visual extremamente forte (forma perfeita)")
             
         # 7. SÉTIMO: Verificar se é definitivamente um mamífero (APENAS SE NÃO FOR PÁSSARO)
         elif has_mammal_features and not (has_wings or has_beak or has_feathers):
+                confidence = 0.9
+                tier_info = self._calculate_confidence_tier(
+                    confidence, 0, False, visual_scores, True
+                )
             reasoning['is_bird'] = False
-            reasoning['confidence'] = 0.9
-            reasoning['intuition_level'] = 'Alta'
+                reasoning['confidence'] = tier_info['confidence']
+                reasoning['confidence_tier'] = tier_info['tier']
+                reasoning['confidence_tier_explanation'] = tier_info['explanation']
+                reasoning['intuition_level'] = tier_info['tier']
             reasoning['reasoning_steps'].append("[ERRO] Detectadas características específicas de mamíferos")
         
         # 8. OITAVO: Provavelmente não é pássaro
         else:
+                confidence = 0.2
+                tier_info = self._calculate_confidence_tier(
+                    confidence, bird_count, False, visual_scores, has_non_bird_features
+                )
             reasoning['is_bird'] = False
-            reasoning['confidence'] = 0.2
-            reasoning['intuition_level'] = 'Baixa'
+                reasoning['confidence'] = tier_info['confidence']
+                reasoning['confidence_tier'] = tier_info['tier']
+                reasoning['confidence_tier_explanation'] = tier_info['explanation']
+                reasoning['intuition_level'] = tier_info['tier']
             reasoning['reasoning_steps'].append("[ERRO] Poucas evidências de características de pássaro")
         
         # Determinar espécie (se for pássaro)
@@ -2633,9 +3344,15 @@ class IntuitionEngine:
             # Se tem cor azul + características de penas + bico, é provavelmente um pássaro
             if (has_blue_color and has_beak and 
                 (has_complex_patterns or has_iridescence or has_feathers)):
+                    confidence = 0.7
+                    tier_info = self._calculate_confidence_tier(
+                        confidence, bird_count + 1, True, visual_scores, has_non_bird_features
+                    )
                 reasoning['is_bird'] = True
-                reasoning['confidence'] = 0.7
-                reasoning['intuition_level'] = 'Média'
+                    reasoning['confidence'] = tier_info['confidence']
+                    reasoning['confidence_tier'] = tier_info['tier']
+                    reasoning['confidence_tier_explanation'] = tier_info['explanation']
+                    reasoning['intuition_level'] = tier_info['tier']
                 reasoning['reasoning_steps'].append("🔵 Pássaro azul detectado por características específicas")
                 logger.info("🔵 PÁSSARO AZUL DETECTADO - Corrigindo falso negativo!")
             else:
@@ -2644,7 +3361,74 @@ class IntuitionEngine:
         # Calcular confiança geral
         reasoning['overall_confidence'] = reasoning['confidence']
         
+            # ============================================================================
+            # NOVO: IDENTIFICAR CASOS DUVIDOSOS - MELHORIA 2
+            # ============================================================================
+            # Identificar casos duvidosos após todas as decisões
+            dubious_info = self._identify_dubious_cases(
+                visual_analysis, characteristics, 
+                reasoning['confidence'], bird_count,
+                bird_like_features, bird_shape_score, bird_color_score
+            )
+            
+            # Se é caso duvidoso, atualizar flags
+            if dubious_info['is_dubious']:
+                reasoning['is_dubious_case'] = True
+                reasoning['dubious_reasons'] = dubious_info['reasons']
+                reasoning['dubious_suggestion'] = dubious_info['suggestion']
+                reasoning['needs_manual_review'] = True  # Casos duvidosos sempre precisam revisão
+                
+                # Adicionar razões aos reasoning_steps
+                for reason in dubious_info['reasons']:
+                    reasoning['reasoning_steps'].append(f"[CASO DUVIDOSO] {reason}")
+                
+                logger.info(f"[DUBIOUS_CASE] Caso duvidoso detectado: {len(dubious_info['reasons'])} razão(ões)")
+            
+            # MELHORIA 4: Filtragem por confiança mínima baseada no modo de operação
+            if hasattr(self, 'system_mode_manager') and self.system_mode_manager:
+                min_confidence = self.system_mode_manager.get_min_confidence()
+                current_confidence = reasoning.get('confidence', 0.0)
+                
+                # Verificar se resultado deve ser aceito
+                should_accept = self.system_mode_manager.should_accept_result(
+                    current_confidence, 
+                    reasoning.get('is_bird', False)
+                )
+                
+                if not should_accept:
+                    # Rejeitar resultado com confiança muito baixa
+                    reasoning['is_bird'] = False
+                    reasoning['confidence'] = current_confidence
+                    reasoning['needs_manual_review'] = True
+                    reasoning['reasoning_steps'].append(
+                        f"[MODO] Resultado rejeitado: confiança {current_confidence:.2%} < mínimo {min_confidence:.2%} (modo: {self.system_mode_manager.get_current_mode().value})"
+                    )
+                    logger.info(f"[SYSTEM_MODE] Resultado rejeitado por confiança baixa: {current_confidence:.2%} < {min_confidence:.2%}")
+                
+                # Registrar análise para estatísticas
+                self.system_mode_manager.record_analysis(
+                    is_bird=reasoning.get('is_bird', False),
+                    confidence=current_confidence
+                )
+            
         return reasoning
+        
+        except Exception as e:
+            logger.error(f"[ERRO] Exceção em _logical_reasoning: {e}")
+            import traceback
+            logger.error(f"[ERRO] Traceback: {traceback.format_exc()}")
+            # Retornar dict de erro em vez de None
+            return {
+                'is_bird': False,
+                'confidence': 0.0,
+                'species': 'Erro',
+                'reasoning': f'Erro no raciocínio lógico: {str(e)}',
+                'intuition_level': 'Erro',
+                'needs_manual_review': True,
+                'reasoning_steps': [f'Erro: {str(e)}'],
+                'characteristics_found': [],
+                'error': str(e)
+            }
     
     def _advanced_cognitive_analysis(self, visual_analysis: Dict, characteristics: Dict, reasoning: Dict) -> Dict[str, float]:
         """Análise cognitiva avançada neuro-simbólica"""
@@ -6963,14 +7747,41 @@ class IntuitionEngine:
         return "REGISTRAR_PARA_ANALISE_FUTURA"
     
     def learn_from_feedback(self, image_path: str, human_feedback: Dict[str, Any]):
-        """Aprende com feedback humano (como uma criança)"""
+        """Aprende com feedback humano (como uma criança) - APROVAÇÕES E REJEIÇÕES"""
         try:
             # Extrair características da imagem
             visual_analysis = self._analyze_visual_characteristics(image_path)
             characteristics = self._detect_fundamental_characteristics(image_path)
             
-            # Atualizar conhecimento baseado no feedback
-            if human_feedback.get('is_bird', False):
+            is_bird = human_feedback.get('is_bird', False)
+            
+            # MELHORIA 3: Registrar feedback no sistema adaptativo
+            if hasattr(self, 'adaptive_learning_system') and self.adaptive_learning_system:
+                # Obter predição original (se disponível)
+                predicted_bird = human_feedback.get('original_prediction', is_bird)
+                confidence = human_feedback.get('confidence', 0.8)
+                
+                # Registrar feedback
+                self.adaptive_learning_system.record_feedback(
+                    predicted_bird=predicted_bird,
+                    actual_bird=is_bird,
+                    confidence=confidence
+                )
+            
+            # MELHORIA 3: Registrar métricas de aprendizado
+            if hasattr(self, 'learning_metrics') and self.learning_metrics:
+                predicted_bird = human_feedback.get('original_prediction', is_bird)
+                confidence = human_feedback.get('confidence', 0.8)
+                
+                self.learning_metrics.record_feedback(
+                    is_bird=is_bird,
+                    predicted_bird=predicted_bird,
+                    confidence=confidence,
+                    feedback_type="manual"
+                )
+            
+            # APRENDER COM APROVAÇÕES (is_bird = True)
+            if is_bird:
                 species = human_feedback.get('species', 'unknown')
                 self.learned_patterns['known_species'].add(species)
                 
@@ -6986,10 +7797,44 @@ class IntuitionEngine:
                             'confidence': human_feedback.get('confidence', 0.8)
                         })
                 
-                logger.info(f"[IA] Aprendizado: {species} adicionado ao conhecimento")
+                logger.info(f"[IA] Aprendizado POSITIVO: {species} adicionado ao conhecimento")
+            
+            # APRENDER COM REJEIÇÕES (is_bird = False) - CRÍTICO!
+            else:
+                # Inicializar padrões rejeitados se não existir
+                if 'rejected_patterns' not in self.learned_patterns:
+                    self.learned_patterns['rejected_patterns'] = []
+                
+                # Adicionar padrão rejeitado
+                rejection_pattern = {
+                    'visual_features': visual_analysis,
+                    'characteristics': characteristics,
+                    'reason': human_feedback.get('reasoning', 'Não é um pássaro'),
+                    'confidence': human_feedback.get('confidence', 1.0),
+                    'timestamp': time.strftime('%Y-%m-%dT%H:%M:%S')
+                }
+                
+                self.learned_patterns['rejected_patterns'].append(rejection_pattern)
+                
+                # Manter apenas os últimos 1000 padrões rejeitados para não sobrecarregar memória
+                if len(self.learned_patterns['rejected_patterns']) > 1000:
+                    self.learned_patterns['rejected_patterns'] = self.learned_patterns['rejected_patterns'][-1000:]
+                
+                logger.info(f"[IA] Aprendizado NEGATIVO: Padrão rejeitado adicionado (total: {len(self.learned_patterns['rejected_patterns'])})")
+                
+                # INVALIDAR CACHE para esta imagem específica
+                try:
+                    cache_key = self._generate_cache_key(image_path)
+                    if hasattr(self, 'analysis_cache') and cache_key in self.analysis_cache:
+                        del self.analysis_cache[cache_key]
+                        logger.info(f"[IA] Cache invalidado para imagem rejeitada: {os.path.basename(image_path)}")
+                except Exception as cache_error:
+                    logger.warning(f"[IA] Erro ao invalidar cache: {cache_error}")
             
         except Exception as e:
             logger.error(f"[ERRO] Erro no aprendizado: {e}")
+            import traceback
+            logger.error(f"[ERRO] Traceback completo: {traceback.format_exc()}")
     
     def get_learning_statistics(self) -> Dict[str, Any]:
         """Retorna estatísticas de aprendizado"""

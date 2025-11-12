@@ -34,6 +34,7 @@ from src.core.cache import image_cache
 from src.interfaces.manual_analysis import manual_analysis
 from src.interfaces.tinder_interface_enhanced import TinderInterfaceEnhanced
 from src.interfaces.realtime_logs import render_realtime_logs
+from src.interfaces.dubious_review_interface import DubiousReviewInterface
 from src.utils.debug_logger import DebugLogger
 from src.utils.realtime_logger import log_info, log_error, log_warning, log_success
 from src.utils.terminal_logger import log_info as term_log_info, log_error as term_log_error, log_warning as term_log_warning, log_success as term_log_success, log_debug as term_log_debug
@@ -45,8 +46,8 @@ def main():
     # Log de inicialização APENAS NA PRIMEIRA VEZ
     if 'logged_start' not in st.session_state:
         st.session_state.logged_start = True
-        term_log_info("Iniciando aplicação web Streamlit", "WebApp", "main")
-        frontend_log_info("Iniciando aplicação web Streamlit", "WebApp", "main")
+    term_log_info("Iniciando aplicação web Streamlit", "WebApp", "main")
+    frontend_log_info("Iniciando aplicação web Streamlit", "WebApp", "main")
     
     # REMOVER Bootstrap Icons completamente - usar apenas emojis
     st.markdown("""
@@ -270,7 +271,7 @@ def main():
         st.session_state.systems_initialized = False  # Marcar como iniciando
         
         with st.spinner("🔄 Inicializando sistemas pela primeira vez..."):
-            systems = initialize_systems()
+    systems = initialize_systems()
             
             if systems is not None:
                 st.session_state.systems_initialized = True  # Marcar como completo
@@ -307,6 +308,9 @@ def main():
         st.session_state.tabs_created = True
     
     # Menu principal com tabs - RESTAURADO
+    # Inicializar interface de casos duvidosos
+    dubious_review = DubiousReviewInterface()
+    
     tab_names = [
         '🏠 Início',
         '📸 Análise de Imagem', 
@@ -315,6 +319,7 @@ def main():
         '📚 Aprendizado Contínuo',
         '👥 Análise Manual',
         '💖 Tinder Interface',
+        '🔍 Casos Duvidosos',
         '⚙️ Configurações',
         '📄 Relatórios',
         '📝 Logs em Tempo Real',
@@ -323,7 +328,7 @@ def main():
     
     # Criar tabs UMA VEZ
     tabs = st.tabs(tab_names)
-    inicio_tab, analise_tab, santo_graal_tab, dashboard_tab, aprendizado_tab, manual_tab, tinder_tab, config_tab, relatorios_tab, logs_tab, frontend_logs_tab = tabs
+    inicio_tab, analise_tab, santo_graal_tab, dashboard_tab, aprendizado_tab, manual_tab, tinder_tab, dubious_tab, config_tab, relatorios_tab, logs_tab, frontend_logs_tab = tabs
     
     # TAB 1: INÍCIO - RESTAURADO
     with inicio_tab:
@@ -421,6 +426,14 @@ def main():
                         st.info("🔄 Iniciando análise...")
                         results = intuition_engine.analyze_image_intuition(temp_path)
                         
+                        # Verificar se imagem foi rejeitada anteriormente
+                        if results.get('analysis_type') == 'rejected_by_human':
+                            st.error("🚫 **IMAGEM JÁ FOI REJEITADA ANTERIORMENTE**")
+                            rejection_info = results.get('rejection_info', {})
+                            st.warning(f"**Motivo:** {rejection_info.get('reason', 'Não é um pássaro')}")
+                            st.info(f"**Feedback anterior:** {rejection_info.get('reasoning', 'Imagem rejeitada pelo usuário')}")
+                            st.markdown("---")
+                        
                         # Exibir resultados simples
                         st.markdown("### 📊 Resultados da Análise")
                         
@@ -428,14 +441,40 @@ def main():
                             col1, col2 = st.columns(2)
                             
                             with col1:
-                                st.metric("🎯 Confiança", f"{results.get('confidence', 0):.2%}")
-                                st.metric("🐦 Espécie", results.get('species', 'Desconhecida'))
+                                confidence = results.get('confidence', 0)
+                                species = results.get('species', 'Desconhecida')
+                                
+                                # Obter tier de confiança
+                                intuition_data = results.get('intuition_analysis', {})
+                                logical_reasoning = intuition_data.get('logical_reasoning', {})
+                                confidence_tier = logical_reasoning.get('confidence_tier', 'Muito Baixa')
+                                confidence_tier_explanation = logical_reasoning.get('confidence_tier_explanation', '')
+                                
+                                # Cores para tiers de confiança
+                                tier_colors = {
+                                    'Alta': '🟢',
+                                    'Média': '🟡',
+                                    'Baixa': '🟠',
+                                    'Muito Baixa': '🔴'
+                                }
+                                tier_icon = tier_colors.get(confidence_tier, '⚪')
+                                
+                                # Se foi rejeitada, destacar visualmente
+                                if results.get('analysis_type') == 'rejected_by_human':
+                                    st.metric("🎯 Confiança", f"{confidence:.2%}", delta="REJEITADA", delta_color="off")
+                                    st.metric("🐦 Espécie", species, delta="Não é pássaro", delta_color="off")
+                                else:
+                                    st.metric("🎯 Confiança", f"{confidence:.2%}")
+                                    st.metric("🐦 Espécie", species)
+                                
+                                # Exibir tier de confiança
+                                st.metric(f"{tier_icon} Nível de Confiança", confidence_tier)
+                                if confidence_tier_explanation:
+                                    st.caption(confidence_tier_explanation)
                             
                             with col2:
                                 st.metric("🎨 Cor", results.get('color', 'Desconhecida'))
                                 # Intuição da IA baseada na análise neuro-simbólica
-                                intuition_data = results.get('intuition_analysis', {})
-                                logical_reasoning = intuition_data.get('logical_reasoning', {})
                                 intuition_level = logical_reasoning.get('intuition_level', 'Baixa')
                                 is_bird = logical_reasoning.get('is_bird', False)
                                 
@@ -457,14 +496,23 @@ def main():
                                 is_bird = logical_reasoning.get('is_bird', False)
                                 confidence = logical_reasoning.get('confidence', 0)
                                 needs_review = logical_reasoning.get('needs_manual_review', False)
+                                is_dubious = logical_reasoning.get('is_dubious_case', False)
+                                dubious_reasons = logical_reasoning.get('dubious_reasons', [])
                                 
                                 if is_bird:
                                     st.success(f"✅ **É um pássaro!** (Confiança: {confidence:.1%})")
                                 else:
                                     st.error(f"❌ **Não é um pássaro** (Confiança: {confidence:.1%})")
                                 
-                                if needs_review:
-                                    st.warning("⚠️ **Recomenda análise manual** - Caso duvidoso")
+                                # Exibir informações de caso duvidoso
+                                if is_dubious:
+                                    st.warning("⚠️ **CASO DUVIDOSO DETECTADO** - Requer revisão manual")
+                                    if dubious_reasons:
+                                        with st.expander("📋 Ver razões de dúvida"):
+                                            for reason in dubious_reasons:
+                                                st.write(f"• {reason}")
+                                elif needs_review:
+                                    st.warning("⚠️ **Recomenda análise manual**")
                                 
                                 # Características detectadas
                                 characteristics_found = logical_reasoning.get('characteristics_found', [])
@@ -656,7 +704,236 @@ def main():
     with dashboard_tab:
         st.header("📊 Dashboard")
         
-        # Gráficos de performance
+        # MELHORIA 3: Seção de Aprendizado Adaptativo
+        st.subheader("🎯 Sistema de Aprendizado Adaptativo")
+        
+        # Obter instância do IntuitionEngine
+        intuition_engine = None
+        if hasattr(st.session_state, 'intuition_engine'):
+            intuition_engine = st.session_state.intuition_engine
+        elif hasattr(manual_analysis, 'intuition_engine'):
+            intuition_engine = manual_analysis.intuition_engine
+        
+        if intuition_engine and hasattr(intuition_engine, 'adaptive_learning_system') and intuition_engine.adaptive_learning_system:
+            adaptive_system = intuition_engine.adaptive_learning_system
+            stats = adaptive_system.get_statistics()
+            mode = adaptive_system.get_learning_mode()
+            thresholds = adaptive_system.get_thresholds()
+            
+            # Exibir modo atual
+            mode_colors = {
+                'initial': '🟢',
+                'intermediate': '🟡',
+                'experienced': '🔵'
+            }
+            mode_names = {
+                'initial': 'Inicial (Permissivo)',
+                'intermediate': 'Intermediário (Balanceado)',
+                'experienced': 'Experiente (Rigoroso)'
+            }
+            
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                mode_icon = mode_colors.get(mode.value, '⚪')
+                st.metric("🎯 Modo de Aprendizado", f"{mode_icon} {mode_names.get(mode.value, mode.value)}")
+            
+            with col2:
+                st.metric("📊 Total de Feedback", stats['total_feedback'])
+            
+            with col3:
+                st.metric("✅ Precisão Atual", f"{stats['accuracy']:.1%}")
+            
+            with col4:
+                fp_rate = stats['false_positive_rate']
+                fn_rate = stats['false_negative_rate']
+                st.metric("⚠️ Taxa de Erro", f"FP: {fp_rate:.1%}, FN: {fn_rate:.1%}")
+            
+            # Thresholds adaptativos
+            st.markdown("---")
+            st.subheader("⚙️ Thresholds Adaptativos")
+            
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                st.metric("🐦 Bird-like Features", f"{thresholds['bird_like_features']:.3f}")
+            
+            with col2:
+                st.metric("📐 Bird Shape Score", f"{thresholds['bird_shape_score']:.3f}")
+            
+            with col3:
+                st.metric("🎨 Bird Color Score", f"{thresholds['bird_color_score']:.3f}")
+            
+            with col4:
+                st.metric("🎯 Confidence Min", f"{thresholds['confidence_min']:.3f}")
+            
+            # Estatísticas detalhadas
+            st.markdown("---")
+            st.subheader("📈 Estatísticas Detalhadas")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.write("**Correções Realizadas:**")
+                st.write(f"  • Falsos Positivos Corrigidos: {stats['false_positives_corrected']}")
+                st.write(f"  • Falsos Negativos Corrigidos: {stats['false_negatives_corrected']}")
+            
+            with col2:
+                st.write("**Taxas de Erro:**")
+                st.write(f"  • Taxa de Falsos Positivos: {stats['false_positive_rate']:.2%}")
+                st.write(f"  • Taxa de Falsos Negativos: {stats['false_negative_rate']:.2%}")
+            
+            # Métricas de aprendizado (se disponível)
+            if hasattr(intuition_engine, 'learning_metrics') and intuition_engine.learning_metrics:
+                st.markdown("---")
+                st.subheader("📊 Métricas de Aprendizado")
+                
+                metrics_summary = intuition_engine.learning_metrics.get_metrics_summary(days=7)
+                
+                col1, col2, col3, col4 = st.columns(4)
+                
+                with col1:
+                    st.metric("📈 Precision", f"{metrics_summary['precision']:.1%}")
+                
+                with col2:
+                    st.metric("📈 Recall", f"{metrics_summary['recall']:.1%}")
+                
+                with col3:
+                    st.metric("📈 F1 Score", f"{metrics_summary['f1_score']:.1%}")
+                
+                with col4:
+                    st.metric("📊 Total Feedback", metrics_summary['total_feedback'])
+                
+                # Detalhes adicionais
+                with st.expander("📋 Detalhes das Métricas"):
+                    st.write(f"**Verdadeiros Positivos:** {metrics_summary['true_positives']}")
+                    st.write(f"**Verdadeiros Negativos:** {metrics_summary['true_negatives']}")
+                    st.write(f"**Falsos Positivos:** {metrics_summary['false_positives']}")
+                    st.write(f"**Falsos Negativos:** {metrics_summary['false_negatives']}")
+        else:
+            st.info("ℹ️ Sistema de aprendizado adaptativo não disponível no momento.")
+        
+        # MELHORIA 4: Seção de Modo de Operação
+        st.markdown("---")
+        st.subheader("⚙️ Modo de Operação do Sistema")
+        
+        # Obter instância do IntuitionEngine
+        intuition_engine = None
+        if hasattr(st.session_state, 'intuition_engine'):
+            intuition_engine = st.session_state.intuition_engine
+        elif hasattr(manual_analysis, 'intuition_engine'):
+            intuition_engine = manual_analysis.intuition_engine
+        
+        if intuition_engine and hasattr(intuition_engine, 'system_mode_manager') and intuition_engine.system_mode_manager:
+            mode_manager = intuition_engine.system_mode_manager
+            current_mode = mode_manager.get_current_mode()
+            thresholds = mode_manager.get_thresholds()
+            stats = mode_manager.get_statistics()
+            all_stats = mode_manager.get_all_statistics()
+            
+            # Seleção de modo
+            col1, col2 = st.columns([2, 1])
+            
+            with col1:
+                mode_options = {
+                    'research': '🔬 Pesquisa (Permissivo)',
+                    'production': '🏭 Produção (Rigoroso)',
+                    'balanced': '⚖️ Balanceado (Padrão)'
+                }
+                
+                selected_mode_str = st.selectbox(
+                    "🎯 Selecione o Modo de Operação:",
+                    options=['research', 'production', 'balanced'],
+                    index=['research', 'production', 'balanced'].index(current_mode.value),
+                    format_func=lambda x: mode_options[x],
+                    key="system_mode_selector"
+                )
+                
+                if selected_mode_str != current_mode.value:
+                    from src.core.system_mode import SystemMode
+                    new_mode = SystemMode(selected_mode_str)
+                    mode_manager.set_mode(new_mode)
+                    st.success(f"✅ Modo alterado para: {mode_options[selected_mode_str]}")
+                    st.rerun()
+            
+            with col2:
+                mode_icons = {
+                    'research': '🔬',
+                    'production': '🏭',
+                    'balanced': '⚖️'
+                }
+                st.metric(
+                    "Modo Atual",
+                    f"{mode_icons.get(current_mode.value, '⚙️')} {mode_options.get(current_mode.value, current_mode.value).split(' ')[1]}"
+                )
+            
+            # Thresholds do modo atual
+            st.markdown("---")
+            st.subheader("📊 Thresholds do Modo Atual")
+            
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                st.metric("🐦 Bird-like Features", f"{thresholds['bird_like_features']:.3f}")
+            
+            with col2:
+                st.metric("📐 Bird Shape Score", f"{thresholds['bird_shape_score']:.3f}")
+            
+            with col3:
+                st.metric("🎨 Bird Color Score", f"{thresholds['bird_color_score']:.3f}")
+            
+            with col4:
+                st.metric("🎯 Confiança Mínima", f"{thresholds['min_confidence']:.3f}")
+            
+            # Estatísticas do modo atual
+            st.markdown("---")
+            st.subheader("📈 Estatísticas do Modo Atual")
+            
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                st.metric("📊 Total de Análises", stats['total_analyses'])
+            
+            with col2:
+                st.metric("🐦 Pássaros Detectados", stats['birds_detected'])
+            
+            with col3:
+                st.metric("✅ Taxa de Detecção", f"{stats['detection_rate']:.1%}")
+            
+            with col4:
+                st.metric("🎯 Precisão", f"{stats['accuracy']:.1%}")
+            
+            # Estatísticas de todos os modos
+            st.markdown("---")
+            st.subheader("📊 Comparação de Modos")
+            
+            comparison_data = {
+                'Modo': [],
+                'Total Análises': [],
+                'Pássaros Detectados': [],
+                'Taxa Detecção': [],
+                'Precisão': [],
+                'Falsos Positivos': [],
+                'Falsos Negativos': []
+            }
+            
+            for mode_key, mode_stats in all_stats.items():
+                comparison_data['Modo'].append(mode_options.get(mode_key, mode_key))
+                comparison_data['Total Análises'].append(mode_stats['total_analyses'])
+                comparison_data['Pássaros Detectados'].append(mode_stats['birds_detected'])
+                comparison_data['Taxa Detecção'].append(f"{mode_stats['detection_rate']:.1%}")
+                comparison_data['Precisão'].append(f"{mode_stats['accuracy']:.1%}")
+                comparison_data['Falsos Positivos'].append(mode_stats['false_positives'])
+                comparison_data['Falsos Negativos'].append(mode_stats['false_negatives'])
+            
+            import pandas as pd
+            comparison_df = pd.DataFrame(comparison_data)
+            st.dataframe(comparison_df, use_container_width=True)
+        else:
+            st.info("ℹ️ Sistema de modo de operação não disponível no momento.")
+        
+        # Dashboard original (mantido)
+        st.markdown("---")
         st.subheader("📈 Performance do Sistema")
         
         # Dados de exemplo
@@ -733,7 +1010,7 @@ def main():
         with st.expander("🔍 Debug Detalhado"):
             st.write(f"**Pasta pending:** `data/manual_analysis/pending/`")
             st.write(f"**Existe pasta:** {os.path.exists('data/manual_analysis/pending')}")
-        
+            
         # TEMPORARIAMENTE DESABILITADO
         if False and pending_images:
             st.success(f"📁 {len(pending_images)} imagens pendentes de análise")
@@ -765,37 +1042,37 @@ def main():
                 
                 with col1:
                     # Formulário de aprovação - FORA do button para evitar loops
-                    species = st.text_input("🐦 Espécie identificada:", value="generic_bird", key="species_input")
-                    confidence = st.slider("🎯 Confiança:", 0.0, 1.0, 0.8, key="confidence_input")
-                    notes = st.text_area("📝 Notas:", key="notes_input")
-                    
+                            species = st.text_input("🐦 Espécie identificada:", value="generic_bird", key="species_input")
+                            confidence = st.slider("🎯 Confiança:", 0.0, 1.0, 0.8, key="confidence_input")
+                            notes = st.text_area("📝 Notas:", key="notes_input")
+                            
                     if st.button("✅ Confirmar Aprovação", type="primary", key="confirm_approve_btn"):
                         try:
-                            approved_path = manual_analysis.approve_image(
-                                filename, species, confidence, notes,
-                                "Aprovação manual via interface web",
-                                ["uploaded_by_user"],
-                                "Análise manual realizada pelo usuário"
-                            )
-                            st.success("✅ Imagem aprovada!")
-                            st.rerun()
+                                approved_path = manual_analysis.approve_image(
+                                    filename, species, confidence, notes,
+                                    "Aprovação manual via interface web",
+                                    ["uploaded_by_user"],
+                                    "Análise manual realizada pelo usuário"
+                                )
+                                st.success("✅ Imagem aprovada!")
+                                st.rerun()
                         except Exception as e:
                             st.error(f"❌ Erro ao aprovar: {e}")
                 
                 with col2:
                     # Formulário de rejeição - FORA do button para evitar loops
-                    reason = st.text_input("❌ Motivo da rejeição:", key="reject_reason_input")
-                    
+                            reason = st.text_input("❌ Motivo da rejeição:", key="reject_reason_input")
+                            
                     if st.button("❌ Confirmar Rejeição", type="secondary", key="confirm_reject_btn"):
                         try:
-                            rejected_path = manual_analysis.reject_image(
-                                filename, reason,
-                                "Rejeição manual via interface web",
-                                ["uploaded_by_user"],
-                                "Análise manual realizada pelo usuário"
-                            )
-                            st.warning("⚠️ Imagem rejeitada!")
-                            st.rerun()
+                                rejected_path = manual_analysis.reject_image(
+                                    filename, reason,
+                                    "Rejeição manual via interface web",
+                                    ["uploaded_by_user"],
+                                    "Análise manual realizada pelo usuário"
+                                )
+                                st.warning("⚠️ Imagem rejeitada!")
+                                st.rerun()
                         except Exception as e:
                             st.error(f"❌ Erro ao rejeitar: {e}")
                 
@@ -857,7 +1134,11 @@ def main():
                 st.error("❌ Erro: Tinder Interface não encontrada no session_state")
                 st.session_state.tinder_initialized = False
     
-    # TAB 8: CONFIGURAÇÕES
+    # TAB 8: CASOS DUVIDOSOS
+    with dubious_tab:
+        dubious_review.render_review_interface()
+    
+    # TAB 9: CONFIGURAÇÕES
     with config_tab:
         st.header("⚙️ Configurações")
         

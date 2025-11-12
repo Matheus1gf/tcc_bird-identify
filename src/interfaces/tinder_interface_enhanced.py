@@ -7,11 +7,14 @@ Sistema de aprendizado contínuo baseado em feedback humano
 import streamlit as st
 import os
 import json
+import logging
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 from PIL import Image
 import cv2
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 class TinderInterfaceEnhanced:
     """Interface Tinder melhorada para análise manual de pássaros"""
@@ -399,26 +402,105 @@ class TinderInterfaceEnhanced:
             st.error(f"Erro ao renderizar imagem: {e}")
     
     def _get_ai_analysis(self, image_path: str) -> Optional[Dict[str, Any]]:
-        """Obtém análise da IA para a imagem"""
+        """Obtém análise da IA para a imagem - ANÁLISE REAL"""
         try:
-            # Simular análise da IA (substituir por análise real)
-            return {
-                'confidence': 0.75,
-                'species': 'Pássaro de espécie desconhecida',
-                'color': 'brown',
-                'characteristics': ['has_eyes', 'has_feathers', 'bird_body_shape'],
-                'reasoning': 'Detectadas características visuais interessantes'
+            # OBTER INTUITION ENGINE REAL
+            intuition_engine = None
+            
+            # Tentar obter do manual_analysis
+            if hasattr(self.manual_analysis, 'intuition_engine'):
+                intuition_engine = self.manual_analysis.intuition_engine
+            # Tentar obter do session_state
+            elif hasattr(st.session_state, 'intuition_engine'):
+                intuition_engine = st.session_state.intuition_engine
+            # Tentar criar nova instância se não existir
+            else:
+                try:
+                    from src.core.intuition import IntuitionEngine
+                    from src.utils.debug_logger import DebugLogger
+                    debug_logger = DebugLogger()
+                    intuition_engine = IntuitionEngine(
+                        'yolov8n.pt', 
+                        'data/models/modelo_classificacao_passaros.keras', 
+                        debug_logger
+                    )
+                    # Salvar para reutilizar
+                    st.session_state.intuition_engine = intuition_engine
+                except Exception as e:
+                    logger.error(f"Erro ao criar IntuitionEngine: {e}")
+                    return None
+            
+            if not intuition_engine:
+                st.error("❌ Não foi possível obter o motor de análise da IA")
+                return None
+            
+            # EXECUTAR ANÁLISE REAL
+            logger.info(f"[TINDER] Executando análise real para: {os.path.basename(image_path)}")
+            results = intuition_engine.analyze_image_intuition(image_path)
+            
+            if not results:
+                return None
+            
+            # Extrair dados para exibição
+            confidence = results.get('confidence', 0.0)
+            species = results.get('species', 'Desconhecida')
+            
+            # Extrair dados de intuição
+            intuition_data = results.get('intuition_analysis', {})
+            logical_reasoning = intuition_data.get('logical_reasoning', {})
+            is_bird = logical_reasoning.get('is_bird', False)
+            
+            # Extrair características
+            characteristics = []
+            characteristics_found = logical_reasoning.get('characteristics_found', [])
+            if characteristics_found:
+                characteristics.extend(characteristics_found)
+            
+            # Construir estrutura de retorno compatível
+            analysis = {
+                'confidence': confidence,
+                'species': species,
+                'color': results.get('color', 'unknown'),
+                'characteristics': characteristics if characteristics else ['has_eyes', 'has_wings'],
+                'reasoning': logical_reasoning.get('reasoning', 'Análise realizada'),
+                'is_bird': is_bird,
+                'full_results': results  # Manter resultados completos para uso posterior
             }
+            
+            logger.info(f"[TINDER] Análise concluída: is_bird={is_bird}, confidence={confidence:.2%}")
+            return analysis
+            
         except Exception as e:
-            st.error(f"Erro na análise da IA: {e}")
+            logger.error(f"Erro na análise da IA: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            st.error(f"❌ Erro ao analisar imagem: {e}")
             return None
     
     def _render_ai_analysis(self, analysis: Dict[str, Any]):
         """Renderiza análise da IA"""
+        # Obter tier de confiança dos resultados completos
+        full_results = analysis.get('full_results', {})
+        intuition_data = full_results.get('intuition_analysis', {})
+        logical_reasoning = intuition_data.get('logical_reasoning', {})
+        confidence_tier = logical_reasoning.get('confidence_tier', 'Muito Baixa')
+        confidence_tier_explanation = logical_reasoning.get('confidence_tier_explanation', '')
+        
+        # Cores para tiers de confiança
+        tier_colors = {
+            'Alta': '🟢',
+            'Média': '🟡',
+            'Baixa': '🟠',
+            'Muito Baixa': '🔴'
+        }
+        tier_icon = tier_colors.get(confidence_tier, '⚪')
+        
         st.markdown(f"""
         <div class="analysis-info">
             <h4>🤖 Análise da IA</h4>
             <p><strong>Confiança:</strong> {analysis['confidence']:.1%}</p>
+            <p><strong>{tier_icon} Nível de Confiança:</strong> {confidence_tier}</p>
+            {f'<p style="font-size: 0.9em; color: #666;"><em>{confidence_tier_explanation}</em></p>' if confidence_tier_explanation else ''}
             <p><strong>Espécie:</strong> {analysis['species']}</p>
             <p><strong>Cor:</strong> {analysis['color']}</p>
             <p><strong>Raciocínio:</strong> {analysis['reasoning']}</p>
@@ -459,36 +541,147 @@ class TinderInterfaceEnhanced:
             import shutil
             shutil.copy2(image_path, new_path)
             
+            # Converter tipos NumPy, Enums, dataclasses e outros para tipos Python nativos para serialização JSON
+            def convert_to_native(obj):
+                """Converte tipos NumPy, Enums, dataclasses e outros para tipos Python nativos"""
+                import numpy as np
+                from enum import Enum
+                from dataclasses import is_dataclass, asdict
+                
+                # Tipos NumPy
+                if isinstance(obj, np.integer):
+                    return int(obj)
+                elif isinstance(obj, np.floating):
+                    return float(obj)
+                elif isinstance(obj, np.bool_):
+                    return bool(obj)
+                elif isinstance(obj, np.ndarray):
+                    return obj.tolist()
+                
+                # Enums
+                elif isinstance(obj, Enum):
+                    return obj.value
+                
+                # Dataclasses
+                elif is_dataclass(obj):
+                    return convert_to_native(asdict(obj))
+                
+                # Objetos com __dict__ (classes customizadas)
+                elif hasattr(obj, '__dict__') and not isinstance(obj, (str, int, float, bool, type(None))):
+                    return convert_to_native(obj.__dict__)
+                
+                # Dicionários
+                elif isinstance(obj, dict):
+                    return {key: convert_to_native(value) for key, value in obj.items()}
+                
+                # Listas e tuplas
+                elif isinstance(obj, (list, tuple)):
+                    return [convert_to_native(item) for item in obj]
+                
+                return obj
+            
             # Salvar feedback
+            # MELHORIA 3: Incluir predição original para aprendizado adaptativo
+            original_prediction = analysis.get('is_bird', False)
             feedback_data = {
                 'timestamp': datetime.now().isoformat(),
                 'decision': 'rejected',
                 'reason': 'Não é um pássaro',
-                'ai_analysis': analysis,
+                'ai_analysis': convert_to_native(analysis),
                 'human_feedback': {
                     'is_bird': False,
                     'confidence': 1.0,
-                    'reasoning': 'Imagem rejeitada pelo usuário'
+                    'reasoning': 'Imagem rejeitada pelo usuário',
+                    'original_prediction': original_prediction  # MELHORIA 3
                 }
             }
             
             feedback_file = os.path.join(rejected_dir, f"{filename}.json")
-            with open(feedback_file, 'w') as f:
-                json.dump(feedback_data, f, indent=2)
+            with open(feedback_file, 'w', encoding='utf-8') as f:
+                json.dump(feedback_data, f, indent=2, ensure_ascii=False)
+            
+            # APRENDIZADO: Chamar learn_from_feedback para a IA aprender
+            try:
+                # Obter instância do IntuitionEngine através do manual_analysis
+                if hasattr(self.manual_analysis, 'intuition_engine'):
+                    self.manual_analysis.intuition_engine.learn_from_feedback(
+                        new_path, 
+                        feedback_data['human_feedback']
+                    )
+                elif hasattr(st.session_state, 'intuition_engine'):
+                    st.session_state.intuition_engine.learn_from_feedback(
+                        new_path,
+                        feedback_data['human_feedback']
+                    )
+            except Exception as learn_error:
+                logger.warning(f"Erro ao aplicar aprendizado (não crítico): {learn_error}")
+            
+            # Atualizar cache de rejeição
+            try:
+                from src.core.cache import image_cache
+                # Adicionar ao cache como rejeição (não como reconhecimento)
+                # O cache precisa saber que esta imagem foi rejeitada
+                image_cache.add_rejection_to_cache(new_path, feedback_data)
+            except Exception as cache_error:
+                logger.warning(f"Erro ao atualizar cache (não crítico): {cache_error}")
+            
+            # INVALIDAR CACHE DE ANÁLISE: Remover cache antigo (incorreto) do IntuitionEngine
+            try:
+                intuition_engine_for_cache = None
+                if hasattr(self.manual_analysis, 'intuition_engine'):
+                    intuition_engine_for_cache = self.manual_analysis.intuition_engine
+                elif hasattr(st.session_state, 'intuition_engine'):
+                    intuition_engine_for_cache = st.session_state.intuition_engine
+                
+                if intuition_engine_for_cache and hasattr(intuition_engine_for_cache, 'analysis_cache'):
+                    # Calcular todas as possíveis chaves de cache para esta imagem
+                    # e remover do cache de análise
+                    cache_keys_to_invalidate = set()
+                    
+                    # Tentar diferentes variações de caminho
+                    possible_paths = [
+                        new_path,
+                        image_path,  # caminho original (antes de mover)
+                        os.path.basename(new_path),
+                        os.path.basename(image_path)
+                    ]
+                    
+                    for path in possible_paths:
+                        try:
+                            cache_key = intuition_engine_for_cache._generate_cache_key(path)
+                            cache_keys_to_invalidate.add(cache_key)
+                        except:
+                            pass
+                    
+                    # Remover do cache de análise
+                    invalidated_count = 0
+                    for key in cache_keys_to_invalidate:
+                        if key in intuition_engine_for_cache.analysis_cache:
+                            del intuition_engine_for_cache.analysis_cache[key]
+                            invalidated_count += 1
+                            logger.info(f"[CACHE] Cache de análise invalidado: {key[:8]}...")
+                    
+                    if invalidated_count > 0:
+                        logger.info(f"[CACHE] {invalidated_count} entrada(s) de cache invalidada(s) após rejeição")
+            except Exception as invalidate_error:
+                logger.warning(f"Erro ao invalidar cache (não crítico): {invalidate_error}")
             
             # Remover da pasta pendente
+            if os.path.exists(image_path):
             os.remove(image_path)
             
             # Limpar imagem atual
             if 'current_tinder_image' in st.session_state:
                 del st.session_state['current_tinder_image']
             
-            st.success("Imagem rejeitada e feedback salvo!")
+            st.success("✅ Imagem rejeitada, feedback salvo e IA atualizada!")
             # FIXED: st.rerun() removido para prevenir loops
             # st.rerun() # Comentado: não necessário após ação bem-sucedida
             
         except Exception as e:
             st.error(f"Erro ao processar rejeição: {e}")
+            import traceback
+            logger.error(f"Erro completo: {traceback.format_exc()}")
     
     def _handle_approval(self, image_path: str, analysis: Dict[str, Any]):
         """Processa aprovação da imagem"""
@@ -504,36 +697,98 @@ class TinderInterfaceEnhanced:
             import shutil
             shutil.copy2(image_path, new_path)
             
+            # Converter tipos NumPy, Enums, dataclasses e outros para tipos Python nativos para serialização JSON
+            def convert_to_native(obj):
+                """Converte tipos NumPy, Enums, dataclasses e outros para tipos Python nativos"""
+                import numpy as np
+                from enum import Enum
+                from dataclasses import is_dataclass, asdict
+                
+                # Tipos NumPy
+                if isinstance(obj, np.integer):
+                    return int(obj)
+                elif isinstance(obj, np.floating):
+                    return float(obj)
+                elif isinstance(obj, np.bool_):
+                    return bool(obj)
+                elif isinstance(obj, np.ndarray):
+                    return obj.tolist()
+                
+                # Enums
+                elif isinstance(obj, Enum):
+                    return obj.value
+                
+                # Dataclasses
+                elif is_dataclass(obj):
+                    return convert_to_native(asdict(obj))
+                
+                # Objetos com __dict__ (classes customizadas)
+                elif hasattr(obj, '__dict__') and not isinstance(obj, (str, int, float, bool, type(None))):
+                    return convert_to_native(obj.__dict__)
+                
+                # Dicionários
+                elif isinstance(obj, dict):
+                    return {key: convert_to_native(value) for key, value in obj.items()}
+                
+                # Listas e tuplas
+                elif isinstance(obj, (list, tuple)):
+                    return [convert_to_native(item) for item in obj]
+                
+                return obj
+            
             # Salvar feedback
+            # MELHORIA 3: Incluir predição original para aprendizado adaptativo
+            original_prediction = analysis.get('is_bird', False)
             feedback_data = {
                 'timestamp': datetime.now().isoformat(),
                 'decision': 'approved',
                 'reason': 'É um pássaro',
-                'ai_analysis': analysis,
+                'ai_analysis': convert_to_native(analysis),
                 'human_feedback': {
                     'is_bird': True,
                     'confidence': 1.0,
-                    'reasoning': 'Imagem aprovada pelo usuário'
+                    'reasoning': 'Imagem aprovada pelo usuário',
+                    'original_prediction': original_prediction,  # MELHORIA 3
+                    'species': analysis.get('species', 'unknown')
                 }
             }
             
             feedback_file = os.path.join(approved_dir, f"{filename}.json")
-            with open(feedback_file, 'w') as f:
-                json.dump(feedback_data, f, indent=2)
+            with open(feedback_file, 'w', encoding='utf-8') as f:
+                json.dump(feedback_data, f, indent=2, ensure_ascii=False)
+            
+            # APRENDIZADO: Chamar learn_from_feedback para a IA aprender
+            try:
+                # Obter instância do IntuitionEngine através do manual_analysis
+                if hasattr(self.manual_analysis, 'intuition_engine'):
+                    self.manual_analysis.intuition_engine.learn_from_feedback(
+                        new_path, 
+                        feedback_data['human_feedback']
+                    )
+                elif hasattr(st.session_state, 'intuition_engine'):
+                    st.session_state.intuition_engine.learn_from_feedback(
+                        new_path,
+                        feedback_data['human_feedback']
+                    )
+            except Exception as learn_error:
+                logger.warning(f"Erro ao aplicar aprendizado (não crítico): {learn_error}")
             
             # Remover da pasta pendente
+            if os.path.exists(image_path):
             os.remove(image_path)
             
             # Limpar imagem atual
             if 'current_tinder_image' in st.session_state:
                 del st.session_state['current_tinder_image']
             
-            st.success("Imagem aprovada e feedback salvo!")
+            st.success("✅ Imagem aprovada, feedback salvo e IA atualizada!")
             # FIXED: st.rerun() removido para prevenir loops
             # st.rerun() # Comentado: não necessário após ação bem-sucedida
             
         except Exception as e:
             st.error(f"Erro ao processar aprovação: {e}")
+            import traceback
+            logger.error(f"Erro completo: {traceback.format_exc()}")
     
     def _handle_learning(self, image_path: str, analysis: Dict[str, Any]):
         """Processa aprendizado da IA"""
@@ -624,20 +879,59 @@ class TinderInterfaceEnhanced:
             learning_dir = "learning_data/human_feedback"
             os.makedirs(learning_dir, exist_ok=True)
             
+            # Converter tipos NumPy, Enums, dataclasses e outros para tipos Python nativos para serialização JSON
+            def convert_to_native(obj):
+                """Converte tipos NumPy, Enums, dataclasses e outros para tipos Python nativos"""
+                import numpy as np
+                from enum import Enum
+                from dataclasses import is_dataclass, asdict
+                
+                # Tipos NumPy
+                if isinstance(obj, np.integer):
+                    return int(obj)
+                elif isinstance(obj, np.floating):
+                    return float(obj)
+                elif isinstance(obj, np.bool_):
+                    return bool(obj)
+                elif isinstance(obj, np.ndarray):
+                    return obj.tolist()
+                
+                # Enums
+                elif isinstance(obj, Enum):
+                    return obj.value
+                
+                # Dataclasses
+                elif is_dataclass(obj):
+                    return convert_to_native(asdict(obj))
+                
+                # Objetos com __dict__ (classes customizadas)
+                elif hasattr(obj, '__dict__') and not isinstance(obj, (str, int, float, bool, type(None))):
+                    return convert_to_native(obj.__dict__)
+                
+                # Dicionários
+                elif isinstance(obj, dict):
+                    return {key: convert_to_native(value) for key, value in obj.items()}
+                
+                # Listas e tuplas
+                elif isinstance(obj, (list, tuple)):
+                    return [convert_to_native(item) for item in obj]
+                
+                return obj
+            
             # Salvar dados de aprendizado
             learning_data = {
                 'timestamp': datetime.now().isoformat(),
                 'image_path': image_path,
-                'ai_analysis': analysis,
-                'human_feedback': feedback,
+                'ai_analysis': convert_to_native(analysis),
+                'human_feedback': convert_to_native(feedback),
                 'learning_type': 'human_feedback'
             }
             
             filename = f"learning_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
             learning_file = os.path.join(learning_dir, filename)
             
-            with open(learning_file, 'w') as f:
-                json.dump(learning_data, f, indent=2)
+            with open(learning_file, 'w', encoding='utf-8') as f:
+                json.dump(learning_data, f, indent=2, ensure_ascii=False)
             
             # Mover imagem para pasta apropriada
             if feedback['is_bird']:
@@ -648,23 +942,62 @@ class TinderInterfaceEnhanced:
             os.makedirs(target_dir, exist_ok=True)
             
             import shutil
-            filename = os.path.basename(image_path)
-            new_path = os.path.join(target_dir, filename)
+            filename_base = os.path.basename(image_path)
+            new_path = os.path.join(target_dir, filename_base)
             shutil.copy2(image_path, new_path)
             
+            # APRENDIZADO: Chamar learn_from_feedback para a IA aprender
+            try:
+                # Obter instância do IntuitionEngine
+                intuition_engine = None
+                if hasattr(self.manual_analysis, 'intuition_engine'):
+                    intuition_engine = self.manual_analysis.intuition_engine
+                elif hasattr(st.session_state, 'intuition_engine'):
+                    intuition_engine = st.session_state.intuition_engine
+                
+                if intuition_engine:
+                    logger.info(f"[TINDER] Aplicando aprendizado via Ensinar IA: is_bird={feedback['is_bird']}")
+                    intuition_engine.learn_from_feedback(
+                        new_path, 
+                        feedback
+                    )
+                    logger.info(f"[TINDER] Aprendizado aplicado com sucesso")
+                else:
+                    logger.warning("[TINDER] IntuitionEngine não disponível para aprendizado")
+            except Exception as learn_error:
+                logger.error(f"Erro ao aplicar aprendizado: {learn_error}")
+                import traceback
+                logger.error(traceback.format_exc())
+            
+            # Atualizar cache se rejeitado
+            if not feedback['is_bird']:
+                try:
+                    from src.core.cache import image_cache
+                    rejection_data = {
+                        'reason': feedback.get('reasoning', 'Não é um pássaro'),
+                        'human_feedback': feedback,
+                        'timestamp': learning_data['timestamp']
+                    }
+                    image_cache.add_rejection_to_cache(new_path, rejection_data)
+                except Exception as cache_error:
+                    logger.warning(f"Erro ao atualizar cache: {cache_error}")
+            
             # Remover da pasta pendente
+            if os.path.exists(image_path):
             os.remove(image_path)
             
             # Limpar imagem atual
             if 'current_tinder_image' in st.session_state:
                 del st.session_state['current_tinder_image']
             
-            st.success("Aprendizado salvo com sucesso!")
+            st.success("✅ Aprendizado salvo e aplicado à IA com sucesso!")
             # FIXED: st.rerun() removido para prevenir loops
             # st.rerun() # Comentado: não necessário após ação bem-sucedida
             
         except Exception as e:
             st.error(f"Erro ao salvar aprendizado: {e}")
+            import traceback
+            logger.error(f"Erro completo: {traceback.format_exc()}")
     
     def _image_to_base64(self, image: Image.Image) -> str:
         """Converte imagem para base64"""
