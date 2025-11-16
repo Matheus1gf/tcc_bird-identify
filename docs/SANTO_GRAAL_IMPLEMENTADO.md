@@ -71,10 +71,10 @@ O sistema implementa **exatamente** o fluxo que você descreveu:
 - ✅ **Processamento em lote com auto-melhoria**
 - ✅ **Interface de linha de comando**
 
-### **6. Sistema de Testes (`test_santo_graal.py`)**
-- ✅ **Testa todos os módulos**
-- ✅ **Verifica funcionamento completo**
-- ✅ **Gera relatórios detalhados**
+- ### **6. Sistema de Testes**
+  - ✅ O fluxo original descrito como `test_santo_graal.py` foi evoluído para a suíte Pytest em `tests/system/` e `tests/functional/`, onde o pipeline de raciocínio e o ciclo de aprendizado são simulados e validados automaticamente (`python -m pytest`).
+  - ✅ **Verifica funcionamento completo**
+  - ✅ **Gera relatórios detalhados**
 
 ## 🎯 **COMO USAR O SISTEMA**
 

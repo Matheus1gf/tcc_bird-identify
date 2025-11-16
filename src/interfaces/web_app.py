@@ -271,7 +271,7 @@ def main():
         st.session_state.systems_initialized = False  # Marcar como iniciando
         
         with st.spinner("🔄 Inicializando sistemas pela primeira vez..."):
-    systems = initialize_systems()
+            systems = initialize_systems()
             
             if systems is not None:
                 st.session_state.systems_initialized = True  # Marcar como completo
@@ -296,6 +296,16 @@ def main():
     reasoning_system = systems['reasoning_system']
     learning_system = systems['learning_system']
     tinder_interface = systems['tinder_interface']
+
+    # Conectar IntuitionEngine ao sistema de análise manual (para aprendizado e cache)
+    if intuition_engine is not None:
+        try:
+            if hasattr(manual_analysis, 'attach_intuition_engine'):
+                manual_analysis.attach_intuition_engine(intuition_engine)
+            else:
+                manual_analysis.intuition_engine = intuition_engine
+        except Exception as link_error:
+            term_log_warning(f"Não foi possível vincular o IntuitionEngine ao manual_analysis: {link_error}", "WebApp", "main")
     
     # Verificar sistemas essenciais
     if intuition_engine is None:
@@ -599,9 +609,13 @@ def main():
             with col1:
                 if st.button("📝 Marcar para Análise Manual", type="primary", key="mark_manual_analysis_btn"):
                     try:
-                        # Salvar imagem para análise manual
+                        # Salvar imagem original (sem re-encode) para análise manual
                         manual_path = f"manual_analysis_{uploaded_file.name}"
-                        image.save(manual_path)
+                        uploaded_file.seek(0)
+                        file_bytes = uploaded_file.getbuffer() if hasattr(uploaded_file, "getbuffer") else uploaded_file.read()
+                        with open(manual_path, "wb") as f:
+                            f.write(file_bytes)
+                        uploaded_file.seek(0)
                         
                         # Salvar para análise posterior (SEM chamar analyze_image que causa log)
                         detection_data = {
@@ -629,9 +643,13 @@ def main():
             with col2:
                 if st.button("📁 Salvar para Análise Posterior", type="secondary", key="save_for_later_btn"):
                     try:
-                        # Salvar imagem temporariamente para análise
+                        # Salvar imagem temporariamente (sem re-encode)
                         temp_manual_path = f"temp_manual_{uploaded_file.name}"
-                        image.save(temp_manual_path)
+                        uploaded_file.seek(0)
+                        file_bytes = uploaded_file.getbuffer() if hasattr(uploaded_file, "getbuffer") else uploaded_file.read()
+                        with open(temp_manual_path, "wb") as f:
+                            f.write(file_bytes)
+                        uploaded_file.seek(0)
                         
                         # Usar o sistema de análise manual para salvar
                         detection_data = {
@@ -918,15 +936,16 @@ def main():
             }
             
             for mode_key, mode_stats in all_stats.items():
+                false_pos = mode_stats.get('false_positives', 0)
+                false_neg = mode_stats.get('false_negatives', 0)
                 comparison_data['Modo'].append(mode_options.get(mode_key, mode_key))
                 comparison_data['Total Análises'].append(mode_stats['total_analyses'])
                 comparison_data['Pássaros Detectados'].append(mode_stats['birds_detected'])
                 comparison_data['Taxa Detecção'].append(f"{mode_stats['detection_rate']:.1%}")
                 comparison_data['Precisão'].append(f"{mode_stats['accuracy']:.1%}")
-                comparison_data['Falsos Positivos'].append(mode_stats['false_positives'])
-                comparison_data['Falsos Negativos'].append(mode_stats['false_negatives'])
+                comparison_data['Falsos Positivos'].append(false_pos)
+                comparison_data['Falsos Negativos'].append(false_neg)
             
-            import pandas as pd
             comparison_df = pd.DataFrame(comparison_data)
             st.dataframe(comparison_df, use_container_width=True)
         else:
@@ -1042,27 +1061,27 @@ def main():
                 
                 with col1:
                     # Formulário de aprovação - FORA do button para evitar loops
-                            species = st.text_input("🐦 Espécie identificada:", value="generic_bird", key="species_input")
-                            confidence = st.slider("🎯 Confiança:", 0.0, 1.0, 0.8, key="confidence_input")
-                            notes = st.text_area("📝 Notas:", key="notes_input")
-                            
+                    species = st.text_input("🐦 Espécie identificada:", value="generic_bird", key="species_input")
+                    confidence = st.slider("🎯 Confiança:", 0.0, 1.0, 0.8, key="confidence_input")
+                    notes = st.text_area("📝 Notas:", key="notes_input")
+                    
                     if st.button("✅ Confirmar Aprovação", type="primary", key="confirm_approve_btn"):
                         try:
-                                approved_path = manual_analysis.approve_image(
-                                    filename, species, confidence, notes,
-                                    "Aprovação manual via interface web",
-                                    ["uploaded_by_user"],
-                                    "Análise manual realizada pelo usuário"
-                                )
-                                st.success("✅ Imagem aprovada!")
-                                st.rerun()
+                            approved_path = manual_analysis.approve_image(
+                                filename, species, confidence, notes,
+                                "Aprovação manual via interface web",
+                                ["uploaded_by_user"],
+                                "Análise manual realizada pelo usuário"
+                            )
+                            st.success("✅ Imagem aprovada!")
+                            st.rerun()
                         except Exception as e:
                             st.error(f"❌ Erro ao aprovar: {e}")
                 
                 with col2:
                     # Formulário de rejeição - FORA do button para evitar loops
-                            reason = st.text_input("❌ Motivo da rejeição:", key="reject_reason_input")
-                            
+                    reason = st.text_input("❌ Motivo da rejeição:", key="reject_reason_input")
+                    
                     if st.button("❌ Confirmar Rejeição", type="secondary", key="confirm_reject_btn"):
                         try:
                                 rejected_path = manual_analysis.reject_image(

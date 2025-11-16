@@ -616,6 +616,25 @@ class TinderInterfaceEnhanced:
             except Exception as learn_error:
                 logger.warning(f"Erro ao aplicar aprendizado (não crítico): {learn_error}")
             
+            # Atualizar cache de reconhecimento para reutilizar a decisão
+            try:
+                from src.core.cache import image_cache
+                species_name = feedback_data['human_feedback'].get('species') or analysis.get('species', 'generic_bird')
+                confidence_value = feedback_data['human_feedback'].get('confidence', 1.0)
+                analysis_snapshot = {
+                    "ai_analysis": convert_to_native(analysis),
+                    "manual_feedback": feedback_data
+                }
+                image_cache.add_recognized_image(
+                    new_path,
+                    species_name,
+                    confidence_value,
+                    analysis_snapshot,
+                    notes="Aprovação manual via Tinder"
+                )
+            except Exception as cache_error:
+                logger.warning(f"Erro ao atualizar cache (não crítico): {cache_error}")
+            
             # Atualizar cache de rejeição
             try:
                 from src.core.cache import image_cache
@@ -668,7 +687,7 @@ class TinderInterfaceEnhanced:
             
             # Remover da pasta pendente
             if os.path.exists(image_path):
-            os.remove(image_path)
+                os.remove(image_path)
             
             # Limpar imagem atual
             if 'current_tinder_image' in st.session_state:
@@ -775,7 +794,7 @@ class TinderInterfaceEnhanced:
             
             # Remover da pasta pendente
             if os.path.exists(image_path):
-            os.remove(image_path)
+                os.remove(image_path)
             
             # Limpar imagem atual
             if 'current_tinder_image' in st.session_state:
@@ -984,7 +1003,7 @@ class TinderInterfaceEnhanced:
             
             # Remover da pasta pendente
             if os.path.exists(image_path):
-            os.remove(image_path)
+                os.remove(image_path)
             
             # Limpar imagem atual
             if 'current_tinder_image' in st.session_state:

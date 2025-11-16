@@ -271,7 +271,9 @@ class SystemModeManager:
                 'detection_rate': 0.0,
                 'false_positive_rate': 0.0,
                 'false_negative_rate': 0.0,
-                'accuracy': 0.0
+                'accuracy': 0.0,
+                'false_positives': stats.get('false_positives', 0),
+                'false_negatives': stats.get('false_negatives', 0)
             }
         
         detection_rate = stats['birds_detected'] / total if total > 0 else 0.0
@@ -306,4 +308,3 @@ class SystemModeManager:
             'production': self.get_statistics(SystemMode.PRODUCTION),
             'balanced': self.get_statistics(SystemMode.BALANCED)
         }
-

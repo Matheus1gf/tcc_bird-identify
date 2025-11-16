@@ -825,6 +825,14 @@ class IntuitionEngine:
                         logger.warning(f"Erro ao cachear rejeição: {cache_error}")
                     
                     return result_rejected
+
+                # Em seguida, verificar se já foi reconhecida/aprovada manualmente
+                recognized_info = image_cache.is_image_recognized(image_path)
+                logger.info(f"[DEBUG CACHE POSITIVO] recognized_info para {os.path.basename(image_path)}: {recognized_info}")
+                if recognized_info:
+                    result_positive = self._build_manual_recognition_result(image_path, recognized_info)
+                    if result_positive:
+                        return result_positive
             
             # ============================================================================
             # PRIORIDADE 2: CACHE DE PERFORMANCE (DEPOIS DE VERIFICAR REJEIÇÃO)
@@ -922,7 +930,7 @@ class IntuitionEngine:
             logger.info(f"[DEBUG PRE-REASONING] fundamental_characteristics keys: {list(fundamental_characteristics.keys())[:10] if isinstance(fundamental_characteristics, dict) else 'N/A'}, yolo_detection={fundamental_characteristics.get('yolo_detection', 'N/A') if isinstance(fundamental_characteristics, dict) else 'N/A'}")
             
             try:
-            logical_reasoning = self._logical_reasoning(visual_analysis, fundamental_characteristics)
+                logical_reasoning = self._logical_reasoning(visual_analysis, fundamental_characteristics)
                 logger.info(f"[DEBUG POST-REASONING] logical_reasoning retornado: is_bird={logical_reasoning.get('is_bird', 'N/A') if isinstance(logical_reasoning, dict) else 'N/A'}, confidence={logical_reasoning.get('confidence', 'N/A') if isinstance(logical_reasoning, dict) else 'N/A'}, reasoning_steps={len(logical_reasoning.get('reasoning_steps', [])) if isinstance(logical_reasoning, dict) else 'N/A'}")
             except Exception as reasoning_error:
                 log_error(f"Erro ao executar raciocínio lógico: {reasoning_error}", "IntuitionEngine", "analyze_image_intuition")
@@ -1051,7 +1059,7 @@ class IntuitionEngine:
             # Armazenar resultado no cache mesmo em caso de erro
             try:
                 cache_key = self._generate_cache_key(image_input)
-            self._store_cached_analysis(cache_key, error_result)
+                self._store_cached_analysis(cache_key, error_result)
             except Exception as cache_error:
                 logger.warning(f"Erro ao cachear erro: {cache_error}")
             
@@ -1650,6 +1658,15 @@ class IntuitionEngine:
                 characteristics, mammal_score, bird_score
             )
             characteristics['hybrid_confidence'] = hybrid_confidence
+            
+            # 10. Avaliar evidências universais de não-pássaro
+            try:
+                non_bird_evidence = self._evaluate_non_bird_evidence(characteristics)
+            except Exception as non_bird_error:
+                non_bird_evidence = {'signals': [], 'categories': {}, 'total_signals': 0,
+                                     'strong_evidence': False, 'moderate_evidence': False}
+                self.debug_logger.warning(f"[ALERTA] Falha ao avaliar evidências de não-pássaro: {non_bird_error}")
+            characteristics['non_bird_evidence'] = non_bird_evidence
             
             return characteristics
             
@@ -2850,6 +2867,15 @@ class IntuitionEngine:
         else:
             confidence_factors.append(0.2)
         
+        # Fator 5: Evidências de não-pássaro
+        non_bird_evidence = characteristics.get('non_bird_evidence', {})
+        if non_bird_evidence.get('strong_evidence', False):
+            confidence_factors.append(0.15)
+        elif non_bird_evidence.get('moderate_evidence', False):
+            confidence_factors.append(0.35)
+        else:
+            confidence_factors.append(0.6)
+        
         # Fator 3: Análise avançada de contornos
         advanced_count = sum([
             characteristics.get('has_wings_advanced', False),
@@ -3008,22 +3034,19 @@ class IntuitionEngine:
         }
     
     def _logical_reasoning(self, visual_analysis: Dict, characteristics: Dict) -> Dict[str, Any]:
-        """Raciocínio lógico neuro-simbólico SIMPLIFICADO e EFICAZ - FASE 1.6.3"""
+        """Raciocínio lógico neuro-simbólico simplificado, com thresholds adaptativos."""
         try:
-            # Garantir que parâmetros não são None
-            if visual_analysis is None:
-                visual_analysis = {}
-            if characteristics is None:
-                characteristics = {}
-            
-        reasoning = {
-            'is_bird': False,
-            'confidence': 0.0,
-            'species': 'Desconhecida',
-            'reasoning_steps': [],
-            'characteristics_found': [],
-            'missing_characteristics': [],
-            'intuition_level': 'Baixa',
+            visual_analysis = visual_analysis or {}
+            characteristics = characteristics or {}
+
+            reasoning = {
+                'is_bird': False,
+                'confidence': 0.0,
+                'species': 'Desconhecida',
+                'reasoning_steps': [],
+                'characteristics_found': [],
+                'missing_characteristics': [],
+                'intuition_level': 'Baixa',
                 'confidence_tier': 'Muito Baixa',
                 'confidence_tier_explanation': '',
                 'needs_manual_review': False,
@@ -3031,393 +3054,366 @@ class IntuitionEngine:
                 'dubious_reasons': [],
                 'dubious_suggestion': 'revisar'
             }
-            
-            # ============================================================================
-            # PRIORIDADE 0: VERIFICAR PADRÕES REJEITADOS APRENDIDOS (ANTES DE TUDO!)
-            # ============================================================================
-            if hasattr(self, 'learned_patterns') and 'rejected_patterns' in self.learned_patterns:
-                rejected_patterns = self.learned_patterns.get('rejected_patterns', [])
-                if rejected_patterns:
-                    # Comparar características visuais e fundamentais com padrões rejeitados
-                    for rejected_pattern in rejected_patterns[-50:]:  # Verificar apenas os 50 mais recentes para performance
-                        rejected_visual = rejected_pattern.get('visual_features', {})
-                        rejected_chars = rejected_pattern.get('characteristics', {})
-                        
-                        # Comparar características principais
-                        similarity_score = 0.0
-                        matches = 0
-                        total = 0
-                        
-                        # Comparar características fundamentais
-                        for key in ['has_wings', 'has_beak', 'has_feathers', 'has_eyes', 'has_claws']:
-                            if key in characteristics and key in rejected_chars:
-                                total += 1
-                                if characteristics[key] == rejected_chars[key]:
-                                    matches += 1
-                        
-                        if total > 0:
-                            similarity_score = matches / total
-                            
-                            # Se similaridade > 70%, é provavelmente um padrão rejeitado
-                            if similarity_score > 0.7:
-                                logger.info(f"[LOGICAL_REASONING] Padrão similar a rejeição detectado (similaridade: {similarity_score:.2f})")
-                                tier_info = self._calculate_confidence_tier(
-                                    0.0, 0, False, {}, True
-                                )
-                                reasoning['is_bird'] = False
-                                reasoning['confidence'] = tier_info['confidence']
-                                reasoning['confidence_tier'] = tier_info['tier']
-                                reasoning['confidence_tier_explanation'] = tier_info['explanation']
-                                reasoning['species'] = 'Não é um pássaro'
-                                reasoning['reasoning_steps'].append(f"[REJEIÇÃO APRENDIDA] Padrão similar a imagem rejeitada anteriormente")
-                                reasoning['intuition_level'] = tier_info['tier']
-                                return reasoning
-        
-        # ============================================================================
-        # PRIORIDADE MÁXIMA: VERIFICAR RESULTADOS DO YOLO - FASE 1.6.3
-        # ============================================================================
-        
-        # Verificar se YOLO detectou pássaro
-        yolo_detection = characteristics.get('yolo_detection', False)
-        bird_confidence_avg = characteristics.get('bird_confidence_avg', 0.0)
-        
-        if yolo_detection and bird_confidence_avg > 0.5:
-                # YOLO detectou pássaro - usar tier de confiança
-                visual_scores = {
-                    'bird_shape_score': visual_analysis.get('bird_shape_score', 0),
-                    'bird_color_score': visual_analysis.get('bird_color_score', 0),
-                    'bird_like_features': visual_analysis.get('bird_like_features', 0)
-                }
-                tier_info = self._calculate_confidence_tier(
-                    bird_confidence_avg, 3, True, visual_scores, False
-                )
-            reasoning['is_bird'] = True
-                reasoning['confidence'] = tier_info['confidence']
-                reasoning['confidence_tier'] = tier_info['tier']
-                reasoning['confidence_tier_explanation'] = tier_info['explanation']
-                reasoning['intuition_level'] = tier_info['tier']
-            reasoning['species'] = 'Pássaro de espécie desconhecida'
-            reasoning['reasoning_steps'].append(f"[YOLO] Pássaro detectado com confiança {bird_confidence_avg:.2f}")
-            logger.info(f"[LOGICAL_REASONING] YOLO detectou pássaro - ACEITO com confiança {bird_confidence_avg:.2f}")
-            return reasoning
-        
-        # ============================================================================
-        # ANÁLISE TRADICIONAL (MANTIDA COMO FALLBACK) - FASE 1.6.3
-        # ============================================================================
-        
-        # Extrair dados básicos
-        has_wings = characteristics.get('has_wings', False)
-        has_beak = characteristics.get('has_beak', False)
-        has_feathers = characteristics.get('has_feathers', False)
-        has_eyes = characteristics.get('has_eyes', False)
-        has_claws = characteristics.get('has_claws', False)
-        
-            # MELHORIA 4: Obter thresholds do modo de operação (tem prioridade)
-            mode_thresholds = None
-            if hasattr(self, 'system_mode_manager') and self.system_mode_manager:
-                mode_thresholds = self.system_mode_manager.get_thresholds()
-            
-            # MELHORIA 3: Obter thresholds adaptativos (fallback)
-            adaptive_thresholds = None
-            if hasattr(self, 'adaptive_learning_system') and self.adaptive_learning_system:
-                adaptive_thresholds = self.adaptive_learning_system.get_thresholds()
-            
-        bird_shape_score = visual_analysis.get('bird_shape_score', 0)
-        bird_color_score = visual_analysis.get('bird_color_score', 0)
-        bird_like_features = visual_analysis.get('bird_like_features', 0)
-        
-            # Aplicar thresholds (modo de operação tem prioridade sobre adaptativo)
-            if mode_thresholds:
-                # Usar thresholds do modo de operação
-                bird_like_threshold = mode_thresholds.get('bird_like_features', 0.35)
-                shape_threshold = mode_thresholds.get('bird_shape_score', 0.25)
-                color_threshold = mode_thresholds.get('bird_color_score', 0.25)
-            elif adaptive_thresholds:
-                # Usar thresholds adaptativos como fallback
-                bird_like_threshold = adaptive_thresholds.get('bird_like_features', 0.4)
-                shape_threshold = adaptive_thresholds.get('bird_shape_score', 0.3)
-                color_threshold = adaptive_thresholds.get('bird_color_score', 0.3)
-            else:
-                # Thresholds padrão
-                bird_like_threshold = 0.4
-                shape_threshold = 0.3
-                color_threshold = 0.3
-            
-        # Detectar características de mamíferos
-        has_mammal_features = characteristics.get('has_mammal_features', False)
-        has_mammal_body = characteristics.get('has_mammal_body', False)
-        has_fur_texture = characteristics.get('has_fur_texture', False)
-        
-        # Contar características de pássaro encontradas
-        bird_characteristics = [has_wings, has_beak, has_feathers, has_eyes, has_claws]
-        bird_count = sum(bird_characteristics)
-        
-        # Listar características encontradas
-        if has_wings: reasoning['characteristics_found'].append('asas')
-        if has_beak: reasoning['characteristics_found'].append('bico')
-        if has_feathers: reasoning['characteristics_found'].append('penas')
-        if has_eyes: reasoning['characteristics_found'].append('olhos')
-        if has_claws: reasoning['characteristics_found'].append('garras')
-        
-        # LÓGICA SIMPLIFICADA E EFICAZ - PRIORIZANDO PÁSSAROS
-            # Preparar dados para cálculo de tier de confiança
-            has_fundamental_features = bird_count >= 2
-            has_non_bird_features = has_mammal_features or has_fur_texture or has_mammal_body
+
+            # Pré-processar métricas visuais e características fundamentais
+            bird_shape_score = visual_analysis.get('bird_shape_score', 0)
+            bird_color_score = visual_analysis.get('bird_color_score', 0)
+            bird_like_features = visual_analysis.get('bird_like_features', 0)
+
+            has_wings = characteristics.get('has_wings', False)
+            has_beak = characteristics.get('has_beak', False)
+            has_feathers = characteristics.get('has_feathers', False)
+            has_eyes = characteristics.get('has_eyes', False)
+            has_claws = characteristics.get('has_claws', False)
+
+            has_mammal_features = characteristics.get('has_mammal_features', False)
+            has_mammal_body = characteristics.get('has_mammal_body', False)
+            has_fur_texture = characteristics.get('has_fur_texture', False)
+
+            bird_characteristics = [has_wings, has_beak, has_feathers, has_eyes, has_claws]
+            bird_count = sum(bird_characteristics)
+            if has_wings:
+                reasoning['characteristics_found'].append('asas')
+            if has_beak:
+                reasoning['characteristics_found'].append('bico')
+            if has_feathers:
+                reasoning['characteristics_found'].append('penas')
+            if has_eyes:
+                reasoning['characteristics_found'].append('olhos')
+            if has_claws:
+                reasoning['characteristics_found'].append('garras')
+
             visual_scores = {
                 'bird_shape_score': bird_shape_score,
                 'bird_color_score': bird_color_score,
                 'bird_like_features': bird_like_features
             }
-        
-        # 1. PRIMEIRO: Verificar características definitivas de pássaro (PRIORIDADE MÁXIMA)
-        if bird_count >= 3:
-                confidence = 0.9
-                tier_info = self._calculate_confidence_tier(
-                    confidence, bird_count, True, visual_scores, has_non_bird_features
+
+            # Avaliar evidências universais de não-pássaro
+            has_non_bird_features = has_mammal_features or has_mammal_body or has_fur_texture
+
+            non_bird_evidence = characteristics.get('non_bird_evidence')
+            if not non_bird_evidence:
+                try:
+                    non_bird_evidence = self._evaluate_non_bird_evidence(characteristics)
+                except Exception as non_bird_error:
+                    logger.warning(f"[ALERTA] Falha ao recalcular evidências de não-pássaro: {non_bird_error}")
+                    non_bird_evidence = {
+                        'signals': [],
+                        'categories': {},
+                        'total_signals': 0,
+                        'strong_evidence': False,
+                        'moderate_evidence': False
+                    }
+                characteristics['non_bird_evidence'] = non_bird_evidence
+
+            non_bird_signals = non_bird_evidence.get('signals', [])
+            strong_non_bird = non_bird_evidence.get('strong_evidence', False)
+            moderate_non_bird = non_bird_evidence.get('moderate_evidence', False)
+            has_non_bird_features = has_non_bird_features or strong_non_bird or moderate_non_bird
+            wings_support = has_wings or characteristics.get('has_wings_ultra', False)
+            feathers_support = has_feathers or characteristics.get('has_feathers_ultra', False) or characteristics.get('has_feathers_hybrid', False)
+            beak_support = has_beak or characteristics.get('has_beak_ultra', False)
+            core_bird_features = [wings_support, feathers_support, beak_support]
+            core_bird_count = sum(core_bird_features)
+            extended_bird_support = core_bird_count + sum([
+                1 if has_claws or characteristics.get('has_claws_ultra', False) else 0,
+                1 if has_eyes else 0
+            ])
+
+            # 0) Rejeições aprendidas
+            rejected_patterns = getattr(getattr(self, 'learned_patterns', {}), 'get', lambda *_: [])('rejected_patterns', [])
+            for pattern in rejected_patterns[-50:]:
+                rejected_chars = pattern.get('characteristics', {})
+                total, matches = 0, 0
+                for key in ['has_wings', 'has_beak', 'has_feathers', 'has_eyes', 'has_claws']:
+                    if key in characteristics and key in rejected_chars:
+                        total += 1
+                        if characteristics[key] == rejected_chars[key]:
+                            matches += 1
+                if total and matches / total > 0.7:
+                    tier = self._calculate_confidence_tier(0.0, 0, False, {}, True)
+                    reasoning.update({
+                        'is_bird': False,
+                        'confidence': tier['confidence'],
+                        'confidence_tier': tier['tier'],
+                        'confidence_tier_explanation': tier['explanation'],
+                        'species': 'Não é um pássaro',
+                        'intuition_level': tier['tier'],
+                        'reasoning_steps': ['[REJEIÇÃO APRENDIDA] Similaridade alta com padrão rejeitado']
+                    })
+                    return reasoning
+
+            # Caso existam evidências fortes de não-pássaro e nenhum detector tenha retornado pássaro
+            if strong_non_bird and not characteristics.get('yolo_detection'):
+                tier_conf = 0.15 if bird_count > 0 else 0.05
+                tier = self._calculate_confidence_tier(
+                    tier_conf,
+                    bird_count,
+                    False,
+                    visual_scores,
+                    True
                 )
-            reasoning['is_bird'] = True
-                reasoning['confidence'] = tier_info['confidence']
-                reasoning['confidence_tier'] = tier_info['tier']
-                reasoning['confidence_tier_explanation'] = tier_info['explanation']
-                reasoning['intuition_level'] = tier_info['tier']
-            reasoning['reasoning_steps'].append(f"[SUCESSO] {bird_count} características definitivas de pássaro detectadas")
-            
-            # 2. SEGUNDO: Verificar características moderadas + análise visual (usando thresholds adaptativos)
-            elif bird_count >= 2 and bird_like_features > bird_like_threshold:
-                confidence = 0.8
-                tier_info = self._calculate_confidence_tier(
-                    confidence, bird_count, True, visual_scores, has_non_bird_features
-                )
-            reasoning['is_bird'] = True
-                reasoning['confidence'] = tier_info['confidence']
-                reasoning['confidence_tier'] = tier_info['tier']
-                reasoning['confidence_tier_explanation'] = tier_info['explanation']
-                reasoning['intuition_level'] = tier_info['tier']
-            reasoning['reasoning_steps'].append(f"[SUCESSO] {bird_count} características + análise visual positiva")
-            
-            # 3. TERCEIRO: Verificar características básicas + forma/cores adequadas (usando thresholds adaptativos)
-            elif bird_count >= 1 and (bird_shape_score > shape_threshold or bird_color_score > color_threshold):
-                confidence = 0.7
-                tier_info = self._calculate_confidence_tier(
-                    confidence, bird_count, bird_count >= 1, visual_scores, has_non_bird_features
-                )
-            reasoning['is_bird'] = True
-                reasoning['confidence'] = tier_info['confidence']
-                reasoning['confidence_tier'] = tier_info['tier']
-                reasoning['confidence_tier_explanation'] = tier_info['explanation']
-                reasoning['intuition_level'] = tier_info['tier']
-            reasoning['reasoning_steps'].append("[SUCESSO] Características básicas + forma/cores adequadas")
-            
-            # 4. QUARTO: Verificar análise visual muito positiva (usando thresholds adaptativos)
-            elif bird_like_features > (bird_like_threshold + 0.1) and (has_eyes or has_wings):
-                confidence = 0.6
-                tier_info = self._calculate_confidence_tier(
-                    confidence, bird_count, bird_count >= 1, visual_scores, has_non_bird_features
-                )
-            reasoning['is_bird'] = True
-                reasoning['confidence'] = tier_info['confidence']
-                reasoning['confidence_tier'] = tier_info['tier']
-                reasoning['confidence_tier_explanation'] = tier_info['explanation']
-                reasoning['intuition_level'] = tier_info['tier']
-            reasoning['reasoning_steps'].append("[SUCESSO] Análise visual muito positiva")
-            
-            # 5. QUINTO: Verificar análise visual moderada (usando thresholds adaptativos)
-            elif bird_like_features > bird_like_threshold and (bird_shape_score > shape_threshold or bird_color_score > color_threshold):
-                confidence = 0.5
-                tier_info = self._calculate_confidence_tier(
-                    confidence, bird_count, False, visual_scores, has_non_bird_features
-                )
-            reasoning['is_bird'] = True
-                reasoning['confidence'] = tier_info['confidence']
-                reasoning['confidence_tier'] = tier_info['tier']
-                reasoning['confidence_tier_explanation'] = tier_info['explanation']
-                reasoning['intuition_level'] = tier_info['tier']
-            reasoning['reasoning_steps'].append("[SUCESSO] Análise visual moderada")
-            
-        # 5.5. QUINTO E MEIO: Casos com forma perfeita de pássaro (prioridade máxima)
-        elif bird_shape_score >= 1.0 and bird_color_score > 0.2:
-                confidence = 0.5
-                tier_info = self._calculate_confidence_tier(
-                    confidence, bird_count, False, visual_scores, has_non_bird_features
-                )
-            reasoning['is_bird'] = True
-                reasoning['confidence'] = tier_info['confidence']
-                reasoning['confidence_tier'] = tier_info['tier']
-                reasoning['confidence_tier_explanation'] = tier_info['explanation']
-                reasoning['intuition_level'] = tier_info['tier']
-            reasoning['needs_manual_review'] = True
-            reasoning['reasoning_steps'].append("[SUCESSO] Forma perfeita de pássaro detectada")
-            
-            # 6. SEXTO: Casos duvidosos - pode ser pássaro (usando thresholds adaptativos)
-            elif bird_count >= 2 and bird_like_features > bird_like_threshold:
-                confidence = 0.4
-                tier_info = self._calculate_confidence_tier(
-                    confidence, bird_count, True, visual_scores, has_non_bird_features
-                )
-            reasoning['is_bird'] = True
-                reasoning['confidence'] = tier_info['confidence']
-                reasoning['confidence_tier'] = tier_info['tier']
-                reasoning['confidence_tier_explanation'] = tier_info['explanation']
-                reasoning['intuition_level'] = tier_info['tier']
-            reasoning['needs_manual_review'] = True
-            reasoning['reasoning_steps'].append("❓ Caso duvidoso - recomenda análise manual")
-            
-            # 6.5. SEXTO E MEIO: Casos com 1 característica mas análise visual muito forte (usando thresholds adaptativos)
-            elif bird_count >= 1 and bird_like_features > (bird_like_threshold + 0.2) and (bird_shape_score > (shape_threshold + 0.4) or bird_color_score > (color_threshold + 0.4)):
-                confidence = 0.4
-                tier_info = self._calculate_confidence_tier(
-                    confidence, bird_count, bird_count >= 1, visual_scores, has_non_bird_features
-                )
-            reasoning['is_bird'] = True
-                reasoning['confidence'] = tier_info['confidence']
-                reasoning['confidence_tier'] = tier_info['tier']
-                reasoning['confidence_tier_explanation'] = tier_info['explanation']
-                reasoning['intuition_level'] = tier_info['tier']
-            reasoning['needs_manual_review'] = True
-            reasoning['reasoning_steps'].append("❓ Uma característica + análise visual muito forte")
-            
-            # 6.6. SEXTO E MEIO: Casos com análise visual extremamente forte (usando thresholds adaptativos)
-            elif bird_shape_score > 0.9 and bird_color_score > color_threshold and bird_like_features > (bird_like_threshold - 0.1):
-                confidence = 0.4
-                tier_info = self._calculate_confidence_tier(
-                    confidence, bird_count, False, visual_scores, has_non_bird_features
-                )
-            reasoning['is_bird'] = True
-                reasoning['confidence'] = tier_info['confidence']
-                reasoning['confidence_tier'] = tier_info['tier']
-                reasoning['confidence_tier_explanation'] = tier_info['explanation']
-                reasoning['intuition_level'] = tier_info['tier']
-            reasoning['needs_manual_review'] = True
-            reasoning['reasoning_steps'].append("❓ Análise visual extremamente forte (forma perfeita)")
-            
-        # 7. SÉTIMO: Verificar se é definitivamente um mamífero (APENAS SE NÃO FOR PÁSSARO)
-        elif has_mammal_features and not (has_wings or has_beak or has_feathers):
-                confidence = 0.9
-                tier_info = self._calculate_confidence_tier(
-                    confidence, 0, False, visual_scores, True
-                )
-            reasoning['is_bird'] = False
-                reasoning['confidence'] = tier_info['confidence']
-                reasoning['confidence_tier'] = tier_info['tier']
-                reasoning['confidence_tier_explanation'] = tier_info['explanation']
-                reasoning['intuition_level'] = tier_info['tier']
-            reasoning['reasoning_steps'].append("[ERRO] Detectadas características específicas de mamíferos")
-        
-        # 8. OITAVO: Provavelmente não é pássaro
-        else:
-                confidence = 0.2
-                tier_info = self._calculate_confidence_tier(
-                    confidence, bird_count, False, visual_scores, has_non_bird_features
-                )
-            reasoning['is_bird'] = False
-                reasoning['confidence'] = tier_info['confidence']
-                reasoning['confidence_tier'] = tier_info['tier']
-                reasoning['confidence_tier_explanation'] = tier_info['explanation']
-                reasoning['intuition_level'] = tier_info['tier']
-            reasoning['reasoning_steps'].append("[ERRO] Poucas evidências de características de pássaro")
-        
-        # Determinar espécie (se for pássaro)
-        if reasoning['is_bird']:
-            species = self._determine_species(visual_analysis, characteristics)
-            reasoning['species'] = species
-            reasoning['reasoning_steps'].append(f"[PASSARO] Espécie identificada: {species}")
-        else:
-            reasoning['species'] = 'Não-Pássaro'
-            reasoning['reasoning_steps'].append("🚫 Não é um pássaro")
-        
-        # NOVO: Verificação específica para pássaros azuis não detectados
-        if not reasoning['is_bird']:
-            logger.info("[BUSCA] Verificando se é um pássaro azul não detectado...")
-            # Verificar se tem características de pássaro azul
-            dominant_colors = visual_analysis.get('dominant_colors', [])
-            has_blue_color = any('blue' in color.lower() for color in dominant_colors)
-            has_complex_patterns = visual_analysis.get('has_complex_patterns', False)
-            has_iridescence = visual_analysis.get('has_iridescence', False)
-            
-            logger.info(f"🔵 Cores dominantes: {dominant_colors}")
-            logger.info(f"🔵 Tem cor azul: {has_blue_color}")
-            logger.info(f"🔵 Tem bico: {has_beak}")
-            logger.info(f"🔵 Tem padrões complexos: {has_complex_patterns}")
-            logger.info(f"🔵 Tem iridescência: {has_iridescence}")
-            logger.info(f"🔵 Tem penas: {has_feathers}")
-            
-            # Se tem cor azul + características de penas + bico, é provavelmente um pássaro
-            if (has_blue_color and has_beak and 
-                (has_complex_patterns or has_iridescence or has_feathers)):
-                    confidence = 0.7
-                    tier_info = self._calculate_confidence_tier(
-                        confidence, bird_count + 1, True, visual_scores, has_non_bird_features
+                reasoning.update({
+                    'is_bird': False,
+                    'confidence': tier['confidence'],
+                    'confidence_tier': tier['tier'],
+                    'confidence_tier_explanation': tier['explanation'],
+                    'intuition_level': tier['tier'],
+                    'needs_manual_review': bird_count > 0,
+                    'species': 'Não é um pássaro'
+                })
+                if non_bird_signals:
+                    reasoning['reasoning_steps'].append(
+                        f"[ALERTA] Sinais fortes de não-pássaro: {', '.join(non_bird_signals[:3])}"
                     )
-                reasoning['is_bird'] = True
-                    reasoning['confidence'] = tier_info['confidence']
-                    reasoning['confidence_tier'] = tier_info['tier']
-                    reasoning['confidence_tier_explanation'] = tier_info['explanation']
-                    reasoning['intuition_level'] = tier_info['tier']
-                reasoning['reasoning_steps'].append("🔵 Pássaro azul detectado por características específicas")
-                logger.info("🔵 PÁSSARO AZUL DETECTADO - Corrigindo falso negativo!")
+                if bird_count > 0:
+                    reasoning['reasoning_steps'].append("❓ Características isoladas detectadas - revisar manualmente")
+                return reasoning
+
+            # 1) Resultado do YOLO tem prioridade
+            if characteristics.get('yolo_detection') and characteristics.get('bird_confidence_avg', 0.0) > 0.5:
+                avg = characteristics['bird_confidence_avg']
+                ultra_support = sum([
+                    characteristics.get('has_wings_ultra', False),
+                    characteristics.get('has_beak_ultra', False),
+                    characteristics.get('has_feathers_ultra', False),
+                    characteristics.get('has_body_ultra', False)
+                ])
+                detection_support = characteristics.get('total_detections', 0)
+                minimal_support = not (
+                    core_bird_count >= 2 or
+                    ultra_support >= 2 or
+                    detection_support >= 2 or
+                    extended_bird_support >= 2
+                )
+                if strong_non_bird and minimal_support:
+                    tier = self._calculate_confidence_tier(0.2, bird_count, False, visual_scores, True)
+                    reasoning.update({
+                        'is_bird': False,
+                        'confidence': tier['confidence'],
+                        'confidence_tier': tier['tier'],
+                        'confidence_tier_explanation': tier['explanation'],
+                        'intuition_level': tier['tier'],
+                        'needs_manual_review': True,
+                        'species': 'Não é um pássaro'
+                    })
+                    if non_bird_signals:
+                        reasoning['reasoning_steps'].append(
+                            f"[ALERTA] YOLO detectou pássaro (conf {avg:.2f}), mas a intuição encontrou sinais fortes de não-pássaro: {', '.join(non_bird_signals[:3])}"
+                        )
+                    if bird_count > 0:
+                        reasoning['reasoning_steps'].append("❓ Características isoladas detectadas - revisar manualmente")
+                    return reasoning
+
+                tier = self._calculate_confidence_tier(avg, max(core_bird_count, 3), True, visual_scores, False)
+                reasoning.update({
+                    'is_bird': True,
+                    'confidence': tier['confidence'],
+                    'confidence_tier': tier['tier'],
+                    'confidence_tier_explanation': tier['explanation'],
+                    'intuition_level': tier['tier'],
+                    'species': 'Pássaro de espécie desconhecida'
+                })
+                reasoning['reasoning_steps'].append(f"[YOLO] Pássaro detectado com confiança {avg:.2f}")
+                if strong_non_bird or moderate_non_bird:
+                    reasoning['needs_manual_review'] = True
+                    if non_bird_signals:
+                        reasoning['reasoning_steps'].append(
+                            f"[ALERTA] Pistas de não-pássaro também detectadas: {', '.join(non_bird_signals[:3])}"
+                        )
+                return reasoning
+
+            # 2) Thresholds adaptativos / modo
+            mode_thresholds = None
+            if hasattr(self, 'system_mode_manager') and self.system_mode_manager:
+                mode_thresholds = self.system_mode_manager.get_thresholds()
+
+            adaptive_thresholds = None
+            if hasattr(self, 'adaptive_learning_system') and self.adaptive_learning_system:
+                adaptive_thresholds = self.adaptive_learning_system.get_thresholds()
+
+            if mode_thresholds:
+                bird_like_threshold = mode_thresholds.get('bird_like_features', 0.35)
+                shape_threshold = mode_thresholds.get('bird_shape_score', 0.25)
+                color_threshold = mode_thresholds.get('bird_color_score', 0.25)
+            elif adaptive_thresholds:
+                bird_like_threshold = adaptive_thresholds.get('bird_like_features', 0.4)
+                shape_threshold = adaptive_thresholds.get('bird_shape_score', 0.3)
+                color_threshold = adaptive_thresholds.get('bird_color_score', 0.3)
             else:
-                logger.info("🔵 Não é um pássaro azul - características insuficientes")
-        
-        # Calcular confiança geral
-        reasoning['overall_confidence'] = reasoning['confidence']
-        
-            # ============================================================================
-            # NOVO: IDENTIFICAR CASOS DUVIDOSOS - MELHORIA 2
-            # ============================================================================
-            # Identificar casos duvidosos após todas as decisões
+                bird_like_threshold = 0.4
+                shape_threshold = 0.3
+                color_threshold = 0.3
+
+            def _apply_result(confidence, require_fundamental):
+                tier = self._calculate_confidence_tier(
+                    confidence,
+                    bird_count,
+                    require_fundamental,
+                    visual_scores,
+                    has_non_bird_features
+                )
+                reasoning.update({
+                    'is_bird': True,
+                    'confidence': tier['confidence'],
+                    'confidence_tier': tier['tier'],
+                    'confidence_tier_explanation': tier['explanation'],
+                    'intuition_level': tier['tier']
+                })
+                return tier
+
+            # 4) Árvore decisória simplificada
+            decided = False
+            if bird_count >= 3:
+                _apply_result(0.9, True)
+                reasoning['reasoning_steps'].append(f"[SUCESSO] {bird_count} características definitivas de pássaro")
+                decided = True
+            elif bird_count >= 2 and bird_like_features > bird_like_threshold:
+                _apply_result(0.8, True)
+                reasoning['reasoning_steps'].append("[SUCESSO] Características moderadas + análise visual positiva")
+                decided = True
+            elif bird_count >= 1 and (bird_shape_score > shape_threshold or bird_color_score > color_threshold):
+                _apply_result(0.7, bird_count >= 1)
+                reasoning['reasoning_steps'].append("[SUCESSO] Características básicas + forma/cores adequadas")
+                decided = True
+            elif bird_like_features > (bird_like_threshold + 0.1) and (has_eyes or has_wings):
+                _apply_result(0.6, bird_count >= 1)
+                reasoning['reasoning_steps'].append("[SUCESSO] Análise visual muito positiva")
+                decided = True
+            elif bird_like_features > bird_like_threshold and (bird_shape_score > shape_threshold or bird_color_score > color_threshold):
+                _apply_result(0.5, False)
+                reasoning['reasoning_steps'].append("[SUCESSO] Análise visual moderada")
+                decided = True
+            elif bird_shape_score >= 1.0 and bird_color_score > 0.2:
+                _apply_result(0.5, False)
+                reasoning['needs_manual_review'] = True
+                reasoning['reasoning_steps'].append("[SUCESSO] Forma perfeita de pássaro detectada")
+                decided = True
+            elif bird_count >= 2 and bird_like_features > bird_like_threshold:
+                _apply_result(0.4, True)
+                reasoning['needs_manual_review'] = True
+                reasoning['reasoning_steps'].append("❓ Caso duvidoso - recomenda análise manual")
+                decided = True
+            elif bird_count >= 1 and bird_like_features > (bird_like_threshold + 0.2) and (
+                bird_shape_score > (shape_threshold + 0.4) or bird_color_score > (color_threshold + 0.4)
+            ):
+                _apply_result(0.4, bird_count >= 1)
+                reasoning['needs_manual_review'] = True
+                reasoning['reasoning_steps'].append("❓ Uma característica + análise visual muito forte")
+                decided = True
+            elif bird_shape_score > 0.9 and bird_color_score > color_threshold and bird_like_features > (bird_like_threshold - 0.1):
+                _apply_result(0.4, False)
+                reasoning['needs_manual_review'] = True
+                reasoning['reasoning_steps'].append("❓ Análise visual extremamente forte")
+                decided = True
+            elif has_mammal_features and not (has_wings or has_beak or has_feathers):
+                tier = self._calculate_confidence_tier(0.9, 0, False, visual_scores, True)
+                reasoning.update({
+                    'is_bird': False,
+                    'confidence': tier['confidence'],
+                    'confidence_tier': tier['tier'],
+                    'confidence_tier_explanation': tier['explanation'],
+                    'intuition_level': tier['tier']
+                })
+                reasoning['reasoning_steps'].append("[ERRO] Características de mamífero detectadas")
+                decided = True
+
+            if not decided:
+                tier = self._calculate_confidence_tier(0.2, bird_count, False, visual_scores, has_non_bird_features)
+                reasoning.update({
+                    'is_bird': False,
+                    'confidence': tier['confidence'],
+                    'confidence_tier': tier['tier'],
+                    'confidence_tier_explanation': tier['explanation'],
+                    'intuition_level': tier['tier']
+                })
+                reasoning['reasoning_steps'].append("[ERRO] Poucas evidências de pássaro")
+
+            # Ajustes finais baseados em evidências de não-pássaro e características encontradas
+            if reasoning['is_bird'] and (strong_non_bird or moderate_non_bird):
+                reasoning['needs_manual_review'] = True
+                if non_bird_signals:
+                    reasoning['reasoning_steps'].append(
+                        f"[ALERTA] A intuição encontrou pistas de não-pássaro: {', '.join(non_bird_signals[:3])}"
+                    )
+            if not reasoning['is_bird'] and bird_count > 0:
+                reasoning['needs_manual_review'] = True
+                reasoning['reasoning_steps'].append(
+                    "❓ Detectei algumas características de pássaro, mas não suficientes - revisar manualmente"
+                )
+
+            # 5) Determinação de espécie ou não pássaro
+            if reasoning['is_bird']:
+                species = self._determine_species(visual_analysis, characteristics)
+                reasoning['species'] = species
+                reasoning['reasoning_steps'].append(f"[PASSARO] Espécie identificada: {species}")
+            else:
+                reasoning['species'] = 'Não-Pássaro'
+                reasoning['reasoning_steps'].append("🚫 Não é um pássaro")
+
+            # 6) Correção para pássaros azuis
+            if not reasoning['is_bird']:
+                dominant_colors = visual_analysis.get('dominant_colors', [])
+                has_blue = any('blue' in color.lower() for color in dominant_colors)
+                has_complex_patterns = visual_analysis.get('has_complex_patterns', False)
+                has_iridescence = visual_analysis.get('has_iridescence', False)
+                if has_blue and has_beak and (has_complex_patterns or has_iridescence or has_feathers):
+                    tier = self._calculate_confidence_tier(0.7, bird_count + 1, True, visual_scores, has_non_bird_features)
+                    reasoning.update({
+                        'is_bird': True,
+                        'confidence': tier['confidence'],
+                        'confidence_tier': tier['tier'],
+                        'confidence_tier_explanation': tier['explanation'],
+                        'intuition_level': tier['tier'],
+                        'needs_manual_review': True
+                    })
+                    reasoning['reasoning_steps'].append("🔵 Pássaro azul detectado por características específicas")
+
+            reasoning['overall_confidence'] = reasoning['confidence']
+
+            # 7) Casos duvidosos
             dubious_info = self._identify_dubious_cases(
-                visual_analysis, characteristics, 
-                reasoning['confidence'], bird_count,
-                bird_like_features, bird_shape_score, bird_color_score
+                visual_analysis,
+                characteristics,
+                reasoning['confidence'],
+                bird_count,
+                bird_like_features,
+                bird_shape_score,
+                bird_color_score
             )
-            
-            # Se é caso duvidoso, atualizar flags
             if dubious_info['is_dubious']:
                 reasoning['is_dubious_case'] = True
                 reasoning['dubious_reasons'] = dubious_info['reasons']
                 reasoning['dubious_suggestion'] = dubious_info['suggestion']
-                reasoning['needs_manual_review'] = True  # Casos duvidosos sempre precisam revisão
-                
-                # Adicionar razões aos reasoning_steps
+                reasoning['needs_manual_review'] = True
                 for reason in dubious_info['reasons']:
                     reasoning['reasoning_steps'].append(f"[CASO DUVIDOSO] {reason}")
-                
-                logger.info(f"[DUBIOUS_CASE] Caso duvidoso detectado: {len(dubious_info['reasons'])} razão(ões)")
-            
-            # MELHORIA 4: Filtragem por confiança mínima baseada no modo de operação
+
+            # 8) Filtragem por modo de operação
             if hasattr(self, 'system_mode_manager') and self.system_mode_manager:
                 min_confidence = self.system_mode_manager.get_min_confidence()
-                current_confidence = reasoning.get('confidence', 0.0)
-                
-                # Verificar se resultado deve ser aceito
                 should_accept = self.system_mode_manager.should_accept_result(
-                    current_confidence, 
+                    reasoning.get('confidence', 0.0),
                     reasoning.get('is_bird', False)
                 )
-                
                 if not should_accept:
-                    # Rejeitar resultado com confiança muito baixa
-                    reasoning['is_bird'] = False
-                    reasoning['confidence'] = current_confidence
                     reasoning['needs_manual_review'] = True
                     reasoning['reasoning_steps'].append(
-                        f"[MODO] Resultado rejeitado: confiança {current_confidence:.2%} < mínimo {min_confidence:.2%} (modo: {self.system_mode_manager.get_current_mode().value})"
+                        f"[MODO] Resultado rejeitado por confiança < {min_confidence:.2%}"
                     )
-                    logger.info(f"[SYSTEM_MODE] Resultado rejeitado por confiança baixa: {current_confidence:.2%} < {min_confidence:.2%}")
-                
-                # Registrar análise para estatísticas
+                    reasoning['is_bird'] = False
                 self.system_mode_manager.record_analysis(
                     is_bird=reasoning.get('is_bird', False),
-                    confidence=current_confidence
+                    confidence=reasoning.get('confidence', 0.0)
                 )
-            
-        return reasoning
-        
+
+            return reasoning
+
         except Exception as e:
             logger.error(f"[ERRO] Exceção em _logical_reasoning: {e}")
             import traceback
             logger.error(f"[ERRO] Traceback: {traceback.format_exc()}")
-            # Retornar dict de erro em vez de None
             return {
                 'is_bird': False,
                 'confidence': 0.0,
@@ -4116,12 +4112,12 @@ class IntuitionEngine:
         score += bird_shape_score * 1.5
         total_weight += 1.5
         
-        # Peso 5: NOVO - Detecção de características de réptil (penalização)
-        reptile_score = self._calculate_reptile_score(characteristics)
-        if reptile_score > 0.6:  # Se tem características fortes de réptil
-            score -= 2.0  # Penalização significativa
-        elif reptile_score > 0.3:  # Se tem características moderadas de réptil
-            score -= 1.0  # Penalização moderada
+        # Peso 5: Evidências de não-pássaro (penalização)
+        non_bird_evidence = characteristics.get('non_bird_evidence', {})
+        if non_bird_evidence.get('strong_evidence', False):
+            score -= 2.0
+        elif non_bird_evidence.get('moderate_evidence', False):
+            score -= 1.0
         total_weight += 2.0
         
         # Peso 6: NOVO - Detecção melhorada de cores específicas
@@ -4136,52 +4132,80 @@ class IntuitionEngine:
         
         return score / total_weight if total_weight > 0 else 0.0
     
-    def _calculate_reptile_score(self, characteristics: Dict) -> float:
-        """Calcula score de réptil baseado em características específicas"""
-        score = 0.0
-        total_weight = 0.0
-        
-        # Peso 1: Detecção de escamas (característica distintiva de répteis)
+    def _evaluate_non_bird_evidence(self, characteristics: Dict) -> Dict[str, Any]:
+        """Avalia evidências universais de que a imagem não representa um pássaro."""
+        categories = {
+            'reptile': 0,
+            'mammal': 0,
+            'general': 0
+        }
+        signals = []
+
+        def _add_signal(category: str, description: str, weight: int = 1):
+            if category in categories:
+                categories[category] += weight
+            else:
+                categories[category] = weight
+            if description not in signals:
+                signals.append(description)
+
+        # Indícios de répteis
         if characteristics.get('has_scales', False):
-            score += 3.0
+            _add_signal('reptile', 'escamas visíveis', 2)
         if characteristics.get('has_scales_ultra', False):
-            score += 2.0
-        total_weight += 3.0
-        
-        # Peso 2: Detecção de crista dorsal (comum em iguanas)
-        if characteristics.get('has_dorsal_crest', False):
-            score += 2.5
-        if characteristics.get('has_spine_ridge', False):
-            score += 2.0
-        total_weight += 2.5
-        
-        # Peso 3: Forma alongada do corpo (típica de répteis)
-        if characteristics.get('has_elongated_body', False):
-            score += 2.0
-        if characteristics.get('body_length_ratio', 0) > 2.5:  # Corpo muito alongado
-            score += 1.5
-        total_weight += 2.0
-        
-        # Peso 4: Ausência de penas (característica distintiva)
-        if not characteristics.get('has_feathers', False):
-            score += 1.0
-        if not characteristics.get('has_feathers_ultra', False):
-            score += 1.5
-        total_weight += 2.0
-        
-        # Peso 5: Presença de garras (comum em répteis)
-        if characteristics.get('has_claws', False):
-            score += 1.5
-        if characteristics.get('has_claws_ultra', False):
-            score += 1.0
-        total_weight += 1.5
-        
-        # Peso 6: Textura de pele escamosa
+            _add_signal('reptile', 'padrões repetitivos semelhantes a escamas')
         if characteristics.get('has_scaly_texture', False):
-            score += 2.0
-        total_weight += 2.0
-        
-        return score / total_weight if total_weight > 0 else 0.0
+            _add_signal('reptile', 'textura escamosa')
+        if characteristics.get('has_dorsal_crest', False) or characteristics.get('has_spine_ridge', False):
+            _add_signal('reptile', 'crista dorsal')
+        if characteristics.get('has_elongated_body', False) or characteristics.get('body_length_ratio', 0) > 2.5:
+            _add_signal('reptile', 'corpo alongado')
+
+        # Indícios de mamíferos
+        if characteristics.get('has_mammal_features', False):
+            _add_signal('mammal', 'características típicas de mamífero')
+        if characteristics.get('has_mammal_body', False):
+            _add_signal('mammal', 'proporções corporais de mamífero')
+        if characteristics.get('has_fur_texture', False) or characteristics.get('has_fur_ultra', False):
+            _add_signal('mammal', 'textura de pelo')
+        if characteristics.get('mammal_score', 0) > 0.6:
+            _add_signal('mammal', 'score alto para mamífero')
+
+        # Indícios gerais (ausência de traços de pássaro)
+        if not (characteristics.get('has_feathers', False) or characteristics.get('has_feathers_ultra', False)):
+            _add_signal('general', 'nenhuma pena detectada')
+        if not (characteristics.get('has_wings', False) or characteristics.get('has_wings_ultra', False)):
+            _add_signal('general', 'nenhuma asa identificada')
+        if characteristics.get('has_claws', False) and not characteristics.get('has_feathers', False):
+            _add_signal('general', 'garras sem presença de penas')
+        if characteristics.get('color_analysis', {}).get('bird_color_score', 0) < 0.1:
+            _add_signal('general', 'padrão de cores incomum para pássaros')
+
+        total_signals = sum(categories.values())
+        strong_evidence = (
+            categories.get('reptile', 0) >= 3 or
+            categories.get('mammal', 0) >= 3 or
+            total_signals >= 4
+        )
+        moderate_evidence = total_signals >= 2
+
+        bird_support = sum([
+            1 if characteristics.get('has_wings', False) or characteristics.get('has_wings_ultra', False) else 0,
+            1 if characteristics.get('has_feathers', False) or characteristics.get('has_feathers_ultra', False) else 0,
+            1 if characteristics.get('has_beak', False) or characteristics.get('has_beak_ultra', False) else 0
+        ])
+        if strong_evidence and bird_support >= 2:
+            strong_evidence = False
+            moderate_evidence = total_signals >= 2
+
+        return {
+            'categories': categories,
+            'signals': signals,
+            'total_signals': total_signals,
+            'strong_evidence': strong_evidence,
+            'moderate_evidence': moderate_evidence,
+            'bird_support': bird_support
+        }
     
     def _calculate_color_bonus(self, characteristics: Dict) -> float:
         """Calcula bônus para cores específicas que podem confundir o modelo"""
@@ -7553,6 +7577,14 @@ class IntuitionEngine:
         bird_shape_score = characteristics.get('bird_shape_score_ultra', 0)
         score += bird_shape_score * 1.0
         total_weight += 1.0
+
+        # Peso 6: Evidências de não-pássaro (penalização)
+        non_bird_evidence = characteristics.get('non_bird_evidence', {})
+        if non_bird_evidence.get('strong_evidence', False):
+            score -= 2.0
+        elif non_bird_evidence.get('moderate_evidence', False):
+            score -= 1.0
+        total_weight += 1.5
         
         return score / total_weight if total_weight > 0 else 0.0
     
@@ -7835,6 +7867,63 @@ class IntuitionEngine:
             logger.error(f"[ERRO] Erro no aprendizado: {e}")
             import traceback
             logger.error(f"[ERRO] Traceback completo: {traceback.format_exc()}")
+
+    def _build_manual_recognition_result(self, image_path: str, recognized_info: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Cria resultado pronto quando imagem já foi aprovada manualmente no passado."""
+        try:
+            if not recognized_info:
+                return None
+            species = recognized_info.get('species', 'Pássaro aprovado manualmente')
+            confidence = float(recognized_info.get('confidence', 0.85) or 0.85)
+            analysis_data = recognized_info.get('analysis_data', {}) or {}
+            notes = recognized_info.get('notes', '')
+            recognition_type = recognized_info.get('recognition_type', 'manual_approval')
+            timestamp = recognized_info.get('timestamp')
+
+            reasoning_steps = []
+            if timestamp:
+                reasoning_steps.append(f"[CACHE] Reconhecimento manual registrado em {timestamp}")
+            else:
+                reasoning_steps.append("[CACHE] Reconhecimento manual recuperado do histórico")
+            if notes:
+                reasoning_steps.append(f"[NOTA] {notes}")
+
+            manual_feedback = analysis_data.get('feedback_data') or analysis_data.get('manual_feedback', {})
+            if manual_feedback.get('reasoning'):
+                reasoning_steps.append(f"[FEEDBACK] {manual_feedback.get('reasoning')}")
+
+            result_positive = {
+                'is_bird': True,
+                'confidence': min(max(confidence, 0.0), 1.0),
+                'species': species,
+                'intuition_level': 'Alta',
+                'needs_manual_review': False,
+                'reasoning_steps': reasoning_steps,
+                'characteristics_found': manual_feedback.get('characteristics', []),
+                'color': manual_feedback.get('color', 'Indefinida'),
+                'analysis_type': recognition_type,
+                'notes': notes,
+                'cached_manual_recognition': True,
+                'intuition_analysis': {
+                    'logical_reasoning': {
+                        'is_bird': True,
+                        'confidence': min(max(confidence, 0.0), 1.0),
+                        'reasoning': 'Reconhecimento manual recuperado do cache',
+                        'needs_manual_review': False,
+                        'characteristics_found': manual_feedback.get('characteristics', []),
+                        'missing_characteristics': []
+                    },
+                    'cached_feedback': manual_feedback,
+                    'analysis_data': analysis_data
+                }
+            }
+
+            logger.info(f"[CACHE] Resultado manual reutilizado para {os.path.basename(image_path)}")
+            return result_positive
+
+        except Exception as e:
+            logger.warning(f"[CACHE] Erro ao reconstruir resultado manual: {e}")
+            return None
     
     def get_learning_statistics(self) -> Dict[str, Any]:
         """Retorna estatísticas de aprendizado"""

@@ -105,6 +105,8 @@ streamlit run app.py
 - ✅ **Inicialização**: Streamlit executando
 - ✅ **Dependências**: Todas funcionando
 - ✅ **Funcionalidades**: Gráficos e visualizações OK
+- ✅ **Suíte Pytest (atual)**: `python -m pytest` cobre cache, análise manual, sincronização e pipelines simulados.
+- ℹ️ **Observação:** O antigo `test_frontend.py` foi substituído pela suíte Pytest em `tests/`; mantenha a documentação atualizada com essa estrutura.
 
 ### 📈 **Taxa de Sucesso**
 - **85.7%** dos testes passaram

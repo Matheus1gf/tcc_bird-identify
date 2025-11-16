@@ -7,12 +7,15 @@ Funciona independentemente das APIs externas (ChatGPT/Gemini)
 import os
 import json
 import shutil
+import logging
 from datetime import datetime
 from typing import Dict, List, Any
 import cv2
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 import streamlit as st
+
+logger = logging.getLogger(__name__)
 
 class ManualAnalysisSystem:
     """Sistema para análise manual de imagens não reconhecidas"""
@@ -23,10 +26,18 @@ class ManualAnalysisSystem:
         self.approved_dir = os.path.join(base_dir, "approved")
         self.rejected_dir = os.path.join(base_dir, "rejected")
         self.annotations_dir = os.path.join(base_dir, "annotations")
+        self.intuition_engine = None
         
         # Criar diretórios se não existirem
         for directory in [self.pending_dir, self.approved_dir, self.rejected_dir, self.annotations_dir]:
             os.makedirs(directory, exist_ok=True)
+
+    def attach_intuition_engine(self, intuition_engine):
+        """Permite que o sistema use o IntuitionEngine para aprendizado contínuo."""
+        if intuition_engine is None or self.intuition_engine is intuition_engine:
+            return
+        self.intuition_engine = intuition_engine
+        logger.info("[ManualAnalysis] IntuitionEngine conectado ao sistema de análise manual")
     
     def analyze_image(self, image_path: str) -> Dict[str, Any]:
         """Analisa uma imagem e retorna dados básicos"""
@@ -133,6 +144,22 @@ class ManualAnalysisSystem:
         image_path = os.path.join(self.pending_dir, filename)
         json_path = os.path.join(self.pending_dir, f"{filename}.json")
         
+        detection_data = {}
+        if os.path.exists(json_path):
+            try:
+                with open(json_path, 'r', encoding='utf-8') as f:
+                    detection_data = json.load(f)
+            except Exception as e:
+                logger.warning(f"[ManualAnalysis] Falha ao ler dados de detecção ({filename}): {e}")
+
+        detection_data = {}
+        if os.path.exists(json_path):
+            try:
+                with open(json_path, 'r', encoding='utf-8') as f:
+                    detection_data = json.load(f)
+            except Exception as e:
+                logger.warning(f"[ManualAnalysis] Falha ao ler dados de detecção ({filename}): {e}")
+        
         approved_image_path = os.path.join(self.approved_dir, filename)
         approved_json_path = os.path.join(self.approved_dir, f"{filename}.json")
         
@@ -168,6 +195,18 @@ class ManualAnalysisSystem:
         feedback_path = os.path.join(self.approved_dir, f"{filename}.feedback.json")
         with open(feedback_path, 'w', encoding='utf-8') as f:
             json.dump(feedback_data, f, indent=2, ensure_ascii=False)
+        
+        # Ensinar o IntuitionEngine (se disponível)
+        self._apply_feedback_to_intuition_engine(
+            approved_image_path,
+            {
+                "is_bird": True,
+                "confidence": confidence,
+                "species": species,
+                "reasoning": decision_reason or notes or "Aprovação manual",
+                "original_prediction": detection_data.get('is_bird', True)
+            }
+        )
         
         # Adicionar ao cache de reconhecimento
         try:
@@ -216,12 +255,34 @@ class ManualAnalysisSystem:
             'visual_characteristics': visual_characteristics or [],
             'additional_observations': additional_observations,
             'timestamp': datetime.now().isoformat(),
-            'rejection_type': 'manual_with_feedback'
+            'rejection_type': 'manual_with_feedback',
+            'confidence': 1.0
         }
         
         rejection_file = os.path.join(self.rejected_dir, f"{filename}_rejection.json")
         with open(rejection_file, 'w', encoding='utf-8') as f:
             json.dump(rejection_data, f, indent=2, ensure_ascii=False)
+        
+        # Atualizar cache e aprendizado
+        cache_feedback = {
+            "timestamp": rejection_data['timestamp'],
+            "human_feedback": {
+                "is_bird": False,
+                "confidence": rejection_data.get('confidence', 1.0),
+                "reasoning": decision_reason or reason or "Imagem rejeitada manualmente",
+                "original_prediction": detection_data.get('is_bird', False)
+            }
+        }
+        try:
+            from src.core.cache import image_cache
+            image_cache.add_rejection_to_cache(rejected_image_path, cache_feedback)
+        except Exception as cache_error:
+            logger.warning(f"[ManualAnalysis] Erro ao atualizar cache de rejeição ({filename}): {cache_error}")
+        
+        self._apply_feedback_to_intuition_engine(
+            rejected_image_path,
+            cache_feedback["human_feedback"]
+        )
         
         return rejected_image_path
     
@@ -309,6 +370,18 @@ class ManualAnalysisSystem:
             'annotations': annotation_count,
             'total_processed': approved_count + rejected_count
         }
+
+    def _apply_feedback_to_intuition_engine(self, image_path: str, human_feedback: Dict[str, Any]):
+        """Encaminha feedback humano para o IntuitionEngine quando disponível."""
+        if not self.intuition_engine:
+            return
+        if not image_path or not os.path.exists(image_path):
+            return
+        try:
+            self.intuition_engine.learn_from_feedback(image_path, human_feedback)
+            logger.info(f"[ManualAnalysis] Feedback aplicado ao IntuitionEngine ({os.path.basename(image_path)})")
+        except Exception as e:
+            logger.warning(f"[ManualAnalysis] Erro ao ensinar IntuitionEngine: {e}")
 
 # Instância global do sistema
 manual_analysis = ManualAnalysisSystem()

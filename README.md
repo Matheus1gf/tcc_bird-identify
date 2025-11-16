@@ -172,6 +172,19 @@ pip install -r requirements.txt
 - [ ] Mobile app
 - [ ] Cloud deployment
 
+## 🧪 Testes
+
+### Automação
+- O repositório inclui uma suíte Pytest em `tests/` e um fluxo GitHub Actions (`.github/workflows/tests.yml`) que executa `python -m pytest` e `python src/utils/warning_suppressor.py` em cada push/PR para `master`.
+
+### Execução local
+```bash
+python3 -m pip install -r requirements.txt
+python3 -m pip install pytest
+python3 -m pytest
+python3 src/utils/warning_suppressor.py  # Verificação complementar
+```
+
 ## 🤝 Contribuição
 
 1. Fork o projeto

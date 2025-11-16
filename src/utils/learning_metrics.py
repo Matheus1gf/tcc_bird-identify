@@ -196,7 +196,11 @@ class LearningMetrics:
                 'false_negative_rate': 0.0,
                 'precision': 0.0,
                 'recall': 0.0,
-                'f1_score': 0.0
+                'f1_score': 0.0,
+                'true_positives': 0,
+                'true_negatives': 0,
+                'false_positives': 0,
+                'false_negatives': 0
             }
         
         total = len(recent)
@@ -236,4 +240,3 @@ class LearningMetrics:
     def save(self):
         """Salva métricas no arquivo"""
         self._save_metrics()
-
