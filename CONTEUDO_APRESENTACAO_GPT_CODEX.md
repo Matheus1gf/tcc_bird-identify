@@ -48,7 +48,33 @@ Problema 4 - Rigidez fundamental: sistemas treinados permanecem estáticos, não
 
 ---
 
-## SLIDE 4: CONTEXTO - PÁSSAROS COMO PILOTO
+## SLIDE 4: RACIOCÍNIO E INTUIÇÃO HUMANA - PERSPECTIVA FILOSÓFICA
+
+**Título:** Compreendendo Raciocínio e Intuição: Abordagem Filosófica
+
+**Conteúdo:**
+Perspectiva filosófica sobre raciocínio humano: tradição racionalista (Descartes, Leibniz) enfatiza raciocínio como processo lógico-dedutivo, onde conclusões derivam de premissas via regras formais. Sugere que raciocínio humano opera através de estruturas lógicas formalizáveis e potencialmente replicáveis em sistemas artificiais. Tradição empirista (Hume, Locke) enfatiza raciocínio emergindo de experiência e associação de ideias - não puramente lógico, mas baseado em padrões observados, generalizações indutivas, conexões estabelecidas através de experiência.
+
+Intuição filosoficamente: para Kant, intuição é forma de conhecimento imediato, capacidade de compreender sem necessidade de raciocínio discursivo completo. Permite julgamentos rápidos baseados em compreensão holística, reconhecendo padrões e relações não imediatamente explícitos via análise lógica formal. Filosofia da mente contemporânea (Dennett, Searle) explora como processos conscientes e não-conscientes interagem no raciocínio e intuição.
+
+Para implementação em IA: simular raciocínio e intuição requer não apenas lógica formal, mas também capacidade de aprendizado a partir de experiência, reconhecimento de padrões sutis, integração de múltiplos tipos de processamento. Abordagem neuro-simbólica busca capturar esta complexidade, combinando raciocínio lógico formal com aprendizado baseado em padrões e reconhecimento intuitivo.
+
+---
+
+## SLIDE 5: RACIOCÍNIO E INTUIÇÃO HUMANA - PERSPECTIVA CIENTÍFICA
+
+**Título:** Compreendendo Raciocínio e Intuição: Abordagem Científica
+
+**Conteúdo:**
+Neurocientificamente, raciocínio envolve múltiplas regiões cerebrais: córtex pré-frontal (planejamento, raciocínio abstrato), córtex parietal (integração de informações espaciais/numéricas), córtex temporal (processamento de memória, reconhecimento de padrões). Estudos de fMRI revelam que raciocínio lógico ativa redes neurais específicas: rede de controle executivo e rede de modo padrão. Raciocínio dedutivo ativa córtex pré-frontal dorsolateral; raciocínio indutivo/analógico ativa regiões temporais/parietais que processam relações e analogias.
+
+Intuição cientificamente: processamento não-consciente rápido que integra múltiplas fontes de informação. Psicologia cognitiva (Kahneman, Tversky) distingue Sistema 1 (rápido, intuitivo, heurísticas) e Sistema 2 (lento, deliberado, analítico). Intuição corresponde principalmente ao Sistema 1, operando via reconhecimento de padrões, associações automáticas, julgamentos baseados em experiência acumulada. Neurocientificamente, intuição envolve processamento em regiões subcorticais e córtex insular, áreas associadas com processamento emocional e tomada de decisão rápida.
+
+Para implementação em IA: replicar aspectos fundamentais: (1) integração de múltiplos tipos de informação (visual, conceitual, contextual), (2) capacidade de raciocínio dedutivo e indutivo, (3) reconhecimento rápido de padrões via processamento paralelo, (4) capacidade de fazer inferências sobre desconhecido baseado em conhecimento existente, (5) integração de processamento consciente (simbólico) e não-consciente (neural). Abordagem neuro-simbólica captura estes aspectos através de combinação de deep learning (processamento paralelo de padrões) com raciocínio simbólico (processamento lógico deliberado).
+
+---
+
+## SLIDE 6: CONTEXTO - PÁSSAROS COMO PILOTO
 
 **Título:** Identificação de Pássaros: Caso de Teste para Raciocínio e Intuição
 
@@ -63,7 +89,7 @@ Motivação técnica: demonstrar viabilidade prática de IA com raciocínio e in
 
 ---
 
-## SLIDE 5: ARQUITETURA E IMPLEMENTAÇÃO
+## SLIDE 7: ARQUITETURA E IMPLEMENTAÇÃO
 
 **Título:** Arquitetura Técnica e Componentes Implementados
 
@@ -78,7 +104,7 @@ Módulo 4 (Sistema de Aprendizado Contínuo) gerencia ciclo completo: armazena p
 
 ---
 
-## SLIDE 6: SISTEMA SANTO GRAAL - IMPLEMENTAÇÃO
+## SLIDE 8: SISTEMA SANTO GRAAL - IMPLEMENTAÇÃO
 
 **Título:** Implementação do Sistema de Aprendizado Autônomo
 
@@ -93,7 +119,7 @@ Anotações aprovadas são automaticamente adicionadas ao dataset de treinamento
 
 ---
 
-## SLIDE 7: STACK TECNOLÓGICO E DEPENDÊNCIAS
+## SLIDE 9: STACK TECNOLÓGICO E DEPENDÊNCIAS
 
 **Título:** Tecnologias, Bibliotecas e Ferramentas Utilizadas
 
@@ -108,7 +134,7 @@ APIs externas: google-generativeai 0.3.0 para integração com Gemini API, opena
 
 ---
 
-## SLIDE 8: ESTRATÉGIAS DE DETECÇÃO E GERAÇÃO
+## SLIDE 10: ESTRATÉGIAS DE DETECÇÃO E GERAÇÃO
 
 **Título:** Algoritmos e Estratégias Implementadas
 
@@ -123,7 +149,7 @@ Validação híbrida combina: (1) resposta semântica da API (sim/não com confi
 
 ---
 
-## SLIDE 9: APRENDIZADO CONTÍNUO - IMPLEMENTAÇÃO
+## SLIDE 11: APRENDIZADO CONTÍNUO - IMPLEMENTAÇÃO
 
 **Título:** Ciclo de Aprendizado e Auto-Melhoria Implementado
 
@@ -140,7 +166,7 @@ Estágio 6 (Avaliação): Sistema calcula métricas de performance (accuracy, pr
 
 ---
 
-## SLIDE 10: RACIOCÍNIO E META-APRENDIZADO
+## SLIDE 12: RACIOCÍNIO E META-APRENDIZADO
 
 **Título:** Implementação de Capacidades de Raciocínio Avançado
 
@@ -155,7 +181,7 @@ Meta-aprendizado implementado via algoritmo que monitora performance de diferent
 
 ---
 
-## SLIDE 11: RESULTADOS E MÉTRICAS
+## SLIDE 13: RESULTADOS E MÉTRICAS
 
 **Título:** Resultados Quantitativos e Qualitativos Obtidos
 
@@ -170,7 +196,7 @@ Capacidade de aprendizado contínuo validada: após incorporação de novas anot
 
 ---
 
-## SLIDE 12: FUNCIONALIDADES E FEATURES
+## SLIDE 14: FUNCIONALIDADES E FEATURES
 
 **Título:** Funcionalidades Implementadas e Status
 
@@ -185,7 +211,7 @@ Interface Web (100%): aplicação Streamlit com upload de imagens, análise em t
 
 ---
 
-## SLIDE 13: INOVAÇÕES E CONTRIBUIÇÕES TÉCNICAS
+## SLIDE 15: INOVAÇÕES E CONTRIBUIÇÕES TÉCNICAS
 
 **Título:** Inovações Técnicas e Contribuições Científicas
 
@@ -200,7 +226,7 @@ Contribuições científicas: (1) metodologia para geração automática de anot
 
 ---
 
-## SLIDE 14: PRÓXIMOS PASSOS TÉCNICOS
+## SLIDE 16: PRÓXIMOS PASSOS TÉCNICOS
 
 **Título:** Direções Futuras e Melhorias Planejadas
 
@@ -215,7 +241,7 @@ Pesquisa e Desenvolvimento: exploração de aprendizado few-shot avançado (Prot
 
 ---
 
-## SLIDE 15: CONCLUSÃO
+## SLIDE 17: CONCLUSÃO
 
 **Título:** Conclusão e Resultados Finais
 

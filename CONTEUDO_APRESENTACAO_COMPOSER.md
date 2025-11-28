@@ -51,7 +51,41 @@ Estas limitações não são meramente técnicas - elas representam barreiras fu
 
 ---
 
-## SLIDE 4: CONTEXTO - POR QUE PÁSSAROS COMO PILOTO
+## SLIDE 4: RACIOCÍNIO E INTUIÇÃO HUMANA - PERSPECTIVA FILOSÓFICA
+
+**Título:** Compreendendo Raciocínio e Intuição: Uma Abordagem Filosófica
+
+**Conteúdo:**
+Do ponto de vista filosófico, o raciocínio humano pode ser compreendido através de múltiplas tradições de pensamento. A tradição racionalista, desde Descartes e Leibniz, enfatiza que o raciocínio é um processo lógico e dedutivo, onde conclusões são derivadas de premissas através de regras formais. Esta perspectiva sugere que o raciocínio humano opera através de estruturas lógicas que podem ser formalizadas e, potencialmente, replicadas em sistemas artificiais.
+
+A tradição empirista, por outro lado, representada por filósofos como Hume e Locke, enfatiza que o raciocínio emerge da experiência e da associação de ideias. Nesta visão, o raciocínio não é puramente lógico, mas também baseado em padrões observados, generalizações indutivas e conexões estabelecidas através da experiência. Esta perspectiva ressalta a importância de aprendizado e adaptação no raciocínio humano.
+
+A intuição, por sua vez, tem sido objeto de debate filosófico há séculos. Para filósofos como Kant, a intuição é uma forma de conhecimento imediato, uma capacidade de compreender algo sem necessidade de raciocínio discursivo completo. A intuição permite que humanos façam julgamentos rápidos baseados em compreensão holística, reconhecendo padrões e relações que não são imediatamente explícitos através de análise lógica formal.
+
+A filosofia da mente contemporânea, especialmente através de pensadores como Dennett e Searle, explora como processos conscientes e não-conscientes interagem no raciocínio e na intuição. Esta perspectiva sugere que o raciocínio humano não é um processo único, mas uma integração complexa de múltiplos sistemas: processamento consciente e deliberado, processamento não-consciente e rápido, memória episódica e semântica, e capacidades de abstração e generalização.
+
+Para nosso trabalho, estas perspectivas filosóficas informam que simular raciocínio e intuição humana requer não apenas lógica formal, mas também capacidade de aprendizado a partir da experiência, reconhecimento de padrões sutis, e integração de múltiplos tipos de processamento. A abordagem neuro-simbólica que propomos busca capturar esta complexidade, combinando raciocínio lógico formal com aprendizado baseado em padrões e reconhecimento intuitivo.
+
+---
+
+## SLIDE 5: RACIOCÍNIO E INTUIÇÃO HUMANA - PERSPECTIVA CIENTÍFICA
+
+**Título:** Compreendendo Raciocínio e Intuição: Uma Abordagem Científica
+
+**Conteúdo:**
+Do ponto de vista científico, o raciocínio e a intuição humana têm sido extensivamente estudados através de neurociência cognitiva, psicologia cognitiva e ciências da computação. Neurocientificamente, o raciocínio envolve múltiplas regiões cerebrais trabalhando em conjunto: o córtex pré-frontal para planejamento e raciocínio abstrato, o córtex parietal para integração de informações espaciais e numéricas, e o córtex temporal para processamento de memória e reconhecimento de padrões.
+
+Estudos de neuroimagem funcional (fMRI) revelam que o raciocínio lógico ativa redes neurais específicas, incluindo a rede de controle executivo e a rede de modo padrão. O raciocínio dedutivo envolve ativação do córtex pré-frontal dorsolateral, enquanto o raciocínio indutivo e analógico envolve ativação de regiões temporais e parietais que processam relações e analogias. Esta distribuição de processamento sugere que o raciocínio humano não é um processo único, mas uma orquestração de múltiplos sistemas neurais.
+
+A intuição, do ponto de vista científico, pode ser compreendida como processamento não-consciente rápido que integra múltiplas fontes de informação. Pesquisas em psicologia cognitiva, especialmente trabalhos de Kahneman e Tversky, distinguem entre dois sistemas de pensamento: Sistema 1 (rápido, intuitivo, baseado em heurísticas) e Sistema 2 (lento, deliberado, baseado em raciocínio analítico). A intuição corresponde principalmente ao Sistema 1, operando através de reconhecimento de padrões, associações automáticas e julgamentos baseados em experiência acumulada.
+
+Neurocientificamente, a intuição envolve processamento em regiões subcorticais e no córtex insular, áreas associadas com processamento emocional e tomada de decisão rápida. Estudos mostram que decisões intuitivas podem ser tão ou mais precisas que decisões deliberadas em certos contextos, especialmente quando baseadas em experiência extensiva. A intuição não é aleatória, mas resultado de processamento paralelo de múltiplas pistas e padrões que não alcançam consciência explícita.
+
+Para implementar raciocínio e intuição em sistemas de IA, precisamos replicar aspectos fundamentais destes processos: (1) integração de múltiplos tipos de informação (visual, conceitual, contextual), (2) capacidade de raciocínio tanto dedutivo quanto indutivo, (3) reconhecimento rápido de padrões através de processamento paralelo, (4) capacidade de fazer inferências sobre o desconhecido baseado em conhecimento existente, e (5) integração de processamento consciente (simbólico) e não-consciente (neural). Nossa abordagem neuro-simbólica busca capturar estes aspectos através da combinação de deep learning (processamento paralelo de padrões) com raciocínio simbólico (processamento lógico deliberado).
+
+---
+
+## SLIDE 6: CONTEXTO - POR QUE PÁSSAROS COMO PILOTO
 
 **Título:** Identificação de Pássaros: Um Caso de Teste para Raciocínio e Intuição
 
@@ -64,7 +98,7 @@ A abordagem neuro-simbólica adotada permite que o sistema não apenas reconheç
 
 ---
 
-## SLIDE 5: ABORDAGEM PROPOSTA - ARQUITETURA GERAL
+## SLIDE 7: ABORDAGEM PROPOSTA - ARQUITETURA GERAL
 
 **Título:** Arquitetura Híbrida Neuro-Simbólica
 
@@ -79,7 +113,7 @@ Finalmente, o Sistema de Aprendizado Contínuo coordena todo o processo de auto-
 
 ---
 
-## SLIDE 6: SISTEMA SANTO GRAAL - APRENDIZADO AUTÔNOMO
+## SLIDE 8: SISTEMA SANTO GRAAL - APRENDIZADO AUTÔNOMO
 
 **Título:** O Sistema Santo Graal: Aprendizado Autônomo Completo
 
@@ -92,7 +126,7 @@ Este processo resulta em uma redução de mais de 80% no trabalho humano necess�
 
 ---
 
-## SLIDE 7: TECNOLOGIAS E FERRAMENTAS
+## SLIDE 9: TECNOLOGIAS E FERRAMENTAS
 
 **Título:** Stack Tecnológico e Ferramentas Utilizadas
 
@@ -105,7 +139,7 @@ A interface web foi desenvolvida utilizando Streamlit, permitindo uma experiênc
 
 ---
 
-## SLIDE 8: ESTRATÉGIAS DE DETECÇÃO E INTUIÇÃO
+## SLIDE 10: ESTRATÉGIAS DE DETECÇÃO E INTUIÇÃO
 
 **Título:** Estratégias de Detecção de Intuição e Geração Automática
 
@@ -133,7 +167,7 @@ Além deste ciclo principal, o sistema implementa mecanismos de auto-otimizaçã
 
 ---
 
-## SLIDE 10: RACIOCÍNIO AVANÇADO E CONCEITOS ABSTRATOS
+## SLIDE 12: RACIOCÍNIO AVANÇADO E CONCEITOS ABSTRATOS
 
 **Título:** Capacidades de Raciocínio e Aprendizado Conceitual
 
@@ -148,7 +182,7 @@ Finalmente, o meta-aprendizado permite que o sistema aprenda como aprender melho
 
 ---
 
-## SLIDE 11: RESULTADOS - MÉTRICAS E PERFORMANCE
+## SLIDE 13: RESULTADOS - MÉTRICAS E PERFORMANCE
 
 **Título:** Resultados Obtidos e Métricas de Performance
 
@@ -163,7 +197,7 @@ O sistema também foi testado em sua capacidade de identificar fronteiras do con
 
 ---
 
-## SLIDE 12: FUNCIONALIDADES IMPLEMENTADAS
+## SLIDE 14: FUNCIONALIDADES IMPLEMENTADAS
 
 **Título:** Funcionalidades Completas do Sistema
 
@@ -178,7 +212,7 @@ Finalmente, a Interface Web fornece uma experiência completa para usuários, pe
 
 ---
 
-## SLIDE 13: INOVAÇÕES E CONTRIBUIÇÕES
+## SLIDE 15: INOVAÇÕES E CONTRIBUIÇÕES
 
 **Título:** Inovações Alcançadas e Contribuições Científicas
 
@@ -193,7 +227,7 @@ Estas inovações contribuem não apenas para o domínio específico de identifi
 
 ---
 
-## SLIDE 14: PRÓXIMOS PASSOS E EXPANSÃO
+## SLIDE 16: PRÓXIMOS PASSOS E EXPANSÃO
 
 **Título:** Direções Futuras e Oportunidades de Expansão
 
@@ -208,7 +242,7 @@ Finalmente, há oportunidades significativas para pesquisa adicional em aprendiz
 
 ---
 
-## SLIDE 15: CONCLUSÃO
+## SLIDE 17: CONCLUSÃO
 
 **Título:** Conclusão e Agradecimentos
 
