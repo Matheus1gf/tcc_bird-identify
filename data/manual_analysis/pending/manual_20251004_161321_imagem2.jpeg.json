@@ -1,0 +1,9 @@
+{
+  "test_image": "imagem2.jpeg",
+  "image_size": [
+    900,
+    540
+  ],
+  "image_mode": "RGB",
+  "source": "test"
+}

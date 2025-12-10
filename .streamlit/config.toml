@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 [global]
 developmentMode = false
 
@@ -12,10 +13,21 @@ gatherUsageStats = false
 
 [theme]
 primaryColor = "#667eea"
+=======
+[server]
+port = 8501
+headless = true
+
+[theme]
+primaryColor = "#1f77b4"
+>>>>>>> 0a80e70b442b7710f312b1665515fc35d1ed6244
 backgroundColor = "#ffffff"
 secondaryBackgroundColor = "#f0f2f6"
 textColor = "#262730"
 font = "sans serif"
+<<<<<<< HEAD
 
 [logger]
 level = "info"
+=======
+>>>>>>> 0a80e70b442b7710f312b1665515fc35d1ed6244

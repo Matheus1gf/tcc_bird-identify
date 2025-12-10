@@ -1,5 +1,25 @@
-import cv2
-import numpy as np
+#!/usr/bin/env python3
+"""
+Sistema de Identificação de Pássaros com IA
+TCC - 2025
+
+Ponto de entrada principal do sistema
+"""
+
+# Suprimir warnings SSL/OpenSSL antes de qualquer importação
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning, module="urllib3")
+warnings.filterwarnings("ignore", message=".*urllib3 v2 only supports OpenSSL 1.1.1+.*")
+warnings.filterwarnings("ignore", message=".*NotOpenSSLWarning.*")
+# Suprimir warnings do TensorFlow
+warnings.filterwarnings("ignore", category=UserWarning, module="tensorflow")
+warnings.filterwarnings("ignore", message=".*TensorFlow.*")
+warnings.filterwarnings("ignore", message=".*keras.*")
+# Suprimir warnings gerais
+warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+import sys
 import os
 import tensorflow as tf
 import logging
